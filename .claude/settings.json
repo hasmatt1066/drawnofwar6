@@ -1,0 +1,22 @@
+{
+  "project_name": "drawnofwar5",
+  "methodology": "documentation-driven-development",
+  "agent_models": {
+    "orchestrator": "opus",
+    "planning": "sonnet",
+    "quality": "sonnet",
+    "implementation": "sonnet"
+  },
+  "quality_gates": {
+    "require_planning": true,
+    "require_tests_first": true,
+    "require_review": true,
+    "no_workarounds": true
+  },
+  "context_access": {
+    "orchestrator": "all",
+    "planning_agents": "level_plus_parent",
+    "implementation_agents": "feature_plus_epic",
+    "quality_agents": "relevant_specs"
+  }
+}

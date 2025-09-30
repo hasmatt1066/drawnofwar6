@@ -1,0 +1,32 @@
+# Docker Compose configuration for Drawn of War local development
+# Provides Redis cache and other infrastructure services
+
+version: '3.8'
+
+services:
+  # Redis cache for generation queue and creature caching
+  redis:
+    image: redis:7-alpine
+    container_name: drawn-of-war-redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - drawn-of-war-network
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  drawn-of-war-network:
+    driver: bridge

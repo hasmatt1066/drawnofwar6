@@ -1,0 +1,737 @@
+# Building Drawn of War: Production Architecture for AI-Powered Creature Autobattler
+
+**Drawn of War represents a new paradigm in player creativity.** The optimal stack centers on **PixelLab.ai for creature generation**, supported by a **50-100 animation library with intelligent mapping**, **Colyseus framework on Railway**, **Supabase for database**, **PixiJS v8 with Spine for rendering**, and **Cloudflare for CDN**. This report provides production-ready architecture decisions focused on your unique creature generation pipeline, with implementation patterns for a solo developer using Claude Code.
+
+## Why this matters now
+
+The convergence of **PixelLab.ai's skeletal animation generation**, mature web gaming frameworks, and accessible cloud infrastructure creates an unprecedented opportunity. Your vision—players drawing creatures that come to life with 20+ unique animations—was technically impossible at indie scale just two years ago. Now, PixelLab.ai's image-to-sprite pipeline with automatic rigging, combined with PixiJS v8's 50% performance boost for skeletal animations, makes this dream achievable for $35/month.
+
+## Understanding the core challenge
+
+The heart of Drawn of War is the **creature generation pipeline**: transforming player drawings into fully animated battle units in under 60 seconds. This isn't just a feature—it's the entire game. Every architectural decision must support this pipeline: handling asynchronous AI generation, mapping sprites to appropriate animations from your library, syncing animation states across multiplayer battles, and doing it all while preserving the personality of each player's drawing. The technical stack must balance three competing demands: real-time generation responsiveness, multiplayer synchronization, and budget constraints.
+
+## The creature generation pipeline architecture
+
+Your game's unique value proposition demands a **four-stage creature pipeline** that transforms player creativity into battle-ready units:
+
+### Stage 1: Multi-Modal Input Capture
+Players provide creatures through three methods:
+- **Canvas drawing**: HTML5 canvas with basic tools (brush, eraser, color picker)
+- **Image upload**: Accept JPG/PNG up to 2MB, resize to 512x512 for processing
+- **Text description**: Fallback for non-visual users or quick testing
+
+All inputs funnel into a unified processing queue. The architecture uses a **pre-battle creation room** where players can create 3-5 creatures while waiting for opponents. This turns the 60-second generation time from a frustration into an engaging preparation phase.
+
+### Stage 2: PixelLab.ai Sprite Generation
+The **PixelLab.ai integration** is your core differentiator:
+- Submit image via their image-to-pixel-art endpoint (not just text-to-sprite)
+- Request 64x64 output with skeletal rigging enabled
+- Processing time: 30-60 seconds (async with status polling)
+
+Critical implementation details:
+```javascript
+class PixelLabService {
+  async generateCreature(imageData) {
+    // 1. Upload to temporary storage
+    const inputUrl = await uploadToTemp(imageData);
+    
+    // 2. Call PixelLab image-to-pixel-art
+    const response = await pixellab.generateSprite({
+      init_image: inputUrl,
+      output_size: 64,
+      style: 'pixel_art',
+      enable_skeleton: true,
+      strength: 500  // Preserve drawing personality
+    });
+    
+    // 3. Poll for completion (webhook preferred)
+    return this.pollForCompletion(response.id);
+  }
+}
+```
+
+### Stage 3: Creature Analysis & Animation Assignment
+This is where your **50-100 animation library** creates value. An AI-powered analyzer examines the generated sprite to determine:
+
+```javascript
+const creatureAnalysis = {
+  // Visual features detected
+  limbs: ['arms', 'wings'],
+  weapons: ['staff'],
+  bodyType: 'humanoid',
+  size: 'medium',
+  
+  // Gameplay assignments
+  attackStyle: 'ranged_magic',
+  movementType: 'hover',
+  specialAbility: 'arcane_burst'
+};
+```
+
+The **animation mapping system** uses hierarchical rules:
+1. Check for specific features (wings → flying animations)
+2. Analyze body type (quadruped → beast animations)
+3. Detect weapons (sword → slash animations)
+4. Fallback to generic based on size
+
+Your animation library structure:
+```
+animations/
+├── movement/
+│   ├── walk_biped.spine
+│   ├── float_hover.spine
+│   └── slither_snake.spine
+├── attacks/
+│   ├── melee_slash.spine
+│   ├── ranged_projectile.spine
+│   └── magic_channel.spine
+├── abilities/
+│   ├── aoe_explosion.spine
+│   └── beam_attack.spine
+└── reactions/
+    ├── hit_small.spine
+    └── death_fade.spine
+```
+
+### Stage 4: Battle-Ready Assembly
+The final creature combines:
+- **Base sprite** from PixelLab (with skeletal data)
+- **Animation set** from your library (15-20 animations)
+- **Stats/abilities** derived from visual analysis
+- **Metadata** for multiplayer sync
+
+This assembly happens server-side and stores in the database:
+```sql
+CREATE TABLE creatures (
+  id uuid PRIMARY KEY,
+  player_id uuid REFERENCES players,
+  
+  -- Generation data
+  pixellab_sprite_url text,
+  pixellab_skeleton_data jsonb,
+  generation_cost decimal(10,4),
+  
+  -- Animation assignments  
+  animation_set_id int,
+  animation_overrides jsonb,
+  
+  -- Gameplay data
+  stats jsonb,
+  abilities text[],
+  
+  created_at timestamp
+);
+```
+
+## Animation library: The secret to 20+ animations per creature
+
+Your **comprehensive animation library** is what transforms static sprites into living creatures. This isn't an afterthought—it's core infrastructure that needs careful planning:
+
+### Library Organization (50-100 animations)
+```
+Core Movement (10 animations)
+- Idle: standing, floating, pulsing
+- Walk: biped, quadruped, slither
+- Run: sprint, gallop, hover-fast
+- Death: fade, explode, melt
+
+Basic Attacks (20 animations)
+- Melee: slash_horizontal, stab, bite, headbutt
+- Ranged: throw_arc, shoot_straight, spit
+- Magic: channel_hands, staff_cast, orb_summon
+
+Special Abilities (20 animations)
+- Area: ground_pound, explosion_ring, shockwave
+- Projectile: multi_shot, homing_orb, beam
+- Buff: power_up_glow, shield_bubble, rage_mode
+- Summon: spawn_portal, split_multiply
+
+Reactions (10 animations)
+- Hit: flinch_small, knockback_medium, stagger_large
+- Status: poisoned_pulse, frozen_shake, burning_flames
+```
+
+### Smart Animation Assignment
+The system maps creatures to animations through **multi-factor analysis**:
+
+```javascript
+class AnimationMapper {
+  assignAnimations(creatureAnalysis) {
+    const assignments = {
+      idle: this.selectIdleAnimation(creatureAnalysis),
+      walk: this.selectMovementAnimation(creatureAnalysis),
+      attack: this.selectAttackAnimation(creatureAnalysis),
+      special: this.selectSpecialAnimation(creatureAnalysis),
+      death: this.selectDeathAnimation(creatureAnalysis)
+    };
+    
+    // Ensure every slot has a fallback
+    return this.validateAndFallback(assignments);
+  }
+  
+  selectAttackAnimation(analysis) {
+    // Priority order matching
+    if (analysis.weapons.includes('sword')) return 'melee_slash';
+    if (analysis.weapons.includes('bow')) return 'ranged_shoot';
+    if (analysis.weapons.includes('staff')) return 'magic_channel';
+    if (analysis.limbs.includes('claws')) return 'melee_scratch';
+    if (analysis.features.includes('mouth')) return 'melee_bite';
+    
+    // Fallback based on body type
+    if (analysis.bodyType === 'humanoid') return 'melee_punch';
+    return 'ranged_projectile'; // Universal fallback
+  }
+}
+```
+
+### Animation Sync Architecture
+Each animation has **metadata for gameplay synchronization**:
+```json
+{
+  "animation_id": "fire_breath",
+  "duration_ms": 1200,
+  "damage_frame": 18,  // When to apply damage
+  "movement_locked": true,
+  "interruptible": false,
+  "sync_points": [
+    {"frame": 10, "event": "muzzle_flash"},
+    {"frame": 18, "event": "damage_calc"},
+    {"frame": 25, "event": "projectile_spawn"}
+  ]
+}
+```
+
+This allows the server to calculate damage at the exact frame while clients play smooth animations.
+
+## Multiplayer architecture supporting asynchronous creation
+
+The creature generation pipeline demands a **modified multiplayer architecture** that handles async operations gracefully:
+
+### Two-Phase Room System
+**Creation Rooms** (Phase 1):
+- Players join a "preparation lobby" before matchmaking
+- Draw/upload/describe up to 5 creatures
+- See real-time generation status for each creature
+- Preview animations as creatures complete
+- Chat and emote while waiting
+
+**Battle Rooms** (Phase 2):
+- Only players with completed creatures can enter
+- Standard Colyseus room with state synchronization
+- References creature data without regenerating
+
+This separation keeps the expensive generation phase from blocking battles and lets players prepare while matchmaking.
+
+### WebSocket + REST Hybrid
+While **Colyseus handles real-time battle state**, creature generation uses a REST + webhook pattern:
+
+```javascript
+// REST for generation initiation
+POST /api/creatures/generate
+{
+  player_id: "uuid",
+  input_type: "drawing",
+  input_data: "base64_image"
+}
+Response: { job_id: "uuid", estimated_time: 45 }
+
+// Webhook from PixelLab on completion
+POST /webhooks/pixellab
+{
+  job_id: "uuid",
+  sprite_url: "https://...",
+  skeleton_data: {...}
+}
+
+// WebSocket notification to player
+creationRoom.send("creatureReady", {
+  creature_id: "uuid",
+  preview_url: "https://..."
+});
+```
+
+### State Management Across Phases
+The architecture maintains creature state across both phases:
+
+```typescript
+// Creature state during generation
+interface GeneratingCreature {
+  id: string;
+  status: 'queued' | 'processing' | 'analyzing' | 'ready' | 'failed';
+  progress: number; // 0-100
+  estimatedTime: number;
+  retryCount: number;
+}
+
+// Creature state during battle
+interface BattleCreature {
+  id: string;
+  position: HexCoordinate;
+  health: number;
+  animations: {
+    current: string;
+    queue: string[];
+    frame: number;
+  };
+  abilities: AbilityState[];
+}
+```
+
+## Database architecture for creature-centric gameplay
+
+The database design centers on **efficient creature data management** with generation tracking:
+
+### Core Schema
+```sql
+-- Generation pipeline tables
+CREATE TABLE generation_jobs (
+  id uuid PRIMARY KEY,
+  player_id uuid REFERENCES players,
+  input_type text, -- 'drawing', 'upload', 'text'
+  input_data text, -- base64 or text
+  status text, -- 'pending', 'processing', 'completed', 'failed'
+  pixellab_job_id text,
+  started_at timestamp,
+  completed_at timestamp
+);
+
+CREATE TABLE animation_library (
+  id serial PRIMARY KEY,
+  name text UNIQUE,
+  category text, -- 'movement', 'attack', 'ability', 'reaction'
+  tags text[], -- ['melee', 'slash', 'humanoid']
+  spine_data_url text,
+  sprite_sheet_url text,
+  metadata jsonb -- damage_frame, duration_ms, etc
+);
+
+CREATE TABLE creatures (
+  id uuid PRIMARY KEY,
+  player_id uuid REFERENCES players,
+  generation_job_id uuid REFERENCES generation_jobs,
+  
+  -- Visual data
+  pixellab_sprite_url text,
+  pixellab_skeleton_json jsonb,
+  thumbnail_url text,
+  
+  -- Animation assignments
+  animation_mappings jsonb, -- {idle: 'float_1', attack: 'magic_2'}
+  
+  -- Gameplay data
+  creature_type text, -- 'melee_tank', 'ranged_dps', etc
+  stats jsonb,
+  abilities text[],
+  
+  -- Metadata
+  created_at timestamp,
+  last_used_at timestamp,
+  battle_count int DEFAULT 0
+);
+
+-- Optimized for quick loading during battles
+CREATE TABLE creature_battle_cache (
+  creature_id uuid PRIMARY KEY REFERENCES creatures,
+  compiled_data jsonb, -- Pre-computed animation + stat bundle
+  updated_at timestamp
+);
+```
+
+### Storage Strategy
+- **Hot storage** (Supabase): Active player creatures, current battle data
+- **Warm storage** (Supabase): Animation library, recent generations
+- **Cold storage** (Cloudflare R2): Archived creatures, old battle replays
+
+The animation library lives in **Supabase for fast queries** during battle, but animation assets (Spine files, sprite sheets) live in **Cloudflare CDN** for global distribution. This split optimizes both query performance and bandwidth costs.
+
+## Rendering pipeline optimized for animated creatures
+
+**PixiJS v8 with Spine2D** delivers the performance needed for 20+ creatures with multiple animations each:
+
+### Layered Rendering Architecture
+```javascript
+class BattleRenderer {
+  constructor() {
+    this.layers = {
+      background: new PIXI.Container(),    // Static battlefield
+      creatures: new PIXI.Container(),     // Spine animations
+      effects: new PIXI.Container(),       // Ability VFX
+      ui: new PIXI.Container()            // Health bars, selection
+    };
+    
+    // Creature layer gets special optimization
+    this.creatures.sortableChildren = true;  // Auto z-sorting
+    this.creatures.cullable = true;         // Viewport culling
+  }
+}
+```
+
+### Creature Animation Controller
+Each creature needs sophisticated animation state management:
+
+```javascript
+class CreatureAnimationController {
+  constructor(creatureData, animationLibrary) {
+    // Load base sprite with skeleton
+    this.spine = new Spine(creatureData.pixellab_skeleton);
+    
+    // Overlay animation library animations
+    this.animations = {};
+    for (const [slot, animationId] of Object.entries(creatureData.animation_mappings)) {
+      this.animations[slot] = animationLibrary.get(animationId);
+    }
+    
+    // Animation blending for smooth transitions
+    this.mixer = new AnimationMixer(this.spine);
+  }
+  
+  playAnimation(animationType, options = {}) {
+    const animation = this.animations[animationType];
+    if (!animation) {
+      console.warn(`No animation for ${animationType}, using fallback`);
+      animation = this.getFallbackAnimation(animationType);
+    }
+    
+    // Sync with server timing
+    this.mixer.play(animation, {
+      loop: options.loop || false,
+      timeScale: options.speed || 1.0,
+      onComplete: options.onComplete
+    });
+    
+    // Report sync points to game logic
+    animation.sync_points.forEach(point => {
+      setTimeout(() => {
+        this.onSyncPoint(point.event);
+      }, point.frame * 16.66); // 60fps timing
+    });
+  }
+}
+```
+
+### Performance Optimizations
+1. **Texture Atlasing**: All creature sprites in one 2048x2048 atlas
+2. **Animation LOD**: Distant creatures use simpler animations
+3. **Batch Rendering**: Group creatures by animation state
+4. **Object Pooling**: Reuse CreatureAnimationController instances
+
+The target remains **30+ FPS with 20 creatures**, achieved through:
+- Only animate on-screen creatures (cullable containers)
+- Reduce animation complexity for distant units
+- Skip frames for background creatures
+- Use GPU-accelerated Spine runtime maximum value per dollar if you're comfortable with Linux. A 2GB RAM droplet runs Node.js, PostgreSQL, Docker, and nginx on one machine, handling 50-100 concurrent connections with room to spare. But this option requires SSH access, security hardening, SSL certificate management, and manual monitoring—adding 1-2 days to your timeline. For a 3-week MVP sprint, the PaaS simplicity of Railway wins.
+
+The architecture's critical constraint is **bandwidth, not compute**. Real-time game updates at 30 messages per second per player generate significant traffic—50 concurrent players could theoretically consume 2-5TB/month. **The solution is aggressive optimization**: use binary WebSocket frames instead of JSON (50% reduction), send only state deltas not full snapshots (70% reduction), apply smart update throttling for distant units (additional 30% reduction). These optimizations reduce realistic bandwidth to 200-400GB/month, well within platform limits.
+
+**WebSocket connection limits** are non-issues for your scale. Railway has no artificial connection caps—you're limited by memory (roughly 100 connections per GB RAM). Supabase Realtime supports 200 concurrent connections on free tier, 500 on Pro, then $10 per 1,000 additional. With 10-50 players, you're nowhere near these limits. The architecture supports 10 simultaneous 5-player battles (50 connections) with 75% capacity remaining.
+
+## Security for AI-generated content
+
+User-generated creatures require **multi-layer content moderation** and security:
+
+### Pre-Generation Validation
+```javascript
+class CreatureInputValidator {
+  async validate(input) {
+    // Size limits
+    if (input.type === 'image' && input.size > 2 * 1024 * 1024) {
+      throw new Error('Image must be under 2MB');
+    }
+    
+    // Rate limiting  
+    const recentCount = await this.countRecentGenerations(input.player_id);
+    if (recentCount >= 10) {
+      throw new Error('Generation limit reached (10 per hour)');
+    }
+    
+    // Quick content check
+    if (input.type === 'text') {
+      const inappropriate = await this.checkTextContent(input.data);
+      if (inappropriate) throw new Error('Inappropriate content detected');
+    }
+    
+    return true;
+  }
+}
+```
+
+### Image Moderation Pipeline
+1. **Pre-moderation** (before PixelLab): Quick client-side checks
+2. **Post-generation** (after PixelLab): Full moderation
+3. **Community reporting**: Players flag inappropriate creatures
+
+```javascript
+class ContentModerator {
+  async moderateCreature(creatureData) {
+    // Free ModerateContent.com API
+    const scores = await fetch('https://moderatecontent.com/api/v1/moderate', {
+      method: 'POST',
+      body: JSON.stringify({
+        image_base64: creatureData.sprite_base64
+      })
+    });
+    
+    // Auto-approve if all scores < 0.3
+    if (Math.max(...Object.values(scores)) < 0.3) {
+      return { approved: true, auto: true };
+    }
+    
+    // Auto-reject if any score > 0.7
+    if (Math.max(...Object.values(scores)) > 0.7) {
+      return { approved: false, reason: 'content_violation' };
+    }
+    
+    // Queue for manual review
+    return { approved: 'pending', scores };
+  }
+}
+```
+
+### Exploit Prevention
+- **No client-side creature stats**: All abilities derived server-side
+- **Sprite-gameplay separation**: Visual changes don't affect balance
+- **Generation tracking**: Monitor patterns, flag suspicious behavior
+- **Replay validation**: Ensure all battles can be deterministically replayed
+
+## Practical implementation roadmap focused on creature pipeline
+
+### Foundation Phase: Creature Generation Core
+**PixelLab Integration**
+- Set up API authentication and webhooks
+- Build generation queue system
+- Test with diverse sample drawings
+- Create generation monitoring dashboard
+
+**Animation Library Setup**
+- Organize 50 base animations into categories
+- Build animation metadata system
+- Create fallback mapping logic
+- Test animation assignment algorithm
+
+**Basic Battle Proof-of-Concept**
+- Simple arena with 2 generated creatures
+- Play assigned animations on ability use
+- Verify animation sync across clients
+- Measure performance with multiple creatures
+
+**Deliverable**: Players can draw a creature, see it generated with PixelLab, watch it fight with appropriate animations
+
+### Integration Phase: Complete Game Loop
+**Creation Room Implementation**
+- Multi-modal input (canvas/upload/text)
+- Real-time generation status
+- Preview animations interface
+- Queue management for multiple creatures
+
+**Battle Room Integration**
+- Colyseus room management
+- Creature placement phase
+- Animation-synced combat
+- Victory conditions
+
+**Animation Expansion**
+- Add animations to reach 80+ total
+- Refine mapping algorithm
+- Implement special ability system
+- Polish visual effects
+
+**Deliverable**: Full game loop from drawing to battle with comprehensive animation library
+
+### Polish Phase: Production Quality
+**Performance & Optimization**
+- Sprite atlasing and batching
+- Animation LOD system
+- Memory profiling
+- Target 30 FPS with 20 creatures
+
+**Security & Moderation**
+- Content moderation integration
+- Rate limiting implementation
+- Database security audit
+- Performance monitoring setup
+
+**Player Experience**
+- Tutorial for first-time players
+- Improve creation feedback
+- Battle replay system
+- Social sharing features
+
+**Launch Preparation**
+- Comprehensive testing
+- Deploy to production
+- Monitor initial users
+- Rapid iteration on feedback
+
+**Deliverable**: Polished game ready for public launch
+
+## Critical Success Factors
+
+1. **Start with PixelLab integration** - This is your core differentiator
+2. **Build animation library early** - Content creation takes time
+3. **Test with real drawings** - Not just perfect test images
+4. **Monitor generation performance** - Track success rates and timing
+5. **Keep scope minimal** - 5 creature types, 10 abilities total for MVP
+
+## Room-based matchmaking with creation flow
+
+The two-phase room system accommodates the **asynchronous nature of creature generation**:
+
+### Creation Room Flow
+```javascript
+class CreationRoom extends Room {
+  onCreate(options) {
+    this.setState(new CreationRoomState());
+    this.maxCreatures = 5;
+    this.creationTimeout = 300; // 5 minutes max
+  }
+  
+  onJoin(client, options) {
+    this.state.players.set(client.sessionId, {
+      id: client.sessionId,
+      name: options.name,
+      creatures: new ArraySchema(),
+      ready: false
+    });
+  }
+  
+  async onMessage(client, type, data) {
+    if (type === 'submitCreature') {
+      // Validate input
+      const valid = await this.validateInput(data);
+      if (!valid) return;
+      
+      // Start generation job
+      const jobId = await this.generationQueue.add({
+        playerId: client.sessionId,
+        input: data
+      });
+      
+      // Track job status
+      this.state.players.get(client.sessionId).creatures.push({
+        jobId,
+        status: 'generating',
+        progress: 0
+      });
+    }
+  }
+  
+  // Called by webhook when generation completes
+  onGenerationComplete(playerId, creatureData) {
+    const player = this.state.players.get(playerId);
+    const creature = player.creatures.find(c => c.jobId === creatureData.jobId);
+    
+    creature.status = 'ready';
+    creature.data = creatureData;
+    
+    // Notify player to preview animations
+    this.send(playerId, 'creatureReady', creatureData);
+  }
+}
+```
+
+### Battle Room Integration
+```javascript
+class BattleRoom extends Room {
+  async onAuth(client, options) {
+    // Verify player has creatures
+    const creatures = await this.loadPlayerCreatures(options.playerId);
+    if (creatures.length === 0) {
+      throw new Error('No creatures available for battle');
+    }
+    return { creatures };
+  }
+  
+  onCreate() {
+    this.setState(new BattleState());
+    this.animationSync = new AnimationSyncManager();
+  }
+  
+  onJoin(client, options, auth) {
+    // Add pre-generated creatures to battle state
+    auth.creatures.forEach(creature => {
+      this.state.addCreature({
+        ...creature,
+        playerId: client.sessionId,
+        position: null // Set during placement
+      });
+    });
+  }
+}
+```
+
+This separation ensures battles start quickly with fully-generated creatures while giving players time to create during matchmaking.
+
+## Scaling strategy for creature-heavy gameplay
+
+The architecture scales by **optimizing the expensive parts** (creature generation) while keeping battles lightweight:
+
+### Phase 1: MVP Launch (0-500 users)
+- **Generation Strategy**: Focus on quality over quantity
+- **Pre-generate commons**: 50 base creatures for tutorials
+- **Player experience**: Unlimited creativity within rate limits
+- **Cache aggressively**: Same drawing = same creature
+
+Technical priorities:
+- Robust generation pipeline
+- Comprehensive animation library
+- Smooth battle performance
+- Quick iteration cycles
+
+### Phase 2: Growth (500-5,000 users)
+- **Generation Scaling**: Parallel processing queues
+- **Animation Library**: Expand to 150+ animations
+- **Smart Detection**: ML to identify similar drawings
+- **Community Features**: Share and remix creatures
+
+Infrastructure upgrades:
+- Horizontal scaling for generation workers
+- CDN distribution for global players
+- Enhanced moderation systems
+- Battle replay storage
+
+### Phase 3: Scale (5,000+ users)
+- **Hybrid Generation**: Common types pre-generated
+- **Player Studio**: Community animation contributions
+- **Advanced Features**: Creature evolution and fusion
+- **Regional Servers**: Reduce latency globally
+
+### Optimization Techniques
+
+1. **Generation Deduplication**
+   ```javascript
+   // Hash drawings to detect duplicates
+   const drawingHash = await hashImage(playerDrawing);
+   const existing = await db.findCreatureByHash(drawingHash);
+   if (existing) {
+     return cloneCreatureForPlayer(existing, playerId);
+   }
+   ```
+
+2. **Animation Reuse**
+   - Same skeleton type = share animation data
+   - Only store differences in creature metadata
+   - One animation serves hundreds of creatures
+
+3. **Progressive Enhancement**
+   - Start with 5 core animations per creature
+   - Add more as player uses creature in battles
+   - Lazy-load rare animations on demand
+
+## Conclusion: Creature-First Architecture
+
+This architecture puts **creature generation at the center** of every decision. By building around the 60-second generation time, 20+ animation requirement, and intelligent mapping system, we create a scalable platform that grows from MVP to thousands of players.
+
+The key insights:
+- **Two-phase rooms** handle async generation gracefully
+- **Animation library** multiplies value of each generation
+- **Smart caching** optimizes performance
+- **Modular architecture** allows progressive enhancement
+
+Your immediate next steps:
+1. Create PixelLab.ai account and test API
+2. Build animation library (start with 50)
+3. Implement basic generation queue
+4. Create first CreationRoom with Colyseus
+5. Test full pipeline with 10 real drawings
+
+**Drawn of War's creature generation pipeline is ambitious but achievable**. The technology exists, the architecture is sound, and the implementation path is clear. Focus on the creature experience first—everything else supports this core innovation.

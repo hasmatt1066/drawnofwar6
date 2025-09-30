@@ -1,0 +1,7 @@
+# pnpm workspace configuration for Drawn of War monorepo
+# Defines the workspace packages for frontend, backend, and shared code
+
+packages:
+  - 'frontend'
+  - 'backend'
+  - 'shared'

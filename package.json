@@ -1,0 +1,50 @@
+{
+  "name": "drawn-of-war",
+  "version": "0.1.0",
+  "description": "AI-powered creature creation and battle game",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm run --parallel --filter \"./frontend\" --filter \"./backend\" dev",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev:backend": "pnpm --filter backend dev",
+    "build": "pnpm run --filter \"./shared\" build && pnpm run --parallel --filter \"./frontend\" --filter \"./backend\" build",
+    "build:frontend": "pnpm --filter frontend build",
+    "build:backend": "pnpm --filter backend build",
+    "test": "pnpm run --recursive test",
+    "test:unit": "pnpm run --recursive test:unit",
+    "test:integration": "pnpm run --recursive test:integration",
+    "lint": "pnpm run --recursive lint",
+    "lint:fix": "pnpm run --recursive lint:fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "type-check": "pnpm run --recursive type-check",
+    "clean": "pnpm run --recursive clean && rm -rf node_modules",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "firebase:emulators": "firebase emulators:start"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3"
+  },
+  "keywords": [
+    "game",
+    "ai",
+    "pixel-art",
+    "creatures",
+    "battle"
+  ],
+  "author": "Drawn of War Team",
+  "license": "UNLICENSED"
+}
