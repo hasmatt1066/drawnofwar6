@@ -1,0 +1,17 @@
+{
+  "animationId": "stun",
+  "action": "stun stars circling",
+  "description": "status effect icon on transparent background, no character",
+  "frameCount": 4,
+  "costUsd": 0,
+  "spriteCostUsd": 0,
+  "animationCostUsd": 0,
+  "generatedAt": "2025-10-02T22:08:27.398Z",
+  "baseSprite": "base-sprite.png",
+  "frames": [
+    "frame-0.png",
+    "frame-1.png",
+    "frame-2.png",
+    "frame-3.png"
+  ]
+}

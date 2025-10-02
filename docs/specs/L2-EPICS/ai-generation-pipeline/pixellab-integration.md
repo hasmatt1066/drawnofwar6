@@ -2,9 +2,9 @@
 
 **Epic ID**: `ai-gen-pixellab`
 **Parent Theme**: AI-Powered Asset Generation (L1)
-**Status**: IN PROGRESS (2/14 features complete - PixelLab API Client ✅, Generation Queue ✅)
-**Version**: 1.1
-**Last Updated**: 2025-09-30
+**Status**: IN PROGRESS (3/15 features complete - PixelLab API Client ✅, Generation Queue ✅, Animation Library ✅)
+**Version**: 1.2
+**Last Updated**: 2025-10-02
 
 ---
 
@@ -189,24 +189,66 @@ This epic breaks down into the following implementable features:
 
 ---
 
-#### 2. **Prompt Builder System** (`prompt-builder`)
-**Description**: UI and logic for constructing structured prompts that yield consistent, high-quality results.
+#### 2. **Prompt Builder System (Multi-Modal)** (`prompt-builder`)
+**Status**: IN DESIGN (2025-10-01) - Specification revised for multi-modal architecture
+**Estimated Effort**: 68-92 hours (was 32-40 hours for text-only)
+**Documentation**: `/docs/specs/L3-FEATURES/ai-generation-pipeline/prompt-builder.md`
+
+**Description**: Multi-modal creature creation system supporting THREE input methods: drawing canvas, text description, and image upload. Uses dual-API architecture (Claude Vision + PixelLab.ai) to analyze visual inputs, assign game attributes, and generate pixel art sprites while preserving the user's drawing style.
 
 **Key Capabilities**:
-- Parameter selection UI (type, style, size, action)
-- Natural language description input
-- Prompt preview and validation
-- Template library (common unit types, effects)
-- Advanced options (color palette, detail level, theme)
+- **Multi-Modal Input System**:
+  - 🎨 Drawing Canvas (HTML5 Canvas with brush tools, colors, undo/redo)
+  - 📝 Text Description (500 character input with template matching)
+  - 📤 Image Upload (drag-and-drop, PNG/JPG, 5MB max)
+- **AI-Powered Analysis** (Claude Vision API):
+  - Analyzes drawings/images to extract creature concept
+  - Assigns game attributes (stats, abilities)
+  - Suggests 20+ animations based on visual features
+  - Identifies style characteristics for preservation
+- **Style Preservation System**:
+  - PixelLab generates sprites matching user's drawing style
+  - Validation compares original vs generated (color + shape similarity)
+  - Regeneration option if style not preserved (60% threshold)
+- **Dual-Processing Architecture**:
+  - Text-only path: Rule-based templates (50+), free, fast (<100ms)
+  - Visual path: Claude Vision + PixelLab parallel processing ($0.01-0.03/generation)
+- **Animation Mapping**:
+  - Maps Claude's suggestions to 50-100 animation library
+  - Ensures minimum 20 animations per creature
+  - Covers base animations + ability-specific animations
 
 **User Flow**:
-1. Select asset type (unit/ability/effect/terrain)
-2. Choose visual style (fantasy/sci-fi/modern/pixel art)
-3. Set dimensions (16x16, 32x32, 64x64, custom)
-4. Pick base animation set (idle, walk, attack, death)
-5. Write description (free text with suggestions)
-6. Preview structured prompt
-7. Submit for generation
+1. Choose input method (Draw It / Describe It / Upload It)
+2. Create creature:
+   - **Draw**: Use canvas tools to draw creature (512x512px)
+   - **Describe**: Write text description (500 chars max)
+   - **Upload**: Drag-and-drop or browse for image file
+3. Submit for generation
+4. Parallel processing:
+   - Claude Vision analyzes input → assigns attributes/animations
+   - PixelLab generates sprite → preserves style
+5. Style validation (if drawing/upload input)
+6. Preview animated creature with 20+ animations
+7. Accept or regenerate if style not preserved
+
+**Technical Architecture**:
+- Frontend: Drawing canvas (react-canvas-draw), image upload (React Dropzone), text input
+- Backend: Input normalization → Claude Vision Service → Animation Mapper → Style Validator
+- APIs: Claude Vision API (Anthropic), PixelLab.ai API
+- Cost Model: Text input $0, visual input $0.01-0.03 per generation
+
+**Critical Requirements** (from user confirmation):
+- ✅ "We need drawing/image/text for MVP" - All three input methods are MVP
+- ✅ "Claude API will analyze submission" - Claude Vision integration required
+- ✅ "User needs to feel like their drawing matters" - Style preservation critical
+- ✅ "20+ animations per creature" - Animation mapper ensures comprehensive sets
+
+**Open Questions**:
+- Claude API budget approval (BLOCKER)
+- Claude model selection (Sonnet vs Opus vs Haiku)
+- Style validation threshold (60% recommended)
+- Rate limiting strategy (10/hour per user recommended)
 
 ---
 
@@ -306,7 +348,45 @@ This epic breaks down into the following implementable features:
 
 ### Animation System
 
-#### 7. **Animation Config Generator** (`animation-config`)
+#### 7. **Animation Library** (`animation-library`) - ✅ MVP COMPLETE
+**Status**: MVP COMPLETE (2025-10-02) - Isolated effects approach implemented, proof-of-concept validated
+**Implementation**: `/backend/src/services/animations/library.ts`, `/backend/src/scripts/generate-library-animations.ts`, `/backend/src/api/routes/library-animations.routes.ts`, `/frontend/src/components/SpellCastDemo/`
+**Documentation**: `/docs/specs/L3-FEATURES/ai-generation-pipeline/animation-library.md`
+
+**Description**: Pre-generated library of 55 reusable animation effects (isolated visual effects only) that overlay on player-generated creatures, enabling rich combat and movement animations without per-creature generation costs.
+
+**Key Capabilities**:
+- ✅ 55 pre-generated isolated animation effects (no character bodies)
+- ✅ Two-step PixelLab generation (base sprite + animation)
+- ✅ Organized by category (idle, locomotion, combat, abilities, reactions)
+- ✅ File storage at `/assets/library-animations/{animationId}/`
+- ✅ REST API endpoints for serving animations to frontend
+- ✅ Admin-only AnimationDebugger component for reviewing animations
+- ✅ On-demand loading with caching
+- ✅ **SpellCastDemo proof-of-concept** - Validates effect compositing with complete cast-to-projectile-to-hit sequence
+
+**Implementation Approach**:
+- **Isolated Effects**: Generate visual effects only (sword slash arcs, fire particles, shield impacts) that overlay on any creature
+- **Universal Application**: Single effect works on any creature regardless of size/shape/style
+- **Cost Savings**: Generate once ($2.20 total), use thousands of times (vs $0.80 per creature for full animation set)
+- **Effect Compositing**: CSS `mix-blend-mode: screen` validated for magical glow effects (proof-of-concept complete)
+
+**Technical Details**:
+- Effect descriptions emphasize "no character body, transparent background"
+- 4 frames per animation at 64x64px
+- Base64-encoded PNG frames served via API
+- Metadata includes action, description, cost, generation timestamp
+
+**Current Status**:
+- ✅ All 55 animations generated successfully (100% success rate, $0.00 cost)
+- ✅ AI-driven smart assignment system documented (variable 6-18 animations per creature)
+- ✅ Effect Compositing System documentation complete
+- ✅ **Proof-of-concept complete** - SpellCastDemo validates compositing strategy with wizard creature
+- Next: Review all 55 effects visually, iterate on problem animations, implement full game engine integration
+
+---
+
+#### 8. **Animation Config Generator** (`animation-config`)
 **Description**: Converts PixelLab sprite sheets into Phaser-compatible animation configurations.
 
 **Key Capabilities**:
@@ -336,7 +416,7 @@ This epic breaks down into the following implementable features:
 
 ---
 
-#### 8. **Phaser Animation Loader** (`phaser-animation-loader`)
+#### 9. **Phaser Animation Loader** (`phaser-animation-loader`)
 **Description**: Runtime system for loading generated assets into Phaser and registering animations.
 
 **Key Capabilities**:
@@ -356,7 +436,7 @@ This epic breaks down into the following implementable features:
 
 ---
 
-#### 9. **Effect Spawning System** (`effect-spawner`)
+#### 10. **Effect Spawning System** (`effect-spawner`)
 **Description**: Runtime system for spawning projectiles, impacts, and particle effects synchronized with sprite animations.
 
 **Key Capabilities**:
@@ -396,7 +476,7 @@ animation.on('animationupdate-attack', (animation, frame) => {
 
 ### User Experience
 
-#### 10. **Asset Creation Modal** (`asset-creation-modal`)
+#### 11. **Asset Creation Modal** (`asset-creation-modal`)
 **Description**: Polished UI for requesting new asset generation with guided workflow and real-time feedback.
 
 **User Flow**:
@@ -421,7 +501,7 @@ animation.on('animationupdate-attack', (animation, frame) => {
 
 ---
 
-#### 11. **Generation Progress Tracker** (`progress-tracker`)
+#### 12. **Generation Progress Tracker** (`progress-tracker`)
 **Description**: Real-time UI showing status of all pending/active generation jobs with notifications.
 
 **Key Capabilities**:
@@ -441,7 +521,7 @@ animation.on('animationupdate-attack', (animation, frame) => {
 
 ---
 
-#### 12. **Asset Preview & Editor** (`asset-preview-editor`)
+#### 13. **Asset Preview & Editor** (`asset-preview-editor`)
 **Description**: Interactive preview of generated sprites with playback controls and basic editing.
 
 **Key Capabilities**:
@@ -469,7 +549,7 @@ animation.on('animationupdate-attack', (animation, frame) => {
 
 ### System Management
 
-#### 13. **Quota & Usage Monitoring** (`quota-monitoring`)
+#### 14. **Quota & Usage Monitoring** (`quota-monitoring`)
 **Description**: Track and display PixelLab API usage, credits, and rate limits with alerts.
 
 **Key Capabilities**:
@@ -487,7 +567,7 @@ animation.on('animationupdate-attack', (animation, frame) => {
 
 ---
 
-#### 14. **Error Handling & Fallbacks** (`error-handling`)
+#### 15. **Error Handling & Fallbacks** (`error-handling`)
 **Description**: Comprehensive error management for API failures, invalid results, and edge cases.
 
 **Error Scenarios**:

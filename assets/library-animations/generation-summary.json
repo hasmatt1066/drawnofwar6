@@ -1,0 +1,394 @@
+{
+  "generatedAt": "2025-10-02T22:09:31.665Z",
+  "totalAnimations": 55,
+  "successful": 55,
+  "failed": 0,
+  "totalCost": 0,
+  "results": [
+    {
+      "animationId": "idle_default",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/idle_default"
+    },
+    {
+      "animationId": "idle_breathing",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/idle_breathing"
+    },
+    {
+      "animationId": "idle_alert",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/idle_alert"
+    },
+    {
+      "animationId": "idle_tired",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/idle_tired"
+    },
+    {
+      "animationId": "idle_flying",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/idle_flying"
+    },
+    {
+      "animationId": "walk_default",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/walk_default"
+    },
+    {
+      "animationId": "run_default",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/run_default"
+    },
+    {
+      "animationId": "fly_default",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/fly_default"
+    },
+    {
+      "animationId": "glide_default",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/glide_default"
+    },
+    {
+      "animationId": "swim_default",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/swim_default"
+    },
+    {
+      "animationId": "jump_default",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/jump_default"
+    },
+    {
+      "animationId": "land_default",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/land_default"
+    },
+    {
+      "animationId": "dash_default",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/dash_default"
+    },
+    {
+      "animationId": "crawl_default",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/crawl_default"
+    },
+    {
+      "animationId": "turn_left",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/turn_left"
+    },
+    {
+      "animationId": "turn_right",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/turn_right"
+    },
+    {
+      "animationId": "teleport",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/teleport"
+    },
+    {
+      "animationId": "attack_melee_default",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/attack_melee_default"
+    },
+    {
+      "animationId": "attack_melee_sword",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/attack_melee_sword"
+    },
+    {
+      "animationId": "attack_melee_punch",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/attack_melee_punch"
+    },
+    {
+      "animationId": "attack_melee_claw",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/attack_melee_claw"
+    },
+    {
+      "animationId": "attack_melee_bite",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/attack_melee_bite"
+    },
+    {
+      "animationId": "attack_ranged_default",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/attack_ranged_default"
+    },
+    {
+      "animationId": "attack_ranged_bow",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/attack_ranged_bow"
+    },
+    {
+      "animationId": "attack_ranged_throw",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/attack_ranged_throw"
+    },
+    {
+      "animationId": "defend_default",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/defend_default"
+    },
+    {
+      "animationId": "defend_shield",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/defend_shield"
+    },
+    {
+      "animationId": "dodge_default",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/dodge_default"
+    },
+    {
+      "animationId": "roll_default",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/roll_default"
+    },
+    {
+      "animationId": "parry_default",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/parry_default"
+    },
+    {
+      "animationId": "counter_attack",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/counter_attack"
+    },
+    {
+      "animationId": "charge_attack",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/charge_attack"
+    },
+    {
+      "animationId": "cast_spell_default",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/cast_spell_default"
+    },
+    {
+      "animationId": "cast_fire_spell",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/cast_fire_spell"
+    },
+    {
+      "animationId": "cast_ice_spell",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/cast_ice_spell"
+    },
+    {
+      "animationId": "cast_lightning_spell",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/cast_lightning_spell"
+    },
+    {
+      "animationId": "heal_spell",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/heal_spell"
+    },
+    {
+      "animationId": "buff_spell",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/buff_spell"
+    },
+    {
+      "animationId": "breathe_fire",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/breathe_fire"
+    },
+    {
+      "animationId": "roar",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/roar"
+    },
+    {
+      "animationId": "tail_whip",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/tail_whip"
+    },
+    {
+      "animationId": "wing_attack",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/wing_attack"
+    },
+    {
+      "animationId": "stomp",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/stomp"
+    },
+    {
+      "animationId": "summon",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/summon"
+    },
+    {
+      "animationId": "special_move_1",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/special_move_1"
+    },
+    {
+      "animationId": "special_move_2",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/special_move_2"
+    },
+    {
+      "animationId": "stealth",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/stealth"
+    },
+    {
+      "animationId": "hit_default",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/hit_default"
+    },
+    {
+      "animationId": "death_default",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/death_default"
+    },
+    {
+      "animationId": "celebrate",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/celebrate"
+    },
+    {
+      "animationId": "taunt",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/taunt"
+    },
+    {
+      "animationId": "scared",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/scared"
+    },
+    {
+      "animationId": "stun",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/stun"
+    },
+    {
+      "animationId": "knockback",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/knockback"
+    },
+    {
+      "animationId": "revive",
+      "success": true,
+      "framesGenerated": 4,
+      "costUsd": 0,
+      "filePath": "/mnt/c/Users/mhast/Desktop/drawnofwar6/assets/library-animations/revive"
+    }
+  ]
+}

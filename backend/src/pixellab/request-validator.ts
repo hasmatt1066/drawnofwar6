@@ -27,11 +27,6 @@ export type OutlineStyle = 'single color black outline' | 'single color outline'
 export type ViewAngle = 'low top-down' | 'high top-down' | 'side';
 
 /**
- * Number of directional views (4 or 8)
- */
-export type DirectionCount = 4 | 8;
-
-/**
  * Generation request parameters
  */
 export interface GenerationRequest {
@@ -53,17 +48,14 @@ export interface GenerationRequest {
   /** Camera angle (optional) */
   view?: ViewAngle;
 
-  /** Number of directional views (optional, default 8) */
-  nDirections?: DirectionCount;
-
-  /** AI creative freedom 100-999 (optional) */
-  aiFreedom?: number;
-
   /** Text guidance scale 1.0-20.0 (optional) */
   textGuidanceScale?: number;
 
   /** Base64 PNG init image (optional) */
   initImage?: string;
+
+  /** Generate with transparent background (optional, default false) */
+  noBackground?: boolean;
 }
 
 /**
@@ -107,17 +99,6 @@ export class RequestValidator {
   private static readonly VALID_VIEWS: readonly ViewAngle[] = ['low top-down', 'high top-down', 'side'];
 
   /**
-   * Valid direction counts
-   */
-  private static readonly VALID_DIRECTIONS: readonly DirectionCount[] = [4, 8];
-
-  /**
-   * AI freedom range
-   */
-  private static readonly AI_FREEDOM_MIN = 100;
-  private static readonly AI_FREEDOM_MAX = 999;
-
-  /**
    * Text guidance scale range
    */
   private static readonly TEXT_GUIDANCE_MIN = 1.0;
@@ -151,14 +132,6 @@ export class RequestValidator {
 
     if (request.view !== undefined) {
       this.validateView(request.view);
-    }
-
-    if (request.nDirections !== undefined) {
-      this.validateDirections(request.nDirections);
-    }
-
-    if (request.aiFreedom !== undefined) {
-      this.validateAiFreedom(request.aiFreedom);
     }
 
     if (request.textGuidanceScale !== undefined) {
@@ -259,40 +232,6 @@ export class RequestValidator {
       throw new PixelLabError({
         type: PixelLabErrorType.INVALID_REQUEST,
         message: `View must be one of: ${this.VALID_VIEWS.join(', ')}`,
-        retryable: false,
-      });
-    }
-  }
-
-  /**
-   * Validate direction count
-   */
-  private static validateDirections(directions: any): void {
-    if (!this.VALID_DIRECTIONS.includes(directions)) {
-      throw new PixelLabError({
-        type: PixelLabErrorType.INVALID_REQUEST,
-        message: `Directions must be 4 or 8`,
-        retryable: false,
-      });
-    }
-  }
-
-  /**
-   * Validate AI freedom parameter
-   */
-  private static validateAiFreedom(aiFreedom: any): void {
-    if (typeof aiFreedom !== 'number') {
-      throw new PixelLabError({
-        type: PixelLabErrorType.INVALID_REQUEST,
-        message: 'AI freedom must be a number',
-        retryable: false,
-      });
-    }
-
-    if (aiFreedom < this.AI_FREEDOM_MIN || aiFreedom > this.AI_FREEDOM_MAX) {
-      throw new PixelLabError({
-        type: PixelLabErrorType.INVALID_REQUEST,
-        message: `AI freedom must be between ${this.AI_FREEDOM_MIN} and ${this.AI_FREEDOM_MAX}`,
         retryable: false,
       });
     }

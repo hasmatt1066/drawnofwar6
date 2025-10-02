@@ -2,14 +2,14 @@ import { HttpClient } from './http-client';
 import { GenerationRequest, RequestValidator } from './request-validator';
 
 /**
- * Job submission response from PixelLab API
+ * Generation response from PixelLab API
  */
-export interface JobSubmissionResponse {
-  /** Character ID for polling status */
-  characterId: string;
+export interface GenerationResponse {
+  /** Base64-encoded generated sprite image */
+  imageBase64: string;
 
-  /** Optional character name */
-  name: string | null;
+  /** Cost in USD */
+  costUsd: number;
 }
 
 /**
@@ -17,15 +17,19 @@ export interface JobSubmissionResponse {
  */
 interface ApiGenerationPayload {
   description: string;
-  size: number;
+  image_size: {
+    width: number;
+    height: number;
+  };
   detail?: string;
   shading?: string;
   outline?: string;
   view?: string;
-  n_directions?: number;
-  ai_freedom?: number;
+  direction?: string;
   text_guidance_scale?: number;
   init_image?: string;
+  init_image_strength?: number;
+  no_background?: boolean;
 }
 
 /**
@@ -38,29 +42,35 @@ export class SpriteGenerator {
   constructor(private readonly httpClient: HttpClient) {}
 
   /**
-   * Submit sprite generation request
+   * Submit sprite generation request and get result immediately
    *
    * @param request - Generation parameters
-   * @returns Job submission response with character ID
-   * @throws {PixelLabError} If request is invalid or submission fails
+   * @returns Generation response with base64 image
+   * @throws {PixelLabError} If request is invalid or generation fails
    */
-  public async submitGeneration(request: GenerationRequest): Promise<JobSubmissionResponse> {
+  public async submitGeneration(request: GenerationRequest): Promise<GenerationResponse> {
     // Validate request parameters
     RequestValidator.validateGenerationRequest(request);
 
     // Convert to API payload format (camelCase -> snake_case)
     const payload = this.buildApiPayload(request);
 
-    // Submit request to API
+    // Submit request to API (synchronous - returns image directly)
     const response = await this.httpClient.axiosInstance.post<{
-      character_id: string;
-      name: string | null;
-    }>('/v1/characters', payload);
+      usage: {
+        type: 'usd';
+        usd: number;
+      };
+      image: {
+        type: 'base64';
+        base64: string;
+      };
+    }>('/generate-image-pixflux', payload);
 
     // Parse and return response
     return {
-      characterId: response.data.character_id,
-      name: response.data.name,
+      imageBase64: response.data.image.base64,
+      costUsd: response.data.usage.usd,
     };
   }
 
@@ -71,7 +81,10 @@ export class SpriteGenerator {
   private buildApiPayload(request: GenerationRequest): ApiGenerationPayload {
     const payload: ApiGenerationPayload = {
       description: request.description,
-      size: request.size,
+      image_size: {
+        width: request.size,
+        height: request.size
+      },
     };
 
     // Add optional fields if present
@@ -91,20 +104,18 @@ export class SpriteGenerator {
       payload.view = request.view;
     }
 
-    if (request.nDirections !== undefined) {
-      payload.n_directions = request.nDirections;
-    }
-
-    if (request.aiFreedom !== undefined) {
-      payload.ai_freedom = request.aiFreedom;
-    }
-
     if (request.textGuidanceScale !== undefined) {
       payload.text_guidance_scale = request.textGuidanceScale;
     }
 
     if (request.initImage !== undefined) {
       payload.init_image = request.initImage;
+      // When using init_image, set strength (default 300 in API)
+      payload.init_image_strength = 300;
+    }
+
+    if (request.noBackground !== undefined) {
+      payload.no_background = request.noBackground;
     }
 
     return payload;

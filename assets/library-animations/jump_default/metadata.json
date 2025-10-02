@@ -1,0 +1,17 @@
+{
+  "animationId": "jump_default",
+  "action": "jump dust cloud",
+  "description": "motion effect element on transparent background, no character",
+  "frameCount": 4,
+  "costUsd": 0,
+  "spriteCostUsd": 0,
+  "animationCostUsd": 0,
+  "generatedAt": "2025-10-02T21:45:48.257Z",
+  "baseSprite": "base-sprite.png",
+  "frames": [
+    "frame-0.png",
+    "frame-1.png",
+    "frame-2.png",
+    "frame-3.png"
+  ]
+}

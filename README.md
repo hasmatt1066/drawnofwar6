@@ -4,7 +4,11 @@ AI-powered creature creation and battle game built with React, Node.js, and Pixe
 
 ## Project Overview
 
-Drawn of War is a creative game where players describe creatures using natural language, which are then generated as pixel art characters using AI. These creatures can be animated and battled against each other in a turn-based combat system.
+Drawn of War is a creative game where players describe creatures using natural language, which are then generated as animated pixel art characters using AI. The core text-to-animated-sprite generation pipeline is **fully functional** and operational.
+
+**Status**: Core generation pipeline working. Text descriptions generate 64x64 animated sprites with 4-frame walk cycles in ~27 seconds.
+
+See `PROJECT_STATUS.md` for detailed status and `GETTING_STARTED.md` for quick setup.
 
 ## Architecture
 
@@ -42,8 +46,9 @@ This is a monorepo managed with pnpm workspaces, containing three packages:
 
 - Node.js >= 18.0.0
 - pnpm >= 8.0.0
-- Docker and Docker Compose (for Redis)
-- Firebase project (or use emulator for local dev)
+- Docker (for Redis)
+- PixelLab API key (https://pixellab.ai/)
+- (Optional) Claude API key for future features
 
 ## Getting Started
 
@@ -62,9 +67,9 @@ cp backend/.env.example backend/.env
 ```
 
 Required environment variables:
-- `PIXELLAB_API_KEY` - Your PixelLab API key
-- `FIREBASE_PROJECT_ID` - Firebase project ID
-- `REDIS_HOST` and `REDIS_PORT` - Redis connection details
+- `PIXELLAB_API_KEY` - Your PixelLab API key (required)
+- `REDIS_HOST` and `REDIS_PORT` - Redis connection details (default: localhost:6379)
+- `ANTHROPIC_API_KEY` - Claude API key (optional for now)
 
 #### Frontend Environment
 ```bash
@@ -72,20 +77,14 @@ cp frontend/.env.example frontend/.env.local
 # Edit frontend/.env.local with your configuration
 ```
 
-### 3. Start Infrastructure Services
+### 3. Start Redis
 
 ```bash
-# Start Redis using Docker Compose
-pnpm docker:up
+# Start Redis container
+docker run -d -p 6379:6379 --name redis-dev redis:alpine
 ```
 
-### 4. Start Firebase Emulators (Optional for Local Development)
-
-```bash
-pnpm firebase:emulators
-```
-
-### 5. Run Development Servers
+### 4. Run Development Servers
 
 ```bash
 # Start both frontend and backend in development mode

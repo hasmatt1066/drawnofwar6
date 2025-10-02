@@ -37,7 +37,7 @@ export interface TimeoutConfig {
  * Contains detailed timing information for debugging and metrics.
  */
 export class TimeoutError extends Error {
-  public readonly name = 'TimeoutError';
+  public override readonly name = 'TimeoutError';
   public readonly jobId: string;
   public readonly elapsedTime: number;
   public readonly timeoutDuration: number;

@@ -1,0 +1,415 @@
+/* Generation Progress Component Styles */
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  padding: 2rem;
+}
+
+.progressCard,
+.successCard,
+.errorCard,
+.loadingCard {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 3rem;
+  max-width: 800px;
+  width: 100%;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
+.statusText {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0 0 2rem 0;
+  text-align: center;
+}
+
+/* Progress Bar */
+.progressBar {
+  width: 100%;
+  height: 32px;
+  background: #f0f0f0;
+  border-radius: 16px;
+  overflow: hidden;
+  margin: 2rem 0;
+  position: relative;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%);
+  transition: width 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 12px;
+}
+
+.progressText {
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+/* Step Indicators */
+.steps {
+  display: flex;
+  justify-content: space-between;
+  margin: 2rem 0;
+  gap: 0.5rem;
+}
+
+.step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stepIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+}
+
+.stepActive .stepIcon {
+  background: #4CAF50;
+  color: white;
+}
+
+.stepCurrent .stepIcon {
+  background: #2196F3;
+  color: white;
+  animation: pulse 1.5s infinite;
+}
+
+.stepLabel {
+  font-size: 0.75rem;
+  color: #999;
+  text-align: center;
+}
+
+.stepActive .stepLabel {
+  color: #4CAF50;
+  font-weight: 600;
+}
+
+.stepCurrent .stepLabel {
+  color: #2196F3;
+  font-weight: 700;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Info Panel */
+.infoPanel {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+}
+
+.infoText {
+  margin: 0.5rem 0;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+/* Loading State */
+.loadingCard {
+  text-align: center;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #f0f0f0;
+  border-top-color: #2196F3;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loadingText {
+  color: #666;
+  font-size: 1rem;
+}
+
+/* Success State */
+.successCard {
+  text-align: center;
+}
+
+.successIcon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.successTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4CAF50;
+  margin: 0 0 2rem 0;
+}
+
+/* Error State */
+.errorCard {
+  text-align: center;
+}
+
+.errorIcon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.errorTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #f44336;
+  margin: 0 0 1rem 0;
+}
+
+.errorMessage {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0 0 2rem 0;
+}
+
+.errorActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+/* Buttons */
+.primaryButton,
+.retryButton {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: #4CAF50;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.primaryButton:hover,
+.retryButton:hover {
+  background: #45a049;
+}
+
+.secondaryButton,
+.homeButton {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #666;
+  background: #f0f0f0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.secondaryButton:hover,
+.homeButton:hover {
+  background: #e0e0e0;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+/* Result Display */
+.resultPanel {
+  text-align: left;
+  margin: 2rem 0;
+}
+
+.resultContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.resultSection {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.resultSectionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 1rem 0;
+}
+
+.resultGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.resultItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.resultLabel {
+  font-size: 0.875rem;
+  color: #999;
+  font-weight: 500;
+}
+
+.resultValue {
+  font-size: 1rem;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+/* Stats */
+.statsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.statBar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.statHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.statValue {
+  font-size: 0.875rem;
+  color: #1a1a1a;
+  font-weight: 700;
+}
+
+.statTrack {
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.statFill {
+  height: 100%;
+  background: linear-gradient(90deg, #2196F3 0%, #03A9F4 100%);
+  transition: width 0.3s ease;
+}
+
+/* Animations */
+.animationCount {
+  font-size: 0.875rem;
+  color: #666;
+  margin: 0 0 1rem 0;
+}
+
+.animationList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.animationBadge {
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  color: #666;
+  white-space: nowrap;
+}
+
+/* Style Validation */
+.styleValidation {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.styleScore {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.scoreLabel {
+  font-size: 1rem;
+  color: #666;
+}
+
+.scoreValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.scorePassed {
+  color: #4CAF50;
+}
+
+.scoreFailed {
+  color: #f44336;
+}
+
+.styleFeedback {
+  font-size: 0.875rem;
+  color: #666;
+  margin: 0;
+}
+
+.processingTime {
+  font-size: 0.875rem;
+  color: #999;
+  text-align: center;
+  margin: 0;
+}

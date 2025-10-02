@@ -1,0 +1,17 @@
+{
+  "animationId": "swim_default",
+  "action": "water ripples and bubbles",
+  "description": "motion effect element on transparent background, no character",
+  "frameCount": 4,
+  "costUsd": 0,
+  "spriteCostUsd": 0,
+  "animationCostUsd": 0,
+  "generatedAt": "2025-10-02T21:45:19.895Z",
+  "baseSprite": "base-sprite.png",
+  "frames": [
+    "frame-0.png",
+    "frame-1.png",
+    "frame-2.png",
+    "frame-3.png"
+  ]
+}

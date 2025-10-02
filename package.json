@@ -36,6 +36,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.29.1",
     "prettier": "^3.2.5",
+    "puppeteer": "24.23.0",
     "typescript": "^5.3.3"
   },
   "keywords": [
@@ -49,12 +50,20 @@
   "license": "UNLICENSED",
   "dependencies": {
     "@esbuild/linux-x64": "0.25.10",
+    "@esbuild/win32-x64": "0.25.10",
+    "@img/sharp-win32-x64": "0.34.4",
     "@rollup/rollup-linux-x64-gnu": "4.52.3",
-    "esbuild": "0.25.10"
+    "@rollup/rollup-win32-x64-msvc": "4.52.3",
+    "esbuild": "0.25.10",
+    "lru-cache": "^9.1.2"
   },
   "pnpm": {
     "overrides": {
       "esbuild": "0.25.10"
-    }
+    },
+    "ignoredBuiltDependencies": [
+      "esbuild",
+      "sharp"
+    ]
   }
 }

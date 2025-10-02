@@ -1,0 +1,237 @@
+/* Animation Player Styles */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Viewport */
+.viewport {
+  position: relative;
+  width: 256px;
+  height: 256px;
+  margin: 0 auto;
+  background: #f5f5f5;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.sprite {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.placeholder {
+  color: #999;
+  text-align: center;
+}
+
+/* Frame Counter */
+.frameCounter {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Library Notice */
+.libraryNotice {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #667eea;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.libraryIcon {
+  font-size: 14px;
+}
+
+.libraryText {
+  font-size: 11px;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.playButton {
+  padding: 0.5rem 1.5rem;
+  background: white;
+  color: #667eea;
+  border: 2px solid white;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.playButton:hover:not(:disabled) {
+  background: #667eea;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.playButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Selector Section */
+.selectorSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.selectorLabel {
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.selector {
+  padding: 0.75rem;
+  background: white;
+  border: 2px solid white;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.selector:hover {
+  border-color: #764ba2;
+}
+
+.selector:focus {
+  outline: none;
+  border-color: #764ba2;
+  box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.2);
+}
+
+.selector optgroup {
+  font-weight: 700;
+  color: #667eea;
+  padding: 0.5rem 0;
+}
+
+.selector option {
+  padding: 0.5rem;
+  font-weight: 500;
+}
+
+/* Info Section */
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.infoLabel {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.infoValue {
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.statusAnimated {
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.statusLibrary {
+  color: #fbbf24;
+  font-weight: 700;
+}
+
+/* Help Text */
+.helpText {
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.helpText p {
+  margin: 0;
+}
+
+.helpText strong {
+  color: white;
+  font-weight: 700;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .container {
+    padding: 0.75rem;
+  }
+
+  .viewport {
+    width: 200px;
+    height: 200px;
+  }
+
+  .sprite {
+    width: 200px;
+    height: 200px;
+  }
+
+  .selectorLabel {
+    font-size: 13px;
+  }
+
+  .selector {
+    font-size: 13px;
+    padding: 0.625rem;
+  }
+
+  .helpText {
+    font-size: 11px;
+  }
+}

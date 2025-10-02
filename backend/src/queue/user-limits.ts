@@ -62,7 +62,6 @@ interface CacheEntry {
  */
 export class UserLimits {
   private queueManager: QueueManager;
-  private jobStatusTracker: JobStatusTracker;
   private config: UserLimitsConfig;
   private logger: QueueLogger;
   private cache: Map<string, CacheEntry>;
@@ -71,18 +70,17 @@ export class UserLimits {
    * Creates a new UserLimits instance
    *
    * @param queueManager - QueueManager instance for accessing BullMQ queue
-   * @param jobStatusTracker - JobStatusTracker for querying job status
+   * @param _jobStatusTracker - JobStatusTracker for querying job status (reserved for future use)
    * @param config - User limits configuration
    * @param logger - Logger instance for structured logging
    */
   constructor(
     queueManager: QueueManager,
-    jobStatusTracker: JobStatusTracker,
+    _jobStatusTracker: JobStatusTracker,
     config: UserLimitsConfig,
     logger: QueueLogger
   ) {
     this.queueManager = queueManager;
-    this.jobStatusTracker = jobStatusTracker;
     this.config = config;
     this.logger = logger;
     this.cache = new Map<string, CacheEntry>();

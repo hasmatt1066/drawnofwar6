@@ -6,6 +6,14 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
 
+  // Vitest configuration
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
+    css: true,
+  },
+
   // Path aliases matching tsconfig.json
   resolve: {
     alias: {

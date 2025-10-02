@@ -1,0 +1,96 @@
+/**
+ * Text Prompt Input Styles
+ */
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.label {
+  display: block;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333333;
+  margin-bottom: 12px;
+}
+
+.textarea {
+  width: 100%;
+  padding: 16px;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333333;
+  background-color: #ffffff;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  resize: vertical;
+  min-height: 150px;
+  transition: border-color 0.2s ease;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.textarea::placeholder {
+  color: #999999;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.counter {
+  font-size: 13px;
+  color: #666666;
+}
+
+.counterWarning {
+  color: #f44336;
+  font-weight: 500;
+}
+
+.clearButton {
+  padding: 6px 16px;
+  font-size: 13px;
+  background-color: #f5f5f5;
+  color: #666666;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clearButton:hover {
+  background-color: #eeeeee;
+  color: #333333;
+}
+
+.hint {
+  margin-top: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #666666;
+  background-color: #f0f7ff;
+  border-left: 3px solid #4a90e2;
+  border-radius: 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .textarea {
+    font-size: 14px;
+    padding: 12px;
+  }
+
+  .label {
+    font-size: 15px;
+  }
+}

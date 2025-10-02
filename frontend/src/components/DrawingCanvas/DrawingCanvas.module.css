@@ -1,0 +1,231 @@
+/**
+ * Drawing Canvas Styles
+ *
+ * Styles for 512x512 canvas, toolbar, brush controls, and color picker.
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.canvasWrapper {
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.canvas {
+  display: block;
+  cursor: crosshair;
+  touch-action: none; /* Prevent scrolling while drawing on touch devices */
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  padding: 12px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.toolGroup {
+  display: flex;
+  gap: 8px;
+}
+
+.toolButton {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 20px;
+  background-color: #ffffff;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toolButton:hover {
+  background-color: #f0f0f0;
+  border-color: #4a90e2;
+  transform: translateY(-1px);
+}
+
+.toolButton:active {
+  transform: translateY(0);
+}
+
+.toolButton.active {
+  background-color: #4a90e2;
+  border-color: #4a90e2;
+  color: #ffffff;
+}
+
+.toolButton.dangerButton:hover {
+  background-color: #ffebee;
+  border-color: #f44336;
+}
+
+/* Brush Size Selector */
+.brushSizeSelector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.label {
+  font-weight: 500;
+  font-size: 14px;
+  color: #333333;
+}
+
+.sizeButtons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.sizeButton {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px;
+  background-color: #ffffff;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sizeButton:hover {
+  background-color: #f0f0f0;
+  border-color: #4a90e2;
+}
+
+.sizeButton.active {
+  background-color: #4a90e2;
+  border-color: #4a90e2;
+  color: #ffffff;
+}
+
+.sizeSmall {
+  font-size: 12px;
+}
+
+.sizeMedium {
+  font-size: 18px;
+}
+
+.sizeLarge {
+  font-size: 24px;
+}
+
+/* Color Picker */
+.colorPicker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.colorPicker.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.presetColors {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+}
+
+.colorButton {
+  width: 44px;
+  height: 44px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.colorButton:hover {
+  border-color: #4a90e2;
+  transform: scale(1.1);
+}
+
+.colorButton.active {
+  border: 3px solid #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
+}
+
+.customColorWrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.customLabel {
+  font-weight: 500;
+  font-size: 14px;
+  color: #333333;
+}
+
+.customColorPicker {
+  width: 60px;
+  height: 44px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.customColorPicker::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.customColorPicker::-webkit-color-swatch {
+  border: none;
+  border-radius: 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 12px;
+  }
+
+  .canvasWrapper {
+    max-width: 100%;
+  }
+
+  .toolbar {
+    flex-wrap: wrap;
+  }
+
+  .presetColors {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .canvasWrapper canvas {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1;
+  }
+}
