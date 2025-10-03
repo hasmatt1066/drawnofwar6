@@ -6,7 +6,7 @@
  */
 
 import type { Request, Response, NextFunction } from 'express';
-import { inputNormalizer } from '../services/input/normalizer.service';
+import { inputNormalizer } from '../services/input/normalizer.service.js';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_MIME_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
