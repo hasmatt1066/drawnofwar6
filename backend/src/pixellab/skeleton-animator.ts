@@ -49,7 +49,7 @@ export class SkeletonAnimator {
     const response = await this.httpClient.axiosInstance.post<{
       frames: string[];
       cost_usd: number;
-    }>('/animate-skeleton', {
+    }>('/v1/animate-skeleton', {
       description: request.description,
       action: request.action,
       n_frames: request.nFrames || 4,

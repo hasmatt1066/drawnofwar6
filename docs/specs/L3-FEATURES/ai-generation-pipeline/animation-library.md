@@ -319,7 +319,8 @@ class CreatureRenderer {
 8. **AI-driven smart assignment system** - Variable animation counts based on creature analysis
 9. **Complete animation generation** - All 55 animations generated successfully (100% success rate)
 10. **Effect Compositing System documentation** - Complete implementation guide
-11. **SpellCastDemo proof-of-concept** - Validates effect compositing strategy with complete cast-to-projectile-to-hit sequence
+11. **SpellCastDemo proof-of-concept** - Validates ranged effect compositing (cast → projectile → hit)
+12. **MeleeAttackDemo proof-of-concept** - Validates melee effect compositing (direct overlay with frame-based hit detection)
 
 ### 📊 Generation Results
 - **Total animations**: 55/55 successful
@@ -330,20 +331,22 @@ class CreatureRenderer {
 
 ### 📋 Next Steps
 1. **Review generated effects** (~30 min) - Visual inspection to verify isolated effects (no character bodies)
-2. ~~**Test effect overlays**~~ ✅ COMPLETE - SpellCastDemo validates compositing concept
+2. ~~**Test effect overlays**~~ ✅ COMPLETE - Both ranged and melee compositing validated
 3. **Iterate on problem animations** (~1-2 hours if needed) - Adjust prompts and regenerate specific animations
 4. **Implement game engine integration** (~3-4 hours) - Follow Effect Compositing System documentation
 5. **Test in battle scenario** (~1 hour) - Verify performance with 20+ creatures on screen
 
-### ✅ Proof-of-Concept: SpellCastDemo
+### ✅ Proof-of-Concept Components
+
+#### 1. SpellCastDemo (Ranged Effects)
 **Component**: `/frontend/src/components/SpellCastDemo/`
 **Status**: COMPLETE (2025-10-02)
-**Purpose**: Validates effect compositing strategy - overlaying library animations onto creature sprites
+**Purpose**: Validates ranged effect compositing - cast animation → projectile spawn → travel → hit
 
 **Features Validated**:
-- ✅ Library animation loading via API (`/api/library-animations/:animationId`)
+- ✅ Library animation loading via API (`/api/library-animations/cast_spell_default`)
 - ✅ Effect overlay using CSS `mix-blend-mode: screen` for magical glow
-- ✅ 4-frame casting animation (10 FPS) plays over wizard sprite
+- ✅ 4-frame casting animation (10 FPS) plays over caster sprite
 - ✅ Projectile spawn system - spawns when cast completes
 - ✅ Projectile travel animation toward target (5px/frame at 20 FPS)
 - ✅ Frame cycling during projectile flight (animates through all 4 effect frames)
@@ -352,10 +355,39 @@ class CreatureRenderer {
 
 **Integration**:
 - Added to GenerationProgress component
-- Shows for any creature with animations (`result.spriteImageBase64 && result.animations?.totalAnimations`)
-- Successfully tested with wizard creature generation (35.8s, 20 animations assigned)
+- Shows for any creature with animations
+- Successfully tested with wizard creature generation
 
-**Key Validation**: Proves that isolated library animations can be dynamically composited onto any creature sprite using blend modes, achieving the desired visual effect without per-creature animation generation costs.
+**Key Validation**: Proves that isolated library animations can be dynamically composited onto any creature sprite using blend modes for ranged attacks with projectile mechanics.
+
+---
+
+#### 2. MeleeAttackDemo (Melee Effects)
+**Component**: `/frontend/src/components/MeleeAttackDemo/`
+**Status**: COMPLETE (2025-10-03)
+**Purpose**: Validates melee effect compositing - direct overlay with frame-based hit detection
+
+**Features Validated**:
+- ✅ Library animation loading via API (`/api/library-animations/attack_melee_sword`)
+- ✅ Effect positioned in front of attacker (80px offset) - no overlay on character
+- ✅ 4-frame sword slash animation (10 FPS) at calculated position
+- ✅ Frame-based hit detection - triggers on frame 3 (peak of swing)
+- ✅ Target hit feedback - white flash animation (200ms duration)
+- ✅ Effect cleanup after animation completes
+- ✅ Debug panel showing frame, position, hit status
+
+**Key Differences from Ranged**:
+- **No projectile** - Effect plays at fixed position near attacker
+- **Hit timing** - Triggers on specific frame (frame 3) vs distance-based
+- **Positioning** - Static offset from attacker vs moving projectile
+- **Duration** - Fixed 400ms vs variable travel time
+
+**Integration**:
+- Added to GenerationProgress component (after SpellCastDemo)
+- Uses same creature sprite for both attacker and target (demo purposes)
+- Shows alongside ranged demo to illustrate both compositing strategies
+
+**Key Validation**: Proves that melee effects can be overlaid at calculated positions without projectiles, with hit detection synchronized to animation frames. Demonstrates different behavior patterns for melee vs ranged attacks.
 
 ## Cost Analysis
 

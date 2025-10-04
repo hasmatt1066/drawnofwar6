@@ -65,7 +65,7 @@ export class SpriteGenerator {
         type: 'base64';
         base64: string;
       };
-    }>('/generate-image-pixflux', payload);
+    }>('/v1/generate-image-pixflux', payload);
 
     // Parse and return response
     return {

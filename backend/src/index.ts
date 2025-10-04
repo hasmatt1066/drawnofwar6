@@ -3,15 +3,23 @@
  *
  * Express API server for creature generation with multi-modal inputs.
  * Supports text descriptions, canvas drawings, and image uploads.
+ * Includes Socket.IO for real-time combat updates.
  */
 
 import express, { type Express, type Request, type Response, type NextFunction } from 'express';
+import { createServer } from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { generateRouter } from './api/routes/generate.routes.js';
 import libraryAnimationsRouter from './api/routes/library-animations.routes.js';
+import { viewAngleTestRouter } from './api/routes/view-angle-test.routes.js';
+import { deploymentRouter } from './api/routes/deployment.routes.js';
+import creatureSpritesRouter from './api/routes/creature-sprites.routes.js';
+import { combatRouter } from './api/routes/combat.routes.js';
 import { validateClaudeConfig } from './config/claude.config.js';
+import { initializeCombatSocket } from './sockets/combat-socket.js';
+import { initializeDeploymentSocket } from './sockets/deployment-socket.js';
 
 // Load environment variables
 dotenv.config();
@@ -23,9 +31,23 @@ const HOST = process.env['HOST'] || 'localhost';
 // Security middleware
 app.use(helmet());
 
-// CORS configuration
+// CORS configuration - allow multiple frontend ports for development
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'http://localhost:5176',
+  process.env['FRONTEND_URL']
+].filter(Boolean);
+
 const corsOptions = {
-  origin: process.env['FRONTEND_URL'] || 'http://localhost:5173',
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -47,6 +69,10 @@ app.get('/health', (_req: Request, res: Response) => {
 // API routes
 app.use('/api', generateRouter);
 app.use('/api/library-animations', libraryAnimationsRouter);
+app.use('/api/test', viewAngleTestRouter);
+app.use('/api/deployment', deploymentRouter);
+app.use('/api/creatures', creatureSpritesRouter);
+app.use('/api/combat', combatRouter);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
@@ -78,10 +104,22 @@ async function startServer() {
     console.log('[Startup] Validating Claude API configuration...');
     validateClaudeConfig();
 
+    // Create HTTP server (needed for Socket.IO)
+    const httpServer = createServer(app);
+
+    // Initialize Socket.IO for combat
+    console.log('[Startup] Initializing Socket.IO for combat...');
+    initializeCombatSocket(httpServer);
+
+    // Initialize Socket.IO for deployment
+    console.log('[Startup] Initializing Socket.IO for deployment...');
+    initializeDeploymentSocket(httpServer);
+
     // Start listening
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       console.log(`[Server] Drawn of War backend running`);
       console.log(`[Server] URL: http://${HOST}:${PORT}`);
+      console.log(`[Server] WebSocket: ws://${HOST}:${PORT}`);
       console.log(`[Server] Environment: ${process.env['NODE_ENV'] || 'development'}`);
       console.log(`[Server] Health check: http://${HOST}:${PORT}/health`);
     });

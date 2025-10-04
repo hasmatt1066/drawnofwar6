@@ -61,7 +61,7 @@ export class TextAnimator {
         type: 'base64';
         base64: string;
       }>;
-    }>('/animate-with-text', {
+    }>('/v1/animate-with-text', {
       description: request.description,
       action: request.action,
       image_size: {

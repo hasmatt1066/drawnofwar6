@@ -13,6 +13,7 @@ dotenv.config();
 import type { Job } from 'bullmq';
 import { claudeVisionService } from '../services/claude/vision.service.js';
 import { animationMapper } from '../services/animations/mapper.service.js';
+import { attributeExtractor } from '../services/attributes/extractor.service.js';
 import { styleValidator } from '../services/style/validator.service.js';
 import { pixelLabPromptBuilder } from '../services/pixellab-prompt-builder.js';
 import { HttpClient } from '../pixellab/http-client.js';
@@ -140,6 +141,15 @@ export async function processGenerationJob(job: Job<GenerationJobData>): Promise
 
     const animations = animationMapper.mapAnimations(claudeAnalysis);
 
+    // Step 2.5: Extract combat attributes (35% progress)
+    await job.updateProgress(35);
+    console.log('[Generation Processor] Step 2.5: Extracting combat attributes...');
+
+    const combatAttributes = attributeExtractor.extractAttributes(
+      claudeAnalysis.abilities,
+      animations.animationSet
+    );
+
     // Step 3: Build PixelLab prompt (40% progress)
     await job.updateProgress(40);
     console.log('[Generation Processor] Step 3: Building PixelLab prompt...');
@@ -178,6 +188,7 @@ export async function processGenerationJob(job: Job<GenerationJobData>): Promise
       originalImage: normalizedImage.base64,
       claudeAnalysis,
       animations,
+      combatAttributes,
       styleValidation,
       spriteImageBase64: generationResponse.imageBase64,
       generatedAt: new Date(),
@@ -201,7 +212,7 @@ function createPixelLabClient(): HttpClient {
     throw new Error('PIXELLAB_API_KEY environment variable is not set');
   }
 
-  const baseURL = process.env['PIXELLAB_API_URL'] || 'https://api.pixellab.ai/v1';
+  const baseURL = process.env['PIXELLAB_API_URL'] || 'https://api.pixellab.ai';
 
   return new HttpClient({
     apiKey,

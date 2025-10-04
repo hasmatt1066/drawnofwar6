@@ -40,7 +40,7 @@ export class SkeletonEstimator {
         label: string;
         z_index: number;
       }>;
-    }>('/estimate-skeleton', {
+    }>('/v1/estimate-skeleton', {
       image: {
         type: 'base64',
         base64: imageBase64,

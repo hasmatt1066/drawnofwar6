@@ -23,6 +23,6 @@ echo Starting backend server...
 echo Press Ctrl+C to stop
 echo.
 
-REM Run from project root so pnpm workspace works
+REM Run from project root via WSL so pnpm workspace works with sharp library
 cd ..
-pnpm dev:backend
+wsl bash -c "cd /mnt/c/Users/mhast/Desktop/drawnofwar6 && pnpm dev:backend"

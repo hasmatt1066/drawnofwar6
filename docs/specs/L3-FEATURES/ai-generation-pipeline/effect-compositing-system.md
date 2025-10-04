@@ -1,6 +1,6 @@
 # Effect Compositing System
 
-## Status: IN PROGRESS (Proof-of-Concept Complete, Full Implementation Planned)
+## Status: PROOF-OF-CONCEPT COMPLETE (Both Ranged and Melee Validated)
 
 ## Overview
 
@@ -24,14 +24,23 @@ Transform static creature sprites into dynamic, animated game characters by:
 
 ### Scope
 
-**✅ Proof-of-Concept Complete (SpellCastDemo)**:
-- Single effect overlay per creature at a time ✅
-- Fixed positioning (center-aligned on creature) ✅
-- CSS blend mode (Screen) for magical glow effects ✅
-- 4-frame animation at 10 FPS ✅
-- Projectile spawn and travel mechanics ✅
-- Hit detection and cleanup ✅
-- Debug panel for state visualization ✅
+**✅ Proof-of-Concept Complete (Both Ranged and Melee)**:
+
+**SpellCastDemo (Ranged)**:
+- ✅ Ranged effect overlay on caster during cast
+- ✅ Projectile spawn and travel mechanics
+- ✅ Distance-based hit detection
+- ✅ CSS blend mode (Screen) for magical glow effects
+- ✅ 4-frame animation at 10 FPS
+- ✅ Debug panel for state visualization
+
+**MeleeAttackDemo (Melee)**:
+- ✅ Melee effect positioned in front of attacker (offset positioning)
+- ✅ Frame-based hit detection (triggers on frame 3)
+- ✅ No projectile - direct placement strategy
+- ✅ Target hit feedback (flash animation)
+- ✅ CSS blend mode (Screen) for bright sword slash
+- ✅ Debug panel showing position and hit status
 
 **MVP (Full Implementation):**
 - Single effect overlay per creature at a time
@@ -57,12 +66,13 @@ Transform static creature sprites into dynamic, animated game characters by:
 
 ---
 
-## Proof-of-Concept Implementation: SpellCastDemo
+## Proof-of-Concept Implementations
 
-### Overview
+### 1. SpellCastDemo (Ranged Effects)
+
 **Component**: `/frontend/src/components/SpellCastDemo/SpellCastDemo.tsx`
 **Status**: COMPLETE (2025-10-02)
-**Purpose**: Validates the core concept of effect compositing - overlaying library animations onto creature sprites
+**Purpose**: Validates ranged effect compositing with projectile mechanics
 
 ### What Was Validated
 
@@ -155,9 +165,127 @@ Transform static creature sprites into dynamic, animated game characters by:
 
 ### Integration Status
 - ✅ Added to GenerationProgress component
-- ✅ Shows for creatures with animations (`result.spriteImageBase64 && result.animations?.totalAnimations`)
+- ✅ Shows for creatures with animations
 - ✅ Successfully tested with wizard creature (35.8s generation, 20 animations assigned)
 - ✅ Proves concept: isolated library animations work with any creature sprite
+
+---
+
+### 2. MeleeAttackDemo (Melee Effects)
+
+**Component**: `/frontend/src/components/MeleeAttackDemo/MeleeAttackDemo.tsx`
+**Status**: COMPLETE (2025-10-03)
+**Purpose**: Validates melee effect compositing with direct placement and frame-based hit detection
+
+#### What Was Validated
+
+##### 1. Offset Positioning Strategy
+- **Attacker Position**: (100, 200)
+- **Effect Offset**: +80px X, 0px Y
+- **Result**: Sword slash appears at (180, 200) - between attacker and target
+- **Validation**: Proves effects can be positioned at calculated offsets (FRONT anchor point concept)
+
+##### 2. Frame-Based Hit Detection
+```typescript
+// Frame progression:
+// Frame 0: Sword starts swinging
+// Frame 1: Sword mid-swing
+// Frame 2: Sword approaching peak
+// Frame 3: 🎯 IMPACT - Trigger target hit
+// Complete: Effect cleanup
+
+if (nextFrame === 3) {
+  triggerTargetHit();  // Flash target
+}
+```
+- **Validation**: Proves hit detection can be synchronized to specific animation frames
+
+##### 3. Melee vs Ranged Behavior
+| Aspect | Melee (Sword) | Ranged (Spell) |
+|--------|---------------|----------------|
+| **Effect Position** | Fixed offset from attacker (+80px) | Overlays on caster (center) |
+| **Projectile** | ❌ None | ✅ Spawns and travels |
+| **Hit Detection** | Frame-based (frame 3) | Distance-based (collision) |
+| **Movement** | Static at attack position | Travels from caster to target |
+| **Duration** | Fixed 400ms (4 frames) | Variable (cast time + travel) |
+| **Cleanup** | After frame 4 completes | After projectile hits target |
+
+##### 4. Visual Feedback System
+```tsx
+// Target flashes white when hit
+<img
+  className={targetHit ? styles.hitFlash : ''}
+  // ...
+/>
+
+// CSS animation
+@keyframes hitFlash {
+  0%, 100% { filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5)); }
+  50% { filter: brightness(1.5) drop-shadow(0 0 20px white); }
+}
+```
+- **Validation**: Proves targets can respond to hit events with visual feedback
+
+##### 5. Effect Cleanup
+- **Trigger**: Animation completes (after frame 3 → frame 4 would loop to 0)
+- **Action**: Effect removed from DOM, cleanup intervals
+- **Validation**: Proves effects can be properly cleaned up after completion
+
+#### Technical Implementation
+
+```tsx
+// Effect positioned in front of attacker
+const EFFECT_OFFSET_X = 80;  // 80px to the right
+const EFFECT_OFFSET_Y = 0;   // Same vertical position
+
+<img
+  src={`data:image/png;base64,${meleeEffect.frames[attackFrame]}`}
+  style={{
+    left: `${ATTACKER_X + EFFECT_OFFSET_X}px`,
+    top: `${ATTACKER_Y + EFFECT_OFFSET_Y}px`,
+    width: `${SPRITE_SIZE}px`,
+    height: `${SPRITE_SIZE}px`,
+    mixBlendMode: 'screen',  // Bright slash effect
+    zIndex: 10,
+    position: 'absolute'
+  }}
+/>
+```
+
+#### Key Insights from Proof-of-Concept
+
+1. **Offset Positioning Works**: Placing effects at calculated offsets (FRONT anchor) successfully positions sword slash between attacker and target.
+
+2. **Frame-Based Hit Detection**: Synchronizing hit events to specific animation frames (frame 3 = peak of swing) creates believable melee combat timing.
+
+3. **Visual Feedback Enhances Feel**: Target flash animation (200ms white flash) provides clear, satisfying hit confirmation.
+
+4. **No Projectile Needed**: Melee attacks don't need projectile systems - direct placement at calculated positions is sufficient.
+
+5. **Blend Mode Versatility**: `screen` blend mode works for both ranged (magical glow) and melee (bright slash) effects.
+
+6. **Static Position Strategy**: Unlike ranged effects, melee effects stay at fixed position - simplifies rendering and hit detection.
+
+#### Integration Status
+- ✅ Added to GenerationProgress component (after SpellCastDemo)
+- ✅ Shows alongside ranged demo to illustrate both compositing strategies
+- ✅ Uses `attack_melee_sword` library animation
+- ✅ Successfully demonstrates FRONT anchor point positioning
+- ✅ Proves melee and ranged effects can coexist in same system
+
+#### What This Proves for Game Engine
+
+**Ranged Effects (SpellCastDemo)**:
+- ✅ Overlay on caster → spawn projectile → travel → distance-based hit
+
+**Melee Effects (MeleeAttackDemo)**:
+- ✅ Calculate offset position → play effect at position → frame-based hit
+
+**Combined System Can Support**:
+- Different hit detection strategies (frame-based vs distance-based)
+- Different positioning strategies (overlay vs offset)
+- Different cleanup triggers (frame completion vs collision)
+- Universal API: Both use same library animations, just different placement logic
 
 ---
 

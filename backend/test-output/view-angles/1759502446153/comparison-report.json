@@ -1,0 +1,40 @@
+{
+  "testCreature": "fierce red dragon warrior with wings and horns",
+  "timestamp": "2025-10-03T14:40:46.159Z",
+  "results": [
+    {
+      "view": "side",
+      "baseSpritePath": "",
+      "animationFrames": [],
+      "costUsd": 0,
+      "timeMs": 0,
+      "notes": "ERROR: Cannot read properties of undefined (reading 'axiosInstance')"
+    },
+    {
+      "view": "low top-down",
+      "baseSpritePath": "",
+      "animationFrames": [],
+      "costUsd": 0,
+      "timeMs": 1,
+      "notes": "ERROR: Cannot read properties of undefined (reading 'axiosInstance')"
+    },
+    {
+      "view": "high top-down",
+      "baseSpritePath": "",
+      "animationFrames": [],
+      "costUsd": 0,
+      "timeMs": 0,
+      "notes": "ERROR: Cannot read properties of undefined (reading 'axiosInstance')"
+    }
+  ],
+  "recommendations": {
+    "forMenus": "side",
+    "forBattlefield": "TBD - Visual inspection required",
+    "notes": [
+      "Visually inspect generated sprites to determine best battlefield view",
+      "Consider style consistency between views",
+      "Evaluate walk animation quality per view",
+      "Test with different creature types (flying, quadruped, etc.)"
+    ]
+  }
+}

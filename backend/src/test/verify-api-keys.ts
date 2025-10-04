@@ -73,7 +73,7 @@ async function verifyPixelLabKey(): Promise<boolean> {
   console.log('\n🔍 Verifying PixelLab API key...');
 
   const apiKey = process.env.PIXELLAB_API_KEY;
-  const apiUrl = process.env.PIXELLAB_API_URL || 'https://api.pixellab.ai/v1';
+  const apiUrl = process.env.PIXELLAB_API_URL || 'https://api.pixellab.ai';
 
   if (!apiKey || apiKey === 'your-pixellab-api-key-here') {
     console.error('❌ PixelLab API key not configured');

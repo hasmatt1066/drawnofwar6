@@ -30,7 +30,7 @@ function createPixelLabClient(): HttpClient {
     throw new Error('PIXELLAB_API_KEY environment variable is not set');
   }
 
-  const baseURL = process.env['PIXELLAB_API_URL'] || 'https://api.pixellab.ai/v1';
+  const baseURL = process.env['PIXELLAB_API_URL'] || 'https://api.pixellab.ai';
 
   return new HttpClient({
     apiKey,
@@ -71,7 +71,7 @@ async function main() {
     const spriteResponse = await spriteGenerator.submitGeneration({
       description: action,  // Isolated effect description
       size: 64,
-      transparentBackground: true
+      noBackground: true
     });
 
     console.log(`  ✓ Base effect sprite generated`);

@@ -59,7 +59,7 @@ export class SpriteAnimator {
         type: 'base64';
         base64: string;
       }>;
-    }>('/animate-with-skeleton', {
+    }>('/v1/animate-with-skeleton', {
       image_size: {
         width: request.size,
         height: request.size

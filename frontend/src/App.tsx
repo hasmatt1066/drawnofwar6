@@ -8,6 +8,8 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { PromptBuilder } from './components/PromptBuilder';
 import { GenerationPage } from './pages/GenerationPage';
+import { ViewAngleTestPage } from './pages/ViewAngleTestPage';
+import { DeploymentGridDemoPage } from './pages/DeploymentGridDemoPage';
 
 export const App: React.FC = () => {
   return (
@@ -22,6 +24,12 @@ export const App: React.FC = () => {
 
           {/* Generation progress page */}
           <Route path="/generation/:jobId" element={<GenerationPage />} />
+
+          {/* View angle test page */}
+          <Route path="/test-view-angles" element={<ViewAngleTestPage />} />
+
+          {/* Deployment grid demo page */}
+          <Route path="/deployment-grid" element={<DeploymentGridDemoPage />} />
 
           {/* 404 fallback */}
           <Route path="*" element={<Navigate to="/create" replace />} />

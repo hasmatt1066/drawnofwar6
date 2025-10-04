@@ -6,6 +6,7 @@
 
 import type { ClaudeAnalysisResult } from '../services/claude/types.js';
 import type { AnimationMappingResult } from '../services/animations/types.js';
+import type { AttributeMappingResult } from '../services/attributes/types.js';
 import type { StylePreservationResult } from '../services/style/types.js';
 import type { NormalizedImage } from './input/index.js';
 
@@ -24,6 +25,9 @@ export interface GenerationResult {
 
   // Animation mapping
   animations: AnimationMappingResult;
+
+  // Combat attributes (1-3 primary attributes for sprite overlays)
+  combatAttributes?: AttributeMappingResult | undefined;
 
   // Style validation (only for visual inputs)
   styleValidation?: StylePreservationResult | undefined;

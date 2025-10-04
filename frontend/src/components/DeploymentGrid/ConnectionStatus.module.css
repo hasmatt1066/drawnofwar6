@@ -1,0 +1,53 @@
+.container {
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  border: 1px solid #2c3e50;
+  margin-bottom: 16px;
+}
+
+.statusRow {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.statusItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.statusText {
+  color: #ecf0f1;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.errorMessage {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(231, 76, 60, 0.2);
+  border: 1px solid #e74c3c;
+  border-radius: 4px;
+  color: #e74c3c;
+  font-size: 13px;
+}
+
+.warningMessage {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(243, 156, 18, 0.2);
+  border: 1px solid #f39c12;
+  border-radius: 4px;
+  color: #f39c12;
+  font-size: 13px;
+}

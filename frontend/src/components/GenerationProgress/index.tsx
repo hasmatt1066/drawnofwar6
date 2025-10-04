@@ -12,6 +12,7 @@ import React, { useEffect, useState } from 'react';
 import { pollJobStatus, type JobStatus, type GenerationResult } from '@/services/generationService';
 import { AnimationDebugger } from '@/components/AnimationDebugger';
 import { SpellCastDemo } from '@/components/SpellCastDemo';
+import { MeleeAttackDemo } from '@/components/MeleeAttackDemo';
 import styles from './GenerationProgress.module.css';
 
 interface GenerationProgressProps {
@@ -315,12 +316,24 @@ const ResultDisplay: React.FC<{ result: GenerationResult }> = ({ result }) => {
         />
       )}
 
-      {/* Spell Cast Demo - Proof of concept for effect compositing */}
+      {/* Spell Cast Demo - Proof of concept for ranged effect compositing */}
       {result.spriteImageBase64 && result.animations?.totalAnimations && (
         <div className={styles.resultSection} style={{ marginTop: '30px' }}>
           <SpellCastDemo
             casterSprite={result.spriteImageBase64}
             casterName="Your Creature"
+            targetSprite={result.spriteImageBase64} // Using same sprite as target for demo
+            targetName="Enemy"
+          />
+        </div>
+      )}
+
+      {/* Melee Attack Demo - Proof of concept for melee effect compositing */}
+      {result.spriteImageBase64 && result.animations?.totalAnimations && (
+        <div className={styles.resultSection} style={{ marginTop: '30px' }}>
+          <MeleeAttackDemo
+            attackerSprite={result.spriteImageBase64}
+            attackerName="Your Creature"
             targetSprite={result.spriteImageBase64} // Using same sprite as target for demo
             targetName="Enemy"
           />

@@ -31,7 +31,7 @@ const envSchema = z.object({
 
   // PixelLab API Configuration
   PIXELLAB_API_KEY: z.string().min(1, 'PixelLab API key is required'),
-  PIXELLAB_API_URL: z.string().url().default('https://api.pixellab.ai/v1'),
+  PIXELLAB_API_URL: z.string().url().default('https://api.pixellab.ai'),
 
   // Redis Configuration
   REDIS_HOST: z.string().default('localhost'),
