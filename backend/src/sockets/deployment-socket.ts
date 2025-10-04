@@ -5,8 +5,7 @@
  * Handles creature placement, ready states, and countdown sync.
  */
 
-import type { Server as HTTPServer } from 'http';
-import { Server as SocketIOServer, Socket } from 'socket.io';
+import type { Namespace, Socket } from 'socket.io';
 import type {
   DeploymentClientEvents,
   DeploymentServerEvents,
@@ -15,9 +14,9 @@ import type {
 import * as matchStateService from '../services/match-state.js';
 
 /**
- * Socket.IO server instance
+ * Deployment namespace instance
  */
-let io: SocketIOServer<DeploymentClientEvents, DeploymentServerEvents> | null = null;
+let deploymentNamespace: Namespace<DeploymentClientEvents, DeploymentServerEvents> | null = null;
 
 /**
  * Track connected players per match
@@ -28,18 +27,10 @@ const matchPlayers = new Map<string, Set<'player1' | 'player2'>>();
 /**
  * Initialize deployment Socket.IO handler
  */
-export function initializeDeploymentSocket(httpServer: HTTPServer): void {
-  const frontendUrl = process.env['FRONTEND_URL'] || 'http://localhost:5173';
+export function initializeDeploymentSocket(namespace: Namespace<DeploymentClientEvents, DeploymentServerEvents>): void {
+  deploymentNamespace = namespace;
 
-  io = new SocketIOServer<DeploymentClientEvents, DeploymentServerEvents>(httpServer, {
-    cors: {
-      origin: frontendUrl,
-      credentials: true
-    },
-    path: '/socket.io'
-  });
-
-  io.on('connection', (socket: Socket) => {
+  deploymentNamespace.on('connection', (socket: Socket) => {
     console.log('[Deployment Socket] Client connected:', socket.id);
 
     // Handle deployment:join
@@ -100,14 +91,12 @@ function handleJoin(
     return;
   }
 
-  // Check if match exists
-  const matchState = matchStateService.getMatchState(matchId);
+  // Auto-create match if it doesn't exist
+  let matchState = matchStateService.getMatchState(matchId);
   if (!matchState) {
-    socket.emit('deployment:error', {
-      message: 'Match not found',
-      code: 'MATCH_NOT_FOUND'
-    });
-    return;
+    console.log(`[Deployment Socket] Match ${matchId} not found, creating new match...`);
+    matchState = matchStateService.createMatch(matchId, 1);
+    console.log(`[Deployment Socket] Match ${matchId} created successfully`);
   }
 
   // Join Socket.IO room
@@ -327,7 +316,7 @@ function handleReady(
 
   // Broadcast updated status to all players in match
   const roomName = `match-${matchId}`;
-  io?.to(roomName).emit('deployment:status-changed', deploymentStatus);
+  deploymentNamespace?.to(roomName).emit('deployment:status-changed', deploymentStatus);
 
   console.log(`[Deployment Socket] ${playerId} marked ready in match ${matchId}`);
 }
@@ -357,7 +346,7 @@ function handleUnready(
 
   // Broadcast updated status to all players in match
   const roomName = `match-${matchId}`;
-  io?.to(roomName).emit('deployment:status-changed', deploymentStatus);
+  deploymentNamespace?.to(roomName).emit('deployment:status-changed', deploymentStatus);
 
   console.log(`[Deployment Socket] ${playerId} unmarked ready in match ${matchId}`);
 }
@@ -431,8 +420,8 @@ function validateSocketRequest(
 }
 
 /**
- * Get Socket.IO server instance (for testing/debugging)
+ * Get deployment namespace instance (for testing/debugging)
  */
-export function getDeploymentSocketIO(): SocketIOServer<DeploymentClientEvents, DeploymentServerEvents> | null {
-  return io;
+export function getDeploymentNamespace(): Namespace<DeploymentClientEvents, DeploymentServerEvents> | null {
+  return deploymentNamespace;
 }
