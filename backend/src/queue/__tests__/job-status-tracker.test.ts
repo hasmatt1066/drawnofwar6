@@ -7,9 +7,9 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Job, Queue } from 'bullmq';
-import { JobStatusTracker, QueueJob, JobStatus } from './job-status-tracker.js';
-import type { QueueManager, QueueServiceConfig } from './queue-manager.js';
-import type { QueueLogger } from './logger.js';
+import { JobStatusTracker, QueueJob, JobStatus } from '../job-status-tracker.js';
+import type { QueueManager, QueueServiceConfig } from '../queue-manager.js';
+import type { QueueLogger } from '../logger.js';
 
 /**
  * Mock QueueManager for testing

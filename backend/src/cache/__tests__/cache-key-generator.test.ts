@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { CacheKeyGenerator } from './cache-key-generator.js';
+import { CacheKeyGenerator } from '../cache-key-generator.js';
 
 describe('CacheKeyGenerator', () => {
   describe('generate', () => {

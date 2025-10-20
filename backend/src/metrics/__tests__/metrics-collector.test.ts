@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { MetricsCollector, QueueMetrics } from './metrics-collector.js';
+import { MetricsCollector, QueueMetrics } from '../metrics-collector.js';
 import type { QueueLogger } from '../queue/logger.js';
 
 /**

@@ -11,19 +11,19 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach, Mock } from 'vitest';
 import { Job } from 'bullmq';
-import { JobProcessor } from './job-processor.js';
-import { SpriteGenerator, JobSubmissionResponse } from '../pixellab/sprite-generator.js';
-import { StatusPoller, PollingConfig } from '../pixellab/status-poller.js';
-import { JobStatusResponse, JobStatus as PixelLabJobStatus } from '../pixellab/status-parser.js';
-import { ResultBuilder, GenerationResult } from '../pixellab/result-builder.js';
-import { ImageDecoder } from '../pixellab/image-decoder.js';
-import { PixelLabError, PixelLabErrorType } from '../pixellab/errors.js';
-import { CacheManager, CacheLookupResult } from '../cache/cache-manager.js';
-import { CacheEntry } from '../cache/redis-cache.js';
-import { ProgressIntegrator } from '../progress/progress-integrator.js';
-import { ErrorClassifier, ClassifiedError, ErrorType } from '../retry/error-classifier.js';
-import { QueueLogger } from './logger.js';
-import { StructuredPrompt, SpriteGenerationResult } from './job-status-tracker.js';
+import { JobProcessor } from '../job-processor.js';
+import { SpriteGenerator, JobSubmissionResponse } from '../../pixellab/sprite-generator.js';
+import { StatusPoller, PollingConfig } from '../../pixellab/status-poller.js';
+import { JobStatusResponse, JobStatus as PixelLabJobStatus } from '../../pixellab/status-parser.js';
+import { ResultBuilder, GenerationResult } from '../../pixellab/result-builder.js';
+import { ImageDecoder } from '../../pixellab/image-decoder.js';
+import { PixelLabError, PixelLabErrorType } from '../../pixellab/errors.js';
+import { CacheManager, CacheLookupResult } from '../../cache/cache-manager.js';
+import { CacheEntry } from '../../cache/redis-cache.js';
+import { ProgressIntegrator } from '../../progress/progress-integrator.js';
+import { ErrorClassifier, ClassifiedError, ErrorType } from '../../retry/error-classifier.js';
+import { QueueLogger } from '../logger.js';
+import { StructuredPrompt, SpriteGenerationResult } from '../job-status-tracker.js';
 
 // Mock dependencies
 vi.mock('../pixellab/sprite-generator.js');

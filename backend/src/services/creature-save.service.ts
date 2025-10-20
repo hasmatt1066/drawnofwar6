@@ -98,15 +98,18 @@ export class CreatureSaveService {
         directionalSprites = {
           E: {
             sprite: generationResult.battlefieldDirectionalViews.E.sprite,
-            walkFrames: generationResult.battlefieldDirectionalViews.E.walkFrames
+            walkFrames: generationResult.battlefieldDirectionalViews.E.walkFrames,
+            idleFrames: generationResult.battlefieldDirectionalViews.E.idleFrames
           },
           NE: {
             sprite: generationResult.battlefieldDirectionalViews.NE.sprite,
-            walkFrames: generationResult.battlefieldDirectionalViews.NE.walkFrames
+            walkFrames: generationResult.battlefieldDirectionalViews.NE.walkFrames,
+            idleFrames: generationResult.battlefieldDirectionalViews.NE.idleFrames
           },
           SE: {
             sprite: generationResult.battlefieldDirectionalViews.SE.sprite,
-            walkFrames: generationResult.battlefieldDirectionalViews.SE.walkFrames
+            walkFrames: generationResult.battlefieldDirectionalViews.SE.walkFrames,
+            idleFrames: generationResult.battlefieldDirectionalViews.SE.idleFrames
           }
         };
       } else if (generationResult.battlefieldSprite) {

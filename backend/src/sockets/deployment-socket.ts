@@ -304,6 +304,17 @@ function handleReady(
     return;
   }
 
+  // Validate player has at least 1 placement
+  const currentPlacements = matchStateService.getPlacements(matchId, playerId) || [];
+  if (currentPlacements.length === 0) {
+    socket.emit('deployment:error', {
+      message: 'Cannot ready - you must place at least one creature',
+      code: 'NO_PLACEMENTS'
+    });
+    console.warn(`[Deployment Socket] ${playerId} tried to ready with 0 placements in match ${matchId}`);
+    return;
+  }
+
   // Mark player ready
   const deploymentStatus = matchStateService.markPlayerReady(matchId, playerId);
   if (!deploymentStatus) {
@@ -318,7 +329,7 @@ function handleReady(
   const roomName = `match-${matchId}`;
   deploymentNamespace?.to(roomName).emit('deployment:status-changed', deploymentStatus);
 
-  console.log(`[Deployment Socket] ${playerId} marked ready in match ${matchId}`);
+  console.log(`[Deployment Socket] ${playerId} marked ready in match ${matchId} (${currentPlacements.length} creatures)`);
 }
 
 /**

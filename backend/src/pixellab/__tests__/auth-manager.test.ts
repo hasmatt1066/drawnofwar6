@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { AuthManager } from './auth-manager';
-import { PixelLabError, PixelLabErrorType } from './errors';
+import { AuthManager } from '../auth-manager';
+import { PixelLabError, PixelLabErrorType } from '../errors';
 
 describe('AuthManager - Task 2.1: API Key Validation', () => {
   describe('validateApiKey', () => {

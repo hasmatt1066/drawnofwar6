@@ -7,11 +7,11 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Job, Queue } from 'bullmq';
-import { RetryManager } from './retry-manager';
-import { RetryStrategy, RetryConfig } from './retry-strategy';
-import { ErrorClassifier, ClassifiedError, ErrorType } from './error-classifier';
-import { QueueLogger } from '../queue/logger';
-import { QueueManager, QueueServiceConfig } from '../queue/queue-manager';
+import { RetryManager } from '../retry-manager';
+import { RetryStrategy, RetryConfig } from '../retry-strategy';
+import { ErrorClassifier, ClassifiedError, ErrorType } from '../error-classifier';
+import { QueueLogger } from '../../queue/logger';
+import { QueueManager, QueueServiceConfig } from '../../queue/queue-manager';
 import { PixelLabError, PixelLabErrorType } from '../pixellab/errors';
 
 describe('RetryManager', () => {

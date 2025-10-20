@@ -6,11 +6,11 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { TimeoutHandler, TimeoutError, TimeoutConfig } from './timeout-handler.js';
-import { JobProcessor } from './job-processor.js';
-import { QueueLogger } from './logger.js';
+import { TimeoutHandler, TimeoutError, TimeoutConfig } from '../timeout-handler.js';
+import { JobProcessor } from '../job-processor.js';
+import { QueueLogger } from '../logger.js';
 import type { Job } from 'bullmq';
-import type { SpriteGenerationResult } from './job-status-tracker.js';
+import type { SpriteGenerationResult } from '../job-status-tracker.js';
 
 /**
  * Mock Job implementation

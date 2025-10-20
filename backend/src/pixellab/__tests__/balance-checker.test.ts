@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { BalanceChecker, BalanceCheckerConfig } from './balance-checker';
-import { HttpClient } from './http-client';
-import { PixelLabError, PixelLabErrorType } from './errors';
-import { QuotaTracker } from './quota-tracker';
+import { BalanceChecker, BalanceCheckerConfig } from '../balance-checker';
+import { HttpClient } from '../http-client';
+import { PixelLabError, PixelLabErrorType } from '../errors';
+import { QuotaTracker } from '../quota-tracker';
 
 describe('Balance Checker - Task 6.4: Check API Balance', () => {
   let httpClient: HttpClient;

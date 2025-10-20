@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { CombatEngine } from './combat-engine.js';
+import { CombatEngine } from '../combat-engine.js';
 import type { DeploymentState } from '../../../../shared/src/types/deployment.js';
 import type { CombatState, CombatResult } from '../../../../shared/src/types/combat.js';
 

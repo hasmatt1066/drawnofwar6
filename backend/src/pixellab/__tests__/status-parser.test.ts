@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { StatusParser, JobStatus, JobStatusResponse } from './status-parser';
-import { PixelLabError, PixelLabErrorType } from './errors';
+import { StatusParser, JobStatus, JobStatusResponse } from '../status-parser';
+import { PixelLabError, PixelLabErrorType } from '../errors';
 import { AxiosResponse } from 'axios';
 
 describe('Status Parser - Task 4.4: Job Status Parser', () => {

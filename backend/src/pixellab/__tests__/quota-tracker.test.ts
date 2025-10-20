@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { QuotaTracker, QuotaTrackerConfig } from './quota-tracker';
+import { QuotaTracker, QuotaTrackerConfig } from '../quota-tracker';
 
 describe('Quota Tracker - Task 6.3: Track Cumulative Credit Usage', () => {
   describe('credit tracking', () => {

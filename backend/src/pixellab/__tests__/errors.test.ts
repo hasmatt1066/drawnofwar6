@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PixelLabError, PixelLabErrorType } from './errors';
+import { PixelLabError, PixelLabErrorType } from '../errors';
 
 describe('PixelLabError - Task 1.4: Custom Error Class', () => {
   describe('constructor', () => {

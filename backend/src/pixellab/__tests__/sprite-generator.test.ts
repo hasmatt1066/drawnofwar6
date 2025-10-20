@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { SpriteGenerator, JobSubmissionResponse } from './sprite-generator';
-import { HttpClient } from './http-client';
-import { GenerationRequest } from './request-validator';
-import { PixelLabError } from './errors';
+import { SpriteGenerator, JobSubmissionResponse } from '../sprite-generator';
+import { HttpClient } from '../http-client';
+import { GenerationRequest } from '../request-validator';
+import { PixelLabError } from '../errors';
 import MockAdapter from 'axios-mock-adapter';
 
 describe('Sprite Generator - Task 3.1: Sprite Generation Request', () => {

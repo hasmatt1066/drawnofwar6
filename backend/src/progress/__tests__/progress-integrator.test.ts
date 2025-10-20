@@ -6,12 +6,12 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { Job } from 'bullmq';
-import { ProgressIntegrator } from './progress-integrator.js';
-import { SSEManager } from './sse-manager.js';
-import { ProgressCalculator, JobStage } from './progress-calculator.js';
-import { QueueLogger } from '../queue/logger.js';
-import { JobStatus, type SpriteGenerationResult } from '../queue/job-status-tracker.js';
-import type { QueueServiceConfig } from '../queue/queue-manager.js';
+import { ProgressIntegrator } from '../progress-integrator.js';
+import { SSEManager } from '../sse-manager.js';
+import { ProgressCalculator, JobStage } from '../progress-calculator.js';
+import { QueueLogger } from '../../queue/logger.js';
+import { JobStatus, type SpriteGenerationResult } from '../../queue/job-status-tracker.js';
+import type { QueueServiceConfig } from '../../queue/queue-manager.js';
 
 describe('ProgressIntegrator', () => {
   let sseManager: SSEManager;

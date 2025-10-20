@@ -1,0 +1,239 @@
+{
+  "timestamp": "2025-10-04T19:15:26.675Z",
+  "totalLogs": 39,
+  "errors": [],
+  "relevantLogs": [
+    {
+      "type": "log",
+      "text": "[HexHover] During drag, updating target to: ",
+      "timestamp": "2025-10-04T19:15:22.551Z"
+    },
+    {
+      "type": "log",
+      "text": "[HexHover] During drag, updating target to: ",
+      "timestamp": "2025-10-04T19:15:22.561Z"
+    },
+    {
+      "type": "log",
+      "text": "Cancelling invalid drag",
+      "timestamp": "2025-10-04T19:15:22.763Z"
+    },
+    {
+      "type": "log",
+      "text": "[HexHover] During drag, updating target to: ",
+      "timestamp": "2025-10-04T19:15:24.748Z"
+    },
+    {
+      "type": "log",
+      "text": "[HexHover] During drag, updating target to: JSHandle@object",
+      "timestamp": "2025-10-04T19:15:24.750Z"
+    },
+    {
+      "type": "log",
+      "text": "Placement success: true",
+      "timestamp": "2025-10-04T19:15:24.963Z"
+    },
+    {
+      "type": "log",
+      "text": "Cancelling invalid drag",
+      "timestamp": "2025-10-04T19:15:24.968Z"
+    }
+  ],
+  "allLogs": [
+    {
+      "type": "debug",
+      "text": "[vite] connecting...",
+      "timestamp": "2025-10-04T19:15:18.899Z"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected.",
+      "timestamp": "2025-10-04T19:15:18.905Z"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
+      "timestamp": "2025-10-04T19:15:18.993Z"
+    },
+    {
+      "type": "log",
+      "text": "[useDeploymentSocketSync] Connecting to match dd3661e7-804a-475b-b0a2-59afb6af2268 as player1",
+      "timestamp": "2025-10-04T19:15:19.097Z"
+    },
+    {
+      "type": "log",
+      "text": "[Deployment Socket] Creating socket connection",
+      "timestamp": "2025-10-04T19:15:19.097Z"
+    },
+    {
+      "type": "warn",
+      "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+      "timestamp": "2025-10-04T19:15:19.100Z"
+    },
+    {
+      "type": "warn",
+      "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.",
+      "timestamp": "2025-10-04T19:15:19.100Z"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'http://localhost:3001/api/creatures/sprites/batch' from origin 'http://localhost:5177' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+      "timestamp": "2025-10-04T19:15:19.104Z"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED",
+      "timestamp": "2025-10-04T19:15:19.104Z"
+    },
+    {
+      "type": "error",
+      "text": "[CreatureSpriteLoader] Failed to load batch sprites: JSHandle@error",
+      "timestamp": "2025-10-04T19:15:19.104Z"
+    },
+    {
+      "type": "log",
+      "text": "[DeploymentDemo] Loaded sprites for 8 creatures",
+      "timestamp": "2025-10-04T19:15:19.105Z"
+    },
+    {
+      "type": "log",
+      "text": "[Deployment Socket] Connected",
+      "timestamp": "2025-10-04T19:15:19.111Z"
+    },
+    {
+      "type": "log",
+      "text": "[Deployment Socket] Joining match dd3661e7-804a-475b-b0a2-59afb6af2268 as player1",
+      "timestamp": "2025-10-04T19:15:19.111Z"
+    },
+    {
+      "type": "warn",
+      "text": "[GroupMarkerNotSet(crbug.com/242999)!:A050230074290000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.",
+      "timestamp": "2025-10-04T19:15:19.141Z"
+    },
+    {
+      "type": "warn",
+      "text": "[GroupMarkerNotSet(crbug.com/242999)!:A020230074290000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.",
+      "timestamp": "2025-10-04T19:15:19.157Z"
+    },
+    {
+      "type": "warn",
+      "text": "[.WebGL-0x3bd402346a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+      "timestamp": "2025-10-04T19:15:19.159Z"
+    },
+    {
+      "type": "warn",
+      "text": "[.WebGL-0x3bd402346a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+      "timestamp": "2025-10-04T19:15:19.236Z"
+    },
+    {
+      "type": "warn",
+      "text": "[.WebGL-0x3bd402346a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+      "timestamp": "2025-10-04T19:15:19.246Z"
+    },
+    {
+      "type": "warn",
+      "text": "[.WebGL-0x3bd402346a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)",
+      "timestamp": "2025-10-04T19:15:19.261Z"
+    },
+    {
+      "type": "log",
+      "text": "Drag started: Warrior",
+      "timestamp": "2025-10-04T19:15:22.536Z"
+    },
+    {
+      "type": "log",
+      "text": "[DragOver] Mouse at pixel: JSHandle@object Hex: ",
+      "timestamp": "2025-10-04T19:15:22.551Z"
+    },
+    {
+      "type": "log",
+      "text": "[HexHover] During drag, updating target to: ",
+      "timestamp": "2025-10-04T19:15:22.551Z"
+    },
+    {
+      "type": "log",
+      "text": "[DragOver] Mouse at pixel: JSHandle@object Hex: ",
+      "timestamp": "2025-10-04T19:15:22.561Z"
+    },
+    {
+      "type": "log",
+      "text": "[HexHover] During drag, updating target to: ",
+      "timestamp": "2025-10-04T19:15:22.561Z"
+    },
+    {
+      "type": "log",
+      "text": "Drag ended from roster",
+      "timestamp": "2025-10-04T19:15:22.763Z"
+    },
+    {
+      "type": "log",
+      "text": "Cancelling invalid drag",
+      "timestamp": "2025-10-04T19:15:22.763Z"
+    },
+    {
+      "type": "log",
+      "text": "Drag started: Archer",
+      "timestamp": "2025-10-04T19:15:24.735Z"
+    },
+    {
+      "type": "log",
+      "text": "[DragOver] Mouse at pixel: JSHandle@object Hex: ",
+      "timestamp": "2025-10-04T19:15:24.748Z"
+    },
+    {
+      "type": "log",
+      "text": "[HexHover] During drag, updating target to: ",
+      "timestamp": "2025-10-04T19:15:24.748Z"
+    },
+    {
+      "type": "log",
+      "text": "[DragOver] Mouse at pixel: JSHandle@object Hex: JSHandle@object",
+      "timestamp": "2025-10-04T19:15:24.750Z"
+    },
+    {
+      "type": "log",
+      "text": "[HexHover] During drag, updating target to: JSHandle@object",
+      "timestamp": "2025-10-04T19:15:24.750Z"
+    },
+    {
+      "type": "warn",
+      "text": "[DeploymentGridRenderer] Invalid sprite URL format for Archer, using fallback: A",
+      "timestamp": "2025-10-04T19:15:24.751Z"
+    },
+    {
+      "type": "error",
+      "text": "[DeploymentGridRenderer] Failed to load sprite: JSHandle@error",
+      "timestamp": "2025-10-04T19:15:24.752Z"
+    },
+    {
+      "type": "log",
+      "text": "Drop on hex: JSHandle@object",
+      "timestamp": "2025-10-04T19:15:24.963Z"
+    },
+    {
+      "type": "log",
+      "text": "Placement success: true",
+      "timestamp": "2025-10-04T19:15:24.963Z"
+    },
+    {
+      "type": "warn",
+      "text": "[DeploymentGridRenderer] Invalid sprite URL format for Archer, using fallback: A",
+      "timestamp": "2025-10-04T19:15:24.966Z"
+    },
+    {
+      "type": "error",
+      "text": "[DeploymentGridRenderer] Failed to load sprite: JSHandle@error",
+      "timestamp": "2025-10-04T19:15:24.966Z"
+    },
+    {
+      "type": "log",
+      "text": "Drag ended from roster",
+      "timestamp": "2025-10-04T19:15:24.968Z"
+    },
+    {
+      "type": "log",
+      "text": "Cancelling invalid drag",
+      "timestamp": "2025-10-04T19:15:24.968Z"
+    }
+  ]
+}

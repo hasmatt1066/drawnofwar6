@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { QueueLogger, redactSensitiveData, truncateForLogging } from './logger';
+import { QueueLogger, redactSensitiveData, truncateForLogging } from '../logger';
 
 describe('QueueLogger - Task 7.3: Structured Logging', () => {
   let consoleLogSpy: any;

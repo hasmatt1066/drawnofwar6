@@ -10,9 +10,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { pollJobStatus, type JobStatus, type GenerationResult } from '@/services/generationService';
+import { getCreatureLibraryService } from '@/services/creatureLibraryService';
+import type { OwnerId } from '@drawn-of-war/shared/types/creature-storage';
 import { AnimationDebugger } from '@/components/AnimationDebugger';
-import { SpellCastDemo } from '@/components/SpellCastDemo';
-import { MeleeAttackDemo } from '@/components/MeleeAttackDemo';
+import { CombatAttributeDisplay } from '@/components/CombatAttributeDisplay';
 import styles from './GenerationProgress.module.css';
 
 interface GenerationProgressProps {
@@ -114,24 +115,7 @@ export const GenerationProgress: React.FC<GenerationProgressProps> = ({
           <div className={styles.successIcon}>✨</div>
           <h2 className={styles.successTitle}>Generation Complete!</h2>
           <div className={styles.resultPanel}>
-            <ResultDisplay result={status.result} />
-          </div>
-          <div className={styles.actions}>
-            <button
-              className={styles.primaryButton}
-              onClick={() => {
-                // TODO: Navigate to creature editor or save to collection
-                console.log('Save creature:', status.result);
-              }}
-            >
-              Save Creature
-            </button>
-            <button
-              className={styles.secondaryButton}
-              onClick={() => window.location.href = '/create'}
-            >
-              Create Another
-            </button>
+            <ResultDisplay result={status.result} jobId={jobId} />
           </div>
         </div>
       </div>
@@ -209,9 +193,16 @@ export const GenerationProgress: React.FC<GenerationProgressProps> = ({
  *
  * Shows the generated creature's details
  */
-const ResultDisplay: React.FC<{ result: GenerationResult }> = ({ result }) => {
+const ResultDisplay: React.FC<{ result: GenerationResult; jobId: string }> = ({ result, jobId }) => {
   // Animation frame playback
   const [currentFrame, setCurrentFrame] = React.useState(0);
+
+  // Save to library state
+  const [selectedOwner, setSelectedOwner] = React.useState<OwnerId>('demo-player1');
+  const [isSaving, setIsSaving] = React.useState(false);
+  const [saveSuccess, setSaveSuccess] = React.useState(false);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
+  const [savedCreatureId, setSavedCreatureId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (!result.animationFrames || result.animationFrames.length === 0) {
@@ -225,8 +216,88 @@ const ResultDisplay: React.FC<{ result: GenerationResult }> = ({ result }) => {
     return () => clearInterval(interval);
   }, [result.animationFrames]);
 
+  // Handle save to library
+  const handleSaveToLibrary = async () => {
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      const libraryService = getCreatureLibraryService();
+      const response = await libraryService.saveCreature({
+        jobId,
+        ownerId: selectedOwner
+      });
+
+      setSaveSuccess(true);
+      setSavedCreatureId(response.creatureId);
+      console.log('Creature saved successfully:', response);
+    } catch (error) {
+      console.error('Error saving creature:', error);
+      setSaveError(error instanceof Error ? error.message : 'Failed to save creature');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className={styles.resultContainer}>
+      {/* Save to Library Actions */}
+      <div className={styles.resultSection}>
+        <h3 className={styles.resultSectionTitle}>Save to Library</h3>
+        {!saveSuccess ? (
+          <div className={styles.saveControls}>
+            <div className={styles.playerSelect}>
+              <label htmlFor="player-select" className={styles.playerSelectLabel}>
+                Select Player:
+              </label>
+              <select
+                id="player-select"
+                value={selectedOwner}
+                onChange={(e) => setSelectedOwner(e.target.value as OwnerId)}
+                className={styles.playerSelectInput}
+                disabled={isSaving}
+              >
+                <option value="demo-player1">Player 1</option>
+                <option value="demo-player2">Player 2</option>
+              </select>
+            </div>
+            <button
+              className={styles.primaryButton}
+              onClick={handleSaveToLibrary}
+              disabled={isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Save to Library'}
+            </button>
+            {saveError && (
+              <p className={styles.errorText}>{saveError}</p>
+            )}
+          </div>
+        ) : (
+          <div className={styles.saveSuccess}>
+            <p className={styles.successText}>
+              ✓ Creature saved successfully!
+            </p>
+            <p className={styles.creatureIdText}>
+              Creature ID: {savedCreatureId}
+            </p>
+            <div className={styles.actions}>
+              <button
+                className={styles.secondaryButton}
+                onClick={() => window.location.href = '/create'}
+              >
+                Create Another
+              </button>
+              <button
+                className={styles.primaryButton}
+                onClick={() => window.location.href = `/deployment?creatures=${savedCreatureId}`}
+              >
+                Deploy to Battle
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Animated Sprite - Just shows the sprite, no controls */}
       {result.animationFrames && result.animationFrames.length > 0 ? (
         <div className={styles.resultSection}>
@@ -316,26 +387,13 @@ const ResultDisplay: React.FC<{ result: GenerationResult }> = ({ result }) => {
         />
       )}
 
-      {/* Spell Cast Demo - Proof of concept for ranged effect compositing */}
-      {result.spriteImageBase64 && result.animations?.totalAnimations && (
+      {/* Combat Attributes Display - Shows baseline attack + AI-assigned special attributes */}
+      {result.combatAttributes && result.combatAttributes.attributes.length > 0 && result.spriteImageBase64&& result.baselineAttackType && (
         <div className={styles.resultSection} style={{ marginTop: '30px' }}>
-          <SpellCastDemo
-            casterSprite={result.spriteImageBase64}
-            casterName="Your Creature"
-            targetSprite={result.spriteImageBase64} // Using same sprite as target for demo
-            targetName="Enemy"
-          />
-        </div>
-      )}
-
-      {/* Melee Attack Demo - Proof of concept for melee effect compositing */}
-      {result.spriteImageBase64 && result.animations?.totalAnimations && (
-        <div className={styles.resultSection} style={{ marginTop: '30px' }}>
-          <MeleeAttackDemo
-            attackerSprite={result.spriteImageBase64}
-            attackerName="Your Creature"
-            targetSprite={result.spriteImageBase64} // Using same sprite as target for demo
-            targetName="Enemy"
+          <CombatAttributeDisplay
+            attributes={result.combatAttributes.attributes}
+            creatureSprite={result.spriteImageBase64}
+            baselineAttackType={result.baselineAttackType}
           />
         </div>
       )}

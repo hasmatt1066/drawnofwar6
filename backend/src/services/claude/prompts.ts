@@ -5,6 +5,8 @@
  * Uses structured output format to ensure consistent responses.
  */
 
+import { buildClaudeAbilityGuidance } from '../../config/abilities-catalog.js';
+
 /**
  * Build prompt for creature analysis
  * Uses few-shot examples and clear instructions for consistent JSON output
@@ -32,11 +34,8 @@ Analyze this creature image and extract the following information:
    - Defense: 0-30 (armor, shields, protective features)
    - Speed: 1-10 (body type, wings, sleek design)
 
-5. **Abilities**: Identify 2-5 abilities this creature likely has based on visual features:
-   - Physical abilities: "melee_attack", "charge", "claw_strike", "bite"
-   - Ranged abilities: "ranged_attack", "projectile", "throw"
-   - Magic abilities: "fire_spell", "ice_spell", "lightning", "heal"
-   - Special abilities: "flight", "fire_breath", "poison", "teleport", "shield"
+5. **Abilities**: Identify 2-5 abilities this creature likely has based on visual features.
+   ${buildClaudeAbilityGuidance()}
 
 6. **Suggested Animations**: Based on the creature type and abilities, suggest 15-25 animations:
    - Base: "idle", "walk", "run", "death"

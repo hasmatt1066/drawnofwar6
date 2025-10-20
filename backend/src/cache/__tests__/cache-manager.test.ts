@@ -10,10 +10,10 @@
  */
 
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
-import { CacheManager, type CacheLookupResult } from './cache-manager.js';
-import type { CacheEntry } from './redis-cache.js';
-import type { QueueServiceConfig } from '../queue/queue-manager.js';
-import type { QueueLogger } from '../queue/logger.js';
+import { CacheManager, type CacheLookupResult } from '../cache-manager.js';
+import type { CacheEntry } from '../redis-cache.js';
+import type { QueueServiceConfig } from '../../queue/queue-manager.js';
+import type { QueueLogger } from '../../queue/logger.js';
 
 // Mock RedisCache interface
 interface MockRedisCache {

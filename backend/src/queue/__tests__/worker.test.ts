@@ -7,10 +7,10 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Worker, Job } from 'bullmq';
-import { QueueWorker, JobProcessor } from './worker.js';
-import { QueueManager } from './queue-manager.js';
-import { QueueLogger } from './logger.js';
-import type { QueueServiceConfig } from './queue-manager.js';
+import { QueueWorker, JobProcessor } from '../worker.js';
+import { QueueManager } from '../queue-manager.js';
+import { QueueLogger } from '../logger.js';
+import type { QueueServiceConfig } from '../queue-manager.js';
 
 // Mock BullMQ Worker
 vi.mock('bullmq', async () => {

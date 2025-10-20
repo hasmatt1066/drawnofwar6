@@ -7,10 +7,10 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import RedisMock from 'ioredis-mock';
-import { RedisCache } from './redis-cache.js';
-import type { QueueServiceConfig } from '../queue/queue-manager.js';
-import type { StructuredPrompt, SpriteGenerationResult } from '../queue/job-status-tracker.js';
-import { QueueLogger } from '../queue/logger.js';
+import { RedisCache } from '../redis-cache.js';
+import type { QueueServiceConfig } from '../../queue/queue-manager.js';
+import type { StructuredPrompt, SpriteGenerationResult } from '../../queue/job-status-tracker.js';
+import { QueueLogger } from '../../queue/logger.js';
 
 describe('RedisCache', () => {
   let redis: RedisMock;

@@ -58,7 +58,7 @@ export const MeleeAttackDemo: React.FC<MeleeAttackDemoProps> = ({
   const loadMeleeEffect = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:3001/api/library-animations/attack_melee_sword');
+      const response = await fetch('/api/library-animations/attack_melee_sword');
       const data: LibraryAnimation = await response.json();
       setMeleeEffect(data);
     } catch (error) {

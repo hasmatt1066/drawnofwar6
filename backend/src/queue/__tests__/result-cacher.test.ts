@@ -6,10 +6,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ResultCacher } from './result-cacher.js';
-import type { CacheManager, CacheLookupResult } from '../cache/cache-manager.js';
-import type { QueueLogger } from './logger.js';
-import type { StructuredPrompt, SpriteGenerationResult } from './job-status-tracker.js';
+import { ResultCacher } from '../result-cacher.js';
+import type { CacheManager, CacheLookupResult } from '../../cache/cache-manager.js';
+import type { QueueLogger } from '../logger.js';
+import type { StructuredPrompt, SpriteGenerationResult } from '../job-status-tracker.js';
 
 describe('ResultCacher', () => {
   let resultCacher: ResultCacher;

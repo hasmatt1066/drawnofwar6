@@ -5,8 +5,7 @@
  * Broadcasts state updates at configurable rate (default 10 updates/sec).
  */
 
-import type { Server as HTTPServer } from 'http';
-import { Server as SocketIOServer, Socket } from 'socket.io';
+import type { Namespace, Socket } from 'socket.io';
 import type { CombatState, CombatResult, CombatEvent } from '../../../../shared/src/types/combat.js';
 import type { DeploymentState } from '../../../../shared/src/types/deployment.js';
 import { combatStateManager } from '../services/combat/combat-state-manager.js';
@@ -22,17 +21,11 @@ function getCombatRoom(matchId: string): string {
  * Combat Socket Handler
  */
 export class CombatSocketHandler {
-  private io: SocketIOServer;
+  private namespace: Namespace;
   private updateIntervals: Map<string, NodeJS.Timeout> = new Map();
 
-  constructor(httpServer: HTTPServer) {
-    this.io = new SocketIOServer(httpServer, {
-      cors: {
-        origin: process.env['FRONTEND_URL'] || 'http://localhost:5173',
-        credentials: true
-      }
-    });
-
+  constructor(namespace: Namespace) {
+    this.namespace = namespace;
     this.setupEventHandlers();
   }
 
@@ -40,7 +33,7 @@ export class CombatSocketHandler {
    * Setup Socket.IO event handlers
    */
   private setupEventHandlers(): void {
-    this.io.on('connection', (socket: Socket) => {
+    this.namespace.on('connection', (socket: Socket) => {
       console.log(`[Combat Socket] Client connected: ${socket.id}`);
 
       // Join combat room
@@ -79,17 +72,23 @@ export class CombatSocketHandler {
    * Handle client joining combat room
    */
   private handleJoinCombat(socket: Socket, matchId: string): void {
+    console.log(`[Combat Socket] Client ${socket.id} requesting to join match ${matchId}`);
+
     const room = getCombatRoom(matchId);
     socket.join(room);
 
-    console.log(`[Combat Socket] Client ${socket.id} joined room ${room}`);
+    console.log(`[Combat Socket] ✓ Client ${socket.id} joined room ${room}`);
 
     // Send current state if combat is active
     const state = combatStateManager.getState(matchId);
     if (state) {
+      console.log(`[Combat Socket] Sending current combat state (tick ${state.tick}) to ${socket.id}`);
       socket.emit('combat:state', state);
+    } else {
+      console.log(`[Combat Socket] No active combat state for match ${matchId}`);
     }
 
+    console.log(`[Combat Socket] Emitting combat:joined to ${socket.id}`);
     socket.emit('combat:joined', { matchId, room });
   }
 
@@ -142,7 +141,7 @@ export class CombatSocketHandler {
       this.startBroadcasting(matchId);
 
       // Notify clients
-      this.io.to(getCombatRoom(matchId)).emit('combat:started', { matchId });
+      this.namespace.to(getCombatRoom(matchId)).emit('combat:started', { matchId });
     } catch (error: any) {
       console.error('[Combat Socket] Error starting combat:', error);
       socket.emit('combat:error', {
@@ -159,7 +158,7 @@ export class CombatSocketHandler {
       combatStateManager.stopCombat(matchId);
       this.stopBroadcasting(matchId);
 
-      this.io.to(getCombatRoom(matchId)).emit('combat:stopped', { matchId });
+      this.namespace.to(getCombatRoom(matchId)).emit('combat:stopped', { matchId });
     } catch (error: any) {
       console.error('[Combat Socket] Error stopping combat:', error);
       socket.emit('combat:error', {
@@ -204,7 +203,7 @@ export class CombatSocketHandler {
     this.stopBroadcasting(matchId);
 
     // Broadcast final result
-    this.io.to(getCombatRoom(matchId)).emit('combat:completed', result);
+    this.namespace.to(getCombatRoom(matchId)).emit('combat:completed', result);
 
     console.log(`[Combat Socket] Combat completed for match ${matchId}, winner: ${result.winner}`);
   }
@@ -212,38 +211,51 @@ export class CombatSocketHandler {
   /**
    * Start broadcasting state updates at fixed rate
    */
-  private startBroadcasting(matchId: string): void {
+  public startBroadcasting(matchId: string): void {
     // Broadcast at 10 updates per second (100ms interval)
     const BROADCAST_INTERVAL = 100;
+
+    let tickCounter = 0;
 
     const interval = setInterval(() => {
       const state = combatStateManager.getState(matchId);
 
       if (!state) {
         // Combat ended, stop broadcasting
+        console.log(`[Combat Socket] No state found, stopping broadcast for match ${matchId}`);
         this.stopBroadcasting(matchId);
         return;
       }
 
+      // Log every 10 broadcasts (once per second) to avoid spam
+      tickCounter++;
+      if (tickCounter % 10 === 0) {
+        const room = getCombatRoom(matchId);
+        const clientsInRoom = this.namespace.adapter.rooms.get(room)?.size || 0;
+        console.log(`[Combat Socket] Broadcasting state tick ${state.tick} to ${clientsInRoom} clients in room ${room}`);
+      }
+
       // Broadcast state to all clients in room
-      this.io.to(getCombatRoom(matchId)).emit('combat:state', state);
+      this.namespace.to(getCombatRoom(matchId)).emit('combat:state', state);
 
       // Broadcast recent events separately for immediate feedback
       const recentEvents = state.events.slice(-5); // Last 5 events
       if (recentEvents.length > 0) {
-        this.io.to(getCombatRoom(matchId)).emit('combat:events', recentEvents);
+        this.namespace.to(getCombatRoom(matchId)).emit('combat:events', recentEvents);
       }
     }, BROADCAST_INTERVAL);
 
     this.updateIntervals.set(matchId, interval);
 
-    console.log(`[Combat Socket] Started broadcasting for match ${matchId}`);
+    const room = getCombatRoom(matchId);
+    const clientsInRoom = this.namespace.adapter.rooms.get(room)?.size || 0;
+    console.log(`[Combat Socket] ✓ Started broadcasting for match ${matchId}, ${clientsInRoom} clients in room ${room}`);
   }
 
   /**
    * Stop broadcasting state updates
    */
-  private stopBroadcasting(matchId: string): void {
+  public stopBroadcasting(matchId: string): void {
     const interval = this.updateIntervals.get(matchId);
     if (interval) {
       clearInterval(interval);
@@ -256,14 +268,14 @@ export class CombatSocketHandler {
    * Broadcast a single event immediately
    */
   public broadcastEvent(matchId: string, event: CombatEvent): void {
-    this.io.to(getCombatRoom(matchId)).emit('combat:event', event);
+    this.namespace.to(getCombatRoom(matchId)).emit('combat:event', event);
   }
 
   /**
-   * Get Socket.IO server instance
+   * Get namespace instance
    */
-  public getIO(): SocketIOServer {
-    return this.io;
+  public getNamespace(): Namespace {
+    return this.namespace;
   }
 
   /**
@@ -276,8 +288,7 @@ export class CombatSocketHandler {
     }
     this.updateIntervals.clear();
 
-    // Close socket server
-    this.io.close();
+    console.log('[Combat Socket] Cleanup complete');
   }
 }
 
@@ -287,12 +298,12 @@ let combatSocketHandler: CombatSocketHandler | null = null;
 /**
  * Initialize combat socket handler
  */
-export function initializeCombatSocket(httpServer: HTTPServer): CombatSocketHandler {
+export function initializeCombatSocket(namespace: Namespace): CombatSocketHandler {
   if (combatSocketHandler) {
     throw new Error('Combat socket handler already initialized');
   }
 
-  combatSocketHandler = new CombatSocketHandler(httpServer);
+  combatSocketHandler = new CombatSocketHandler(namespace);
   return combatSocketHandler;
 }
 

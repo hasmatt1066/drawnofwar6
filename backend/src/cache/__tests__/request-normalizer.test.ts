@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { RequestNormalizer } from './request-normalizer.js';
-import type { StructuredPrompt } from '../queue/job-submitter.js';
+import { RequestNormalizer } from '../request-normalizer.js';
+import type { StructuredPrompt } from '../../queue/job-submitter.js';
 
 describe('RequestNormalizer', () => {
   describe('normalize', () => {

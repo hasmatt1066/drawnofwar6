@@ -5,9 +5,9 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { QueueSizeMonitor, QueueSizeMetrics, QueueSizeMonitorConfig } from './queue-size-monitor.js';
-import { QueueManager, QueueServiceConfig } from './queue-manager.js';
-import { QueueLogger } from './logger.js';
+import { QueueSizeMonitor, QueueSizeMetrics, QueueSizeMonitorConfig } from '../queue-size-monitor.js';
+import { QueueManager, QueueServiceConfig } from '../queue-manager.js';
+import { QueueLogger } from '../logger.js';
 import { Queue } from 'bullmq';
 
 describe('QueueSizeMonitor', () => {

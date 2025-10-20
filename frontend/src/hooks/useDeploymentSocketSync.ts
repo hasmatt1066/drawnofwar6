@@ -5,7 +5,7 @@
  * Manages connection, events, and state synchronization.
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import type { CreaturePlacement, MatchDeploymentStatus } from '@drawn-of-war/shared';
 import { deploymentSocket } from '../services/deployment-socket';
 
@@ -55,6 +55,28 @@ export function useDeploymentSocketSync(options: UseDeploymentSocketSyncOptions)
   // Determine opponent player ID
   const opponentPlayerId = playerId === 'player1' ? 'player2' : 'player1';
 
+  // Use refs to avoid dependency issues with callbacks
+  const callbacksRef = useRef({
+    onStateReceived,
+    onOpponentPlaced,
+    onOpponentRemoved,
+    onOpponentUpdated,
+    onStatusChanged,
+    onError
+  });
+
+  // Update refs on every render
+  useEffect(() => {
+    callbacksRef.current = {
+      onStateReceived,
+      onOpponentPlaced,
+      onOpponentRemoved,
+      onOpponentUpdated,
+      onStatusChanged,
+      onError
+    };
+  });
+
   // Connect and setup event listeners
   useEffect(() => {
     if (!enabled) {
@@ -63,21 +85,24 @@ export function useDeploymentSocketSync(options: UseDeploymentSocketSyncOptions)
 
     console.log(`[useDeploymentSocketSync] Connecting to match ${matchId} as ${playerId}`);
 
-    // Connect to socket
-    deploymentSocket.connect(matchId, playerId);
+    // Connect to socket (async)
+    deploymentSocket.connect(matchId, playerId).catch((error) => {
+      console.error('[useDeploymentSocketSync] Connection failed:', error);
+      setState((prev) => ({ ...prev, error: error.message, isConnected: false }));
+    });
 
-    // Handle initial state
+    // Handle initial state (only set isConnected true here - after join completes)
     deploymentSocket.onState((data) => {
-      console.log('[useDeploymentSocketSync] Received initial state');
-      setState((prev) => ({ ...prev, isConnected: true }));
-      onStateReceived?.(data);
+      console.log('[useDeploymentSocketSync] Received initial state - join completed');
+      setState((prev) => ({ ...prev, isConnected: true, error: null }));
+      callbacksRef.current.onStateReceived?.(data);
     });
 
     // Handle opponent placed
     deploymentSocket.onOpponentPlaced((data) => {
       if (data.playerId === opponentPlayerId) {
         console.log('[useDeploymentSocketSync] Opponent placed creature');
-        onOpponentPlaced?.(data.placement);
+        callbacksRef.current.onOpponentPlaced?.(data.placement);
       }
     });
 
@@ -85,7 +110,7 @@ export function useDeploymentSocketSync(options: UseDeploymentSocketSyncOptions)
     deploymentSocket.onOpponentRemoved((data) => {
       if (data.playerId === opponentPlayerId) {
         console.log('[useDeploymentSocketSync] Opponent removed creature');
-        onOpponentRemoved?.(data.creatureId);
+        callbacksRef.current.onOpponentRemoved?.(data.creatureId);
       }
     });
 
@@ -93,21 +118,21 @@ export function useDeploymentSocketSync(options: UseDeploymentSocketSyncOptions)
     deploymentSocket.onOpponentUpdated((data) => {
       if (data.playerId === opponentPlayerId) {
         console.log('[useDeploymentSocketSync] Opponent updated placements');
-        onOpponentUpdated?.(data.placements);
+        callbacksRef.current.onOpponentUpdated?.(data.placements);
       }
     });
 
     // Handle status changed
     deploymentSocket.onStatusChanged((status) => {
       console.log('[useDeploymentSocketSync] Deployment status changed');
-      onStatusChanged?.(status);
+      callbacksRef.current.onStatusChanged?.(status);
     });
 
     // Handle errors
     deploymentSocket.onError((data) => {
       console.error('[useDeploymentSocketSync] Error:', data.message);
       setState((prev) => ({ ...prev, error: data.message }));
-      onError?.(data.message, data.code);
+      callbacksRef.current.onError?.(data.message, data.code);
     });
 
     // Handle opponent connected
@@ -133,39 +158,30 @@ export function useDeploymentSocketSync(options: UseDeploymentSocketSyncOptions)
       }
     });
 
-    // Update connection state
-    setState((prev) => ({
-      ...prev,
-      isConnected: deploymentSocket.isConnected
-    }));
+    // NOTE: Do NOT set isConnected based on raw socket state here!
+    // isConnected should ONLY be set to true when deployment:state is received (line 97)
+    // This ensures the socket has fully joined the match before allowing operations
 
-    // Cleanup on unmount
+    // Cleanup on unmount - only remove listeners, keep socket alive
     return () => {
-      console.log('[useDeploymentSocketSync] Cleaning up');
+      console.log('[useDeploymentSocketSync] Cleaning up listeners');
       deploymentSocket.removeAllListeners();
-      deploymentSocket.disconnect();
-      setState({
-        isConnected: false,
-        opponentConnected: false,
-        opponentPlayerId: null,
-        error: null
-      });
+      // Note: We keep the socket connection alive for reuse
     };
   }, [
     matchId,
     playerId,
     enabled,
-    opponentPlayerId,
-    onStateReceived,
-    onOpponentPlaced,
-    onOpponentRemoved,
-    onOpponentUpdated,
-    onStatusChanged,
-    onError
+    opponentPlayerId
   ]);
 
   // Emit placement
   const emitPlacement = useCallback((placement: CreaturePlacement) => {
+    console.log('[useDeploymentSocketSync] Emitting placement:', {
+      creatureName: placement.creature.name,
+      hex: placement.hex,
+      isSocketConnected: deploymentSocket.isConnected
+    });
     deploymentSocket.placeCreature(placement);
   }, []);
 
@@ -181,6 +197,7 @@ export function useDeploymentSocketSync(options: UseDeploymentSocketSyncOptions)
 
   // Emit ready
   const emitReady = useCallback(() => {
+    console.log('[useDeploymentSocketSync] Emitting ready, socket connected:', deploymentSocket.isConnected);
     deploymentSocket.markReady();
   }, []);
 

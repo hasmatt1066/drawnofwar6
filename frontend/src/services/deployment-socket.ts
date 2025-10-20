@@ -12,8 +12,6 @@ import type {
   MatchDeploymentStatus
 } from '@drawn-of-war/shared';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
-
 /**
  * Deployment socket client
  */
@@ -21,20 +19,21 @@ export class DeploymentSocketClient {
   private socket: Socket<DeploymentServerEvents, DeploymentClientEvents> | null = null;
   private matchId: string | null = null;
   private playerId: 'player1' | 'player2' | null = null;
+  private joinPromise: Promise<void> | null = null;
 
   /**
-   * Connect to deployment socket
+   * Ensure socket is connected (idempotent)
    */
-  connect(matchId: string, playerId: 'player1' | 'player2'): void {
-    if (this.socket?.connected) {
-      console.warn('[Deployment Socket] Already connected');
-      return;
+  private ensureConnection(): void {
+    if (this.socket) {
+      return; // Already have a socket instance
     }
 
-    this.matchId = matchId;
-    this.playerId = playerId;
+    console.log('[Deployment Socket] Creating socket connection');
 
-    this.socket = io(BACKEND_URL, {
+    // Connect to /deployment namespace
+    // Omit URL to use current origin - allows Vite proxy to handle WebSocket connections
+    this.socket = io('/deployment', {
       path: '/socket.io',
       transports: ['websocket', 'polling'],
       reconnection: true,
@@ -45,7 +44,7 @@ export class DeploymentSocketClient {
 
     this.socket.on('connect', () => {
       console.log('[Deployment Socket] Connected');
-      // Auto-join match on connect
+      // Auto-join match on reconnect
       if (this.matchId && this.playerId) {
         this.joinMatch(this.matchId, this.playerId);
       }
@@ -61,6 +60,58 @@ export class DeploymentSocketClient {
   }
 
   /**
+   * Connect to deployment socket and join match
+   * Returns a promise that resolves when joined
+   */
+  async connect(matchId: string, playerId: 'player1' | 'player2'): Promise<void> {
+    this.matchId = matchId;
+    this.playerId = playerId;
+
+    // If already joining, wait for that promise
+    if (this.joinPromise) {
+      return this.joinPromise;
+    }
+
+    // Create join promise
+    this.joinPromise = new Promise<void>((resolve, reject) => {
+      // Ensure we have a socket connection (creates if needed)
+      this.ensureConnection();
+
+      if (!this.socket) {
+        reject(new Error('Failed to create socket'));
+        return;
+      }
+
+      // Listen for successful join (state received means join succeeded)
+      const onState = () => {
+        this.socket?.off('deployment:state', onState);
+        this.socket?.off('deployment:error', onError);
+        console.log('[Deployment Socket] Successfully joined match');
+        resolve();
+      };
+
+      const onError = (data: { message: string }) => {
+        this.socket?.off('deployment:state', onState);
+        this.socket?.off('deployment:error', onError);
+        console.error('[Deployment Socket] Join failed:', data.message);
+        reject(new Error(data.message));
+      };
+
+      // Set up listeners
+      this.socket.once('deployment:state', onState);
+      this.socket.once('deployment:error', onError);
+
+      // Join immediately if already connected
+      if (this.socket.connected) {
+        this.joinMatch(matchId, playerId);
+      }
+      // Otherwise wait for connect event (which will auto-join via lines 44-49)
+    });
+
+    return this.joinPromise;
+  }
+
+  /**
    * Disconnect from deployment socket
    */
   disconnect(): void {
@@ -69,6 +120,7 @@ export class DeploymentSocketClient {
       this.socket = null;
       this.matchId = null;
       this.playerId = null;
+      this.joinPromise = null;
       console.log('[Deployment Socket] Disconnected');
     }
   }
@@ -231,6 +283,25 @@ export class DeploymentSocketClient {
    */
   onOpponentDisconnected(callback: (data: { playerId: 'player1' | 'player2' }) => void): void {
     this.socket?.on('deployment:opponent-disconnected', callback);
+  }
+
+  /**
+   * Listen for combat started
+   */
+  onCombatStarted(callback: (data: { matchId: string }) => void): void {
+    this.socket?.on('deployment:combat-started', callback);
+  }
+
+  /**
+   * Listen for combat completed
+   */
+  onCombatCompleted(callback: (data: {
+    matchId: string;
+    winner: 'player1' | 'player2' | 'draw';
+    reason: string;
+    duration: number;
+  }) => void): void {
+    this.socket?.on('deployment:combat-completed', callback);
   }
 
   /**

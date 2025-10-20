@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { HttpClient } from './http-client';
-import { PixelLabError, PixelLabErrorType } from './errors';
+import { HttpClient } from '../http-client';
+import { PixelLabError, PixelLabErrorType } from '../errors';
 import MockAdapter from 'axios-mock-adapter';
 
 describe('Error Interceptor - Task 1.3: Response Error Handling', () => {

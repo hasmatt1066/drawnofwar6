@@ -99,48 +99,112 @@ The core generation pipeline is **complete and operational**:
 **API Endpoint**:
 - `POST /api/test/view-angles` - Generate all 3 views with walk cycles
 
-### Battlefield View Integration (✅ PRODUCTION READY)
+### Battlefield View Integration (✅ PRODUCTION READY - ENHANCED)
 
-**Status**: ✅ Dual sprite system **fully implemented and ready for testing** (2025-10-04)
+**Status**: ✅ Multi-directional sprite system **fully implemented and production-tested** (2025-10-07)
 
 **What's Working**:
-- ✅ **Dual Sprite Generation** - Automatic creation of both menu and battlefield views
-- ✅ **Smart View Selection** - Renderer prefers battlefield sprite, falls back to menu sprite
-- ✅ **Animation Studio Integration** - View angle selector toggles between menu/battlefield
-- ✅ **Backward Compatible** - Old creatures work perfectly without battlefield sprites
+- ✅ **Multi-Directional Generation** - 3 unique directional sprites (E, NE, SE) + 3 mirrored (W, NW, SW)
+- ✅ **Rotation API Approach** - Uses PixelLab `/v1/rotate` endpoint for better visual consistency
+- ✅ **Cost-Optimized** - 50% savings through CSS transform mirroring strategy
+- ✅ **Directional Rendering** - DeploymentGridRenderer selects sprite based on creature facing
+- ✅ **CSS Transform Mirroring** - W, NW, SW directions use horizontal flip (scale.x = -1)
+- ✅ **DirectionalAnimationStudio** - New component showcases all 6 directions in grid layout
+- ✅ **Animation Studio Integration** - View angle selector + directional showcase
+- ✅ **Backward Compatible** - Legacy single battlefield sprite system fully supported
 - ✅ **Non-Fatal Generation** - Battlefield view failure doesn't block creature creation
-- ✅ **Cost Tracking** - Total cost includes both view generations (~$0.02 per creature)
+- ✅ **Production Verified** - Successfully tested with dragon creature (job ID 1)
 
 **How It Works**:
 1. **Menu View** (Side profile) - For character menus, galleries, selection screens
-2. **Battlefield View** (Low top-down ~20°) - For isometric hex grid tactical display
-3. **Automatic Selection** - Deployment grid uses battlefield view, menus use side view
-4. **Fallback Logic** - Missing battlefield sprites gracefully degrade to menu sprites
+2. **Battlefield Directional Views** (Low top-down ~20°) - 6-directional hex grid tactical display
+   - **Base Generation**: Single side-view sprite generated first
+   - **Rotation API**: `/v1/rotate` endpoint rotates base to E, NE, SE directions
+   - **Walk Animations**: 4-frame walk animations generated for each rotated sprite
+   - **Mirrored**: W (West), NW (Northwest), SW (Southwest) via CSS transforms
+3. **Dynamic Selection** - Renderer chooses sprite based on creature's facing direction
+4. **Fallback Logic** - Missing directional sprites gracefully degrade to legacy battlefield or menu sprites
+
+**Why Rotation API Instead of Direction Parameter**:
+- **Better Consistency**: Rotating from single base sprite maintains visual coherence
+- **Improved Quality**: Not 100% fidelity yet, but significantly better than direction parameter approach
+- **Same Cost**: 3 rotations + 3 walk animations ≈ $0.08 USD per creature
+- **Mirroring Strategy**: Still uses 3 generated + 3 mirrored for cost efficiency
 
 **Cost Impact**:
-- **Before**: ~$0.01 per creature (menu sprites only)
-- **After**: ~$0.02 per creature (menu + battlefield sprites)
-- **Increase**: $0.01 (100% cost increase, but still very affordable)
+- **Phase 1**: ~$0.01 per creature (menu sprites only)
+- **Phase 2**: ~$0.02 per creature (menu + single battlefield sprite) [DEPRECATED]
+- **Phase 3**: ~$0.08 per creature (menu + 3 rotated directional sprites + 3 walk animations)
+- **Phase 4** (Current): ~$0.236 per creature (Phase 3 + 3 idle animations)
+  - Idle animations: 3 directions × 4 frames × ~$0.013 = ~$0.156 additional cost
+  - **Value**: Living battlefield with subtle breathing animations vs static sprites
+- **Cost Per Direction**: ~$0.013 USD (50% savings vs generating all 6 directions)
+- **Value**: Full 6-directional coverage for immersive hex grid gameplay
 
 **Technical Details**:
-- Generation Step 6: Creates battlefield sprite with `view: 'low top-down'`
-- Data Model: Added `battlefieldSprite`, `battlefieldWalkFrames`, `viewAngles` fields
-- Renderer: Modified to accept sprite data objects with view preferences
-- Animation Studio: Added view angle selector UI component
+- **Generation Pipeline**: Side view → Rotate to E/NE/SE → Animate each direction → Mirror for W/NW/SW
+- **Rotation Service**: `/backend/src/pixellab/rotate-sprite.ts` - `RotateSprite` class with helper methods
+- **Step 6 Process**:
+  1. Generate base side-view sprite
+  2. Loop through 3 directions (E, NE, SE)
+  3. Rotate base sprite using `/v1/rotate` endpoint
+  4. Generate 4-frame walk animation for rotated sprite
+- **Data Model**: `BattlefieldDirectionalViews` type with E, NE, SE directional sprites
+- **Renderer**: Direction-based sprite selection with CSS transform mirroring for W, NW, SW
+- **Animation Studio**: View angle selector + DirectionalAnimationStudio component (6-direction grid)
 
 **Documentation**:
-- Guide: `/BATTLEFIELD_VIEW_INTEGRATION.md`
-- Spec: `/docs/specs/L3-BATTLEFIELD-VIEW-GENERATION.md`
-- Request: `{"description": "creature text", "size": 64}`
-- Response: Base sprites + 4-frame animations for each view
-- Cost: ~$0.12 per test (~$0.04 per view)
-- Time: ~80 seconds total
+- Complete Guide: `/docs/features/MULTI_DIRECTIONAL_SPRITES.md` (comprehensive implementation details)
+- L3 Spec: `/docs/specs/L3-BATTLEFIELD-VIEW-GENERATION.md`
+- Implementation Report: `/docs/implementation-reports/BATTLEFIELD_VIEW_IMPLEMENTATION_REPORT.md`
 
-**Next Steps**:
-1. Test different creatures visually to choose best battlefield angle
-2. Implement multi-view generation in main pipeline
-3. Decide on directional walk strategy (single + flip vs 4-directional)
-4. Update game rendering to reference appropriate view per context
+**Files Modified** (9 total):
+- Backend: `types/generation.ts`, `queue/generation-processor.ts`, `pixellab/rotate-sprite.ts` (NEW)
+- Shared: `types/deployment.ts`
+- Frontend: `DeploymentGrid/DeploymentGridRenderer.ts`, `DirectionalAnimationStudio/index.tsx`, `pages/CreatureAnimationStudio.tsx`
+
+**Production Status**: ✅ Complete and tested (2025-10-07)
+
+#### Dynamic Creature Facing (Complete)
+
+**Status**: ✅ Automatic facing direction based on movement **fully implemented** (2025-10-07)
+
+**What's Working**:
+- ✅ **Movement-Based Facing** - Creatures automatically face the direction they move
+- ✅ **Default Team Facing** - Player 1 creatures face East, Player 2 creatures face West
+- ✅ **Axial Coordinate Calculation** - Angle-based direction from coordinate deltas
+- ✅ **6-Direction Mapping** - Maps to hex directions (NE, E, SE, SW, W, NW)
+- ✅ **Renderer Integration** - Passes facing to DeploymentGridRenderer for sprite selection
+- ✅ **Socket.IO Sync** - Facing automatically synchronized (part of CreaturePlacement type)
+
+**How It Works**:
+1. **Movement Detection** - When creature moves, calculate delta between old and new hex positions
+2. **Angle Calculation** - Convert axial coordinate delta to angle using `Math.atan2()`
+3. **Direction Mapping** - Map angle to one of 6 hex directions (60° sectors)
+4. **Default Facing** - New placements use team-based default (Player 1: E, Player 2: W)
+5. **Sprite Selection** - Renderer selects appropriate directional sprite based on facing
+
+**Implementation Details**:
+- **Facing Calculation** (`useDeploymentState.ts:calculateFacing()`):
+  - Converts axial coordinates (q, r) to pixel offsets
+  - Uses `Math.atan2(dy, dx)` for angle calculation
+  - Maps angles to 6 directions: NE (30°-90°), E (330°-30°), SE (270°-330°), SW (210°-270°), W (150°-210°), NW (90°-150°)
+- **Default Facing** (`useDeploymentState.ts:getDefaultFacing()`):
+  - Player 1 (left side): East (creatures face right toward enemy)
+  - Player 2 (right side): West (creatures face left toward enemy)
+- **Integration** (`DeploymentGridWithDragDrop.tsx`):
+  - Passes `creature.facing` to renderer for each placed creature
+  - Renderer automatically selects correct directional sprite
+
+**Files Modified**:
+- `/frontend/src/components/DeploymentGrid/useDeploymentState.ts` - Added facing calculation logic
+- `/frontend/src/components/DeploymentGrid/DeploymentGridWithDragDrop.tsx` - Updated renderer integration
+
+**Technical Benefits**:
+- Enhances visual immersion (creatures face their movement direction)
+- Works seamlessly with multi-directional sprite system
+- No additional API calls (uses existing directional sprites)
+- Automatic synchronization via Socket.IO (facing already in data model)
 
 ### Battle Engine - Hex Grid Deployment System (Complete + Production Verified)
 
@@ -187,6 +251,13 @@ The core generation pipeline is **complete and operational**:
   - SVG fallbacks for reliability
   - Batch sprite loading
   - Team color glow effects (blue/red)
+- ✅ **Idle Animations** (NEW - 2025-10-18) - Subtle breathing animations for deployed creatures
+  - 4-frame idle animation per direction (E, NE, SE)
+  - PIXI.AnimatedSprite at 0.08 speed (~1-2 FPS for subtle breathing)
+  - Automatic playback when creatures placed on grid
+  - Backward compatible (creatures without idle frames show static sprites)
+  - Full Firebase Storage integration with URL conversion
+  - Minimal cost impact (~$0.156 per creature)
 - ✅ **Combat Simulation** - 60 tps authoritative server
   - Achieved 61.63 tps (102.7% of target)
   - Complete unit AI (targeting, movement, attacking)

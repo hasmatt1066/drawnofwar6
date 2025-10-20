@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { HttpClient } from './http-client';
+import { HttpClient } from '../http-client';
 import MockAdapter from 'axios-mock-adapter';
 
 describe('Auth Interceptor - Task 1.2: Request Authentication', () => {

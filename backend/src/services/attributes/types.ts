@@ -50,6 +50,7 @@ export interface CombatAttribute {
   damageType: DamageType;        // Type of damage dealt
   attackType: AttackType;        // How the attack works
   priority: number;              // Selection priority (1-10, higher = more important)
+  effectFrames?: string[];       // Base64-encoded effect animation frames from library
 }
 
 /**

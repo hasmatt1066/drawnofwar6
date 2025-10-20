@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { RateLimiter, RateLimiterConfig } from './rate-limiter';
+import { RateLimiter, RateLimiterConfig } from '../rate-limiter';
 
 describe('Rate Limiter - Task 6.1: Token Bucket Rate Limiter', () => {
   beforeEach(() => {

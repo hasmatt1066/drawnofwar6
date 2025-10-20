@@ -5,9 +5,9 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { RetryStrategy, RetryConfig } from './retry-strategy';
-import { ErrorClassifier, ErrorType, ClassifiedError } from './error-classifier';
-import { QueueLogger } from '../queue/logger';
+import { RetryStrategy, RetryConfig } from '../retry-strategy';
+import { ErrorClassifier, ErrorType, ClassifiedError } from '../error-classifier';
+import { QueueLogger } from '../../queue/logger';
 import { PixelLabError, PixelLabErrorType } from '../pixellab/errors';
 
 describe('RetryStrategy', () => {

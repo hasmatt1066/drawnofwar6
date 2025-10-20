@@ -87,35 +87,42 @@ export class CombatSocketClient {
    * Returns a promise that resolves when joined
    */
   async join(matchId: string): Promise<void> {
+    console.log(`[Combat Socket] join() called with matchId: ${matchId}`);
     this.matchId = matchId;
 
     // If already joining, wait for that promise
     if (this.joinPromise) {
+      console.log('[Combat Socket] Already joining, waiting for existing promise');
       return this.joinPromise;
     }
 
     // Create join promise
     this.joinPromise = new Promise<void>((resolve, reject) => {
+      console.log('[Combat Socket] Creating new join promise');
+
       // Ensure we have a socket connection (creates if needed)
       this.ensureConnection();
 
       if (!this.socket) {
+        console.error('[Combat Socket] Failed to create socket');
         reject(new Error('Failed to create socket'));
         return;
       }
 
+      console.log(`[Combat Socket] Socket exists, connected: ${this.socket.connected}`);
+
       // Listen for successful join confirmation
-      const onJoined = () => {
+      const onJoined = (data: { matchId: string; room: string }) => {
         this.socket?.off('combat:joined', onJoined);
         this.socket?.off('combat:error', onError);
-        console.log('[Combat Socket] Successfully joined match');
+        console.log(`[Combat Socket] ✓ Successfully joined match ${data.matchId} in room ${data.room}`);
         resolve();
       };
 
       const onError = (data: { message: string }) => {
         this.socket?.off('combat:joined', onJoined);
         this.socket?.off('combat:error', onError);
-        console.error('[Combat Socket] Join failed:', data.message);
+        console.error('[Combat Socket] ✗ Join failed:', data.message);
         reject(new Error(data.message));
       };
 
@@ -123,12 +130,35 @@ export class CombatSocketClient {
       this.socket.once('combat:joined', onJoined);
       this.socket.once('combat:error', onError);
 
+      // Set a timeout in case we never get a response
+      const joinTimeout = setTimeout(() => {
+        this.socket?.off('combat:joined', onJoined);
+        this.socket?.off('combat:error', onError);
+        console.error('[Combat Socket] ✗ Join timed out after 5 seconds');
+        reject(new Error('Join timed out'));
+      }, 5000);
+
+      // Clear timeout on success
+      const originalOnJoined = onJoined;
+      const wrappedOnJoined = (data: { matchId: string; room: string }) => {
+        clearTimeout(joinTimeout);
+        originalOnJoined(data);
+      };
+      this.socket.off('combat:joined', onJoined);
+      this.socket.once('combat:joined', wrappedOnJoined);
+
       // Join immediately if already connected
       if (this.socket.connected) {
+        console.log(`[Combat Socket] Emitting combat:join for match ${matchId}`);
         this.socket.emit('combat:join', matchId);
-        console.log(`[Combat Socket] Joining match ${matchId}`);
+      } else {
+        // Wait for connect event
+        console.log('[Combat Socket] Waiting for socket to connect...');
+        this.socket.once('connect', () => {
+          console.log(`[Combat Socket] Socket connected, emitting combat:join for match ${matchId}`);
+          this.socket?.emit('combat:join', matchId);
+        });
       }
-      // Otherwise wait for connect event (which will auto-join via lines 70-73)
     });
 
     return this.joinPromise;

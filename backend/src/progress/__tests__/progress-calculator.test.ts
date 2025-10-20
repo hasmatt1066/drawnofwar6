@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { ProgressCalculator, JobStage } from './progress-calculator';
+import { ProgressCalculator, JobStage } from '../progress-calculator';
 
 describe('ProgressCalculator', () => {
   let calculator: ProgressCalculator;

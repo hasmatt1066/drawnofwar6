@@ -1,0 +1,1394 @@
+Open SearchSearch
+Keyboard Shortcut:CTRL⌃ k
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Open API Client
+Powered by Scalar
+
+dev
+OAS 3.1.0
+Pixel Lab API
+The API provides endpoints for creating AI-generated pixel art images, rotations, animations, and more. Making it easy for applications to integrate pixel art generation capabilities.
+
+Python Client
+For convenience, a Python client library is available to simplify integration with your applications. Visit our GitHub repository for installation instructions and examples.
+
+pip install pixellab
+Authentication
+The API uses a simple token based authentication system. After creating an account, you can find your API token in your account settings. Include this token in all API requests using the Bearer authentication scheme:
+
+curl -X POST https://api.pixellab.ai/v1/generate-image-pixflux \
+    -H "Authorization: Bearer YOUR_API_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d '{
+        "description": "cute dragon",
+        "image_size": {"width": 128, "height": 128}
+    }'
+Or use the Python client:
+
+import pixellab
+
+client = pixellab.Client(secret="YOUR_API_TOKEN")
+client.generate_image_pixflux(
+    description="cute dragon",
+    image_size=dict(width=128, height=128),
+)
+Supported models
+Generate Image Bitforge: Apply custom art styles using reference images.
+Generate Image Pixflux: Generate pixel art from text descriptions.
+Animate (skeleton): Generate 4 frames of an animation from skeleton poses.
+Animate (text): Generate animation from text descriptions.
+Inpaint: Edit and modify existing pixel art.
+Rotate: Rotate an object or a character.
+Server
+Server:
+https://api.pixellab.ai/v1
+
+Authentication
+Optional
+SelectAuth Type
+No authentication selected
+Client Libraries
+Shell Curl
+Generate Image ​Copy link
+Generate ImageOperations
+post
+/generate-image-pixflux
+post
+/generate-image-bitforge
+Generate image (pixflux)​Copy link
+Creates a pixel art image based on the provided parameters. Called "Create image (new)" in the plugin.
+
+Supported image size:
+
+Minimum area 32x32 and maximum area 400x400
+Supported features:
+
+Init image
+Forced palette
+Transparent background
+Using the Python client:
+
+import pixellab
+
+client = pixellab.Client(secret="YOUR_API_TOKEN")
+
+response = client.generate_image_pixflux(
+    description="cute dragon",
+    image_size=dict(width=128, height=128),
+)
+response.image.pil_image()
+Body
+required
+application/json
+Request model for pixflux image generation endpoint
+
+descriptionCopy link to description
+Type:Description
+required
+Text description of the image to generate
+
+image_sizeCopy link to image_size
+Type:ImageSize
+required
+Example
+Show ImageSizefor image_size
+color_imageCopy link to color_image
+Type:Base64Image
+nullable
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor color_image
+detailCopy link to detail
+Type:Detail
+enum
+nullable
+Detail style reference (weakly guiding)
+
+low detail
+medium detail
+highly detailed
+directionCopy link to direction
+Type:Direction
+enum
+nullable
+Subject direction (weakly guiding)
+
+north
+north-east
+east
+south-east
+south
+south-west
+west
+north-west
+init_imageCopy link to init_image
+Type:Base64Image
+nullable
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor init_image
+init_image_strengthCopy link to init_image_strength
+Type:Init Image Strength
+min:  
+1
+max:  
+999
+default: 
+300
+Strength of the initial image influence
+
+isometricCopy link to isometric
+Type:Isometric
+default: 
+false
+Generate in isometric view (weakly guiding)
+
+negative_descriptionCopy link to negative_description
+Type:Negative Description
+default: 
+""
+(Deprecated)
+
+no_backgroundCopy link to no_background
+Type:No Background
+default: 
+false
+Generate with transparent background, (blank background over 200x200 area)
+
+outlineCopy link to outline
+Type:Outline
+enum
+nullable
+Outline style reference (weakly guiding)
+
+single color black outline
+single color outline
+selective outline
+lineless
+seedCopy link to seed
+Type:Seed
+nullable
+Seed decides the starting noise
+
+Request model for pixflux image generation endpoint
+
+Show additional propertiesfor Request Body
+Responses
+
+200
+Successfully generated image
+
+application/json
+401Copy link to 401
+Invalid API token
+
+402Copy link to 402
+Insufficient credits
+
+422Copy link to 422
+Validation error
+
+429Copy link to 429
+Too many requests
+
+529Copy link to 529
+Rate limit exceeded
+
+Request Example forpost/generate-image-pixflux
+
+Shell Curl
+
+curl https://api.pixellab.ai/v1/generate-image-pixflux \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_SECRET_TOKEN' \
+  --data '{
+  "description": "cute dragon",
+  "image_size": {
+    "height": 128,
+    "width": 128
+  },
+  "no_background": true
+}'
+
+Test Request
+(post /generate-image-pixflux)
+Status:200
+Status:401
+Status:402
+Status:422
+Status:429
+Status:529
+
+
+{
+  "usage": {
+    "type": "usd",
+    "usd": 1
+  },
+  "image": {
+    "type": "base64",
+    "base64": "string"
+  }
+}
+Successfully generated image
+
+Generate image (bitforge)​Copy link
+Generates a pixel art image based on the provided parameters. Called "Generate image (style)" in the plugin.
+
+Supported image size:
+
+Maximum area 200x200
+Supported features:
+
+Style image
+Inpainting
+Init image
+Forced palette
+Transparent background
+Using the Python client:
+
+import pixellab
+
+client = pixellab.Client(secret="YOUR_API_TOKEN")
+
+response = client.generate_image_bitforge(
+    description="cute dragon",
+    image_size=dict(width=128, height=128),
+)
+response.image.pil_image()
+Body
+required
+application/json
+Request model for image generation endpoint
+
+descriptionCopy link to description
+Type:Description
+required
+Text description of the image to generate
+
+image_sizeCopy link to image_size
+Type:ImageSize
+required
+Example
+Show ImageSizefor image_size
+color_imageCopy link to color_image
+Type:Base64Image
+nullable
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor color_image
+coverage_percentageCopy link to coverage_percentage
+Type:Coverage Percentage
+min:  
+0
+max:  
+100
+nullable
+Percentage of the canvas to cover
+
+detailCopy link to detail
+Type:Detail
+enum
+nullable
+Detail style reference
+
+low detail
+medium detail
+highly detailed
+directionCopy link to direction
+Type:Direction
+enum
+nullable
+Subject direction
+
+north
+north-east
+east
+south-east
+south
+south-west
+west
+north-west
+extra_guidance_scaleCopy link to extra_guidance_scale
+Type:Extra Guidance Scale
+min:  
+0
+max:  
+20
+default: 
+3
+(Deprecated)
+
+init_imageCopy link to init_image
+Type:Base64Image
+nullable
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor init_image
+init_image_strengthCopy link to init_image_strength
+Type:Init Image Strength
+min:  
+1
+max:  
+999
+default: 
+300
+Strength of the initial image influence
+
+inpainting_imageCopy link to inpainting_image
+Type:Base64Image
+nullable
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor inpainting_image
+isometricCopy link to isometric
+Type:Isometric
+default: 
+false
+Generate in isometric view
+
+mask_imageCopy link to mask_image
+Type:Base64Image
+nullable
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor mask_image
+Request model for image generation endpoint
+
+Show additional propertiesfor Request Body
+Responses
+
+200
+Successfully generated image
+
+application/json
+401Copy link to 401
+Invalid API token
+
+402Copy link to 402
+Insufficient credits
+
+422Copy link to 422
+Validation error
+
+429Copy link to 429
+Too many requests
+
+529Copy link to 529
+Rate limit exceeded
+
+Request Example forpost/generate-image-bitforge
+
+Shell Curl
+
+curl https://api.pixellab.ai/v1/generate-image-bitforge \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_SECRET_TOKEN' \
+  --data '{
+  "description": "cute dragon",
+  "image_size": {
+    "height": 128,
+    "width": 128
+  },
+  "no_background": true,
+  "style_guidance_scale": 3,
+  "style_strength": 20,
+  "text_guidance_scale": 3
+}'
+
+Test Request
+(post /generate-image-bitforge)
+Status:200
+Status:401
+Status:402
+Status:422
+Status:429
+Status:529
+
+
+{
+  "usage": {
+    "type": "usd",
+    "usd": 1
+  },
+  "image": {
+    "type": "base64",
+    "base64": "string"
+  }
+}
+Successfully generated image
+
+Animate ​Copy link
+AnimateOperations
+post
+/animate-with-skeleton
+post
+/animate-with-text
+post
+/estimate-skeleton
+Generate animation using skeletons​Copy link
+Creates a pixel art animation based on the provided parameters. Called "Animate with skeleton" in the plugin.
+
+Supported image sizes:
+
+16x16
+32x32
+64x64
+128x128
+256x256
+Supported features:
+
+Inpainting
+Init image
+Forced palette
+Using the Python client:
+
+import pixellab
+
+client = pixellab.Client(secret="YOUR_API_TOKEN")
+
+response = client.animate_with_skeleton(
+    view="side",
+    direction="south",
+    image_size=dict(width=64, height=64),
+    reference_image=reference_image,
+    inpainting_images=existing_animation_frames,
+    mask_images=mask_images,
+    skeleton_keypoints=skeleton_keypoints,
+)
+images = [image.pil_image() for image in response.images]
+Body
+required
+application/json
+Request model for animation using skeleton endpoint
+
+image_sizeCopy link to image_size
+Type:ImageSize
+required
+Example
+Show ImageSizefor image_size
+reference_imageCopy link to reference_image
+Type:Base64Image
+required
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor reference_image
+color_imageCopy link to color_image
+Type:Base64Image
+nullable
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor color_image
+directionCopy link to direction
+Type:Direction
+enum
+north
+north-east
+east
+south-east
+south
+south-west
+west
+north-west
+guidance_scaleCopy link to guidance_scale
+Type:Guidance Scale
+min:  
+1
+max:  
+20
+default: 
+4
+How closely to follow the reference image and skeleton keypoints
+
+init_image_strengthCopy link to init_image_strength
+Type:Init Image Strength
+min:  
+1
+max:  
+999
+default: 
+300
+Strength of the initial image influence
+
+init_imagesCopy link to init_images
+Type:array Init Images[]
+nullable
+Initial images to start the generation from
+
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor init_images
+inpainting_imagesCopy link to inpainting_images
+Type:array Inpainting Images[]
+default: 
+[null,null,null]
+Images used for showing the model with connected skeleton
+
+Show Child Attributesfor inpainting_images
+isometricCopy link to isometric
+Type:Isometric
+default: 
+false
+Generate in isometric view
+
+mask_imagesCopy link to mask_images
+Type:array Mask Images[]
+Inpainting / mask image (black and white image, where the white is where the model should inpaint)
+
+Show Child Attributesfor mask_images
+oblique_projectionCopy link to oblique_projection
+Type:Oblique Projection
+default: 
+false
+Generate in oblique projection
+
+seedCopy link to seed
+Type:Seed
+nullable
+Seed decides the starting noise
+
+Request model for animation using skeleton endpoint
+
+Show additional propertiesfor Request Body
+Responses
+
+200
+Successfully generated image
+
+application/json
+401Copy link to 401
+Invalid API token
+
+402Copy link to 402
+Insufficient credits
+
+422Copy link to 422
+Validation error
+
+429Copy link to 429
+Too many requests
+
+529Copy link to 529
+Rate limit exceeded
+
+Request Example forpost/animate-with-skeleton
+
+Shell Curl
+
+curl https://api.pixellab.ai/v1/animate-with-skeleton \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_SECRET_TOKEN' \
+  --data '{
+  "image_size": {
+    "height": 64,
+    "width": 64
+  }
+}'
+
+Test Request
+(post /animate-with-skeleton)
+Status:200
+Status:401
+Status:402
+Status:422
+Status:429
+Status:529
+
+
+{
+  "usage": {
+    "type": "usd",
+    "usd": 1
+  },
+  "images": [
+    {
+      "type": "base64",
+      "base64": "string"
+    }
+  ]
+}
+Successfully generated image
+
+Generate animation using text description​Copy link
+Creates a pixel art animation based on text description and parameters.
+
+Supported image sizes:
+
+64x64
+Supported features:
+
+Text-guided animation generation
+Inpainting
+Init image
+Forced palette
+Multiple frames
+Using the Python client:
+
+import pixellab
+
+client = pixellab.Client(secret="YOUR_API_TOKEN")
+
+response = client.animate_with_text(
+    description="human mage",
+    action="walk",
+    view="side",
+    direction="south",
+    image_size=dict(width=64, height=64),
+    reference_image=reference_image,
+    n_frames=4
+)
+images = [image.pil_image() for image in response.images]
+Body
+required
+application/json
+Request model for animation using text endpoint
+
+actionCopy link to action
+Type:Action
+required
+Action description
+
+descriptionCopy link to description
+Type:Description
+required
+Character description
+
+image_sizeCopy link to image_size
+Type:ImageSize
+required
+Example
+Show ImageSizefor image_size
+reference_imageCopy link to reference_image
+Type:Base64Image
+required
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor reference_image
+color_imageCopy link to color_image
+Type:Base64Image
+nullable
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor color_image
+directionCopy link to direction
+Type:Direction
+enum
+north
+north-east
+east
+south-east
+south
+south-west
+west
+north-west
+image_guidance_scaleCopy link to image_guidance_scale
+Type:Image Guidance Scale
+min:  
+1
+max:  
+20
+default: 
+1.4
+nullable
+How closely to follow the reference image
+
+init_image_strengthCopy link to init_image_strength
+Type:Init Image Strength
+min:  
+1
+max:  
+999
+default: 
+300
+Strength of the initial image influence
+
+init_imagesCopy link to init_images
+Type:array Init Images[]
+nullable
+Initial images to start the generation from
+
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor init_images
+inpainting_imagesCopy link to inpainting_images
+Type:array Inpainting Images[]
+default: 
+[null,null,null,null]
+Existing animation frames to guide the generation
+
+Show Child Attributesfor inpainting_images
+mask_imagesCopy link to mask_images
+Type:array Mask Images[]
+default: 
+[null,null,null,null]
+nullable
+Inpainting / mask image (black and white image, where the white is where the model should inpaint)
+
+Show Child Attributesfor mask_images
+n_framesCopy link to n_frames
+Type:N Frames
+min:  
+2
+max:  
+20
+default: 
+4
+nullable
+Length of full animation (the model will always generate 4 frames)
+
+Request model for animation using text endpoint
+
+Show additional propertiesfor Request Body
+Responses
+
+200
+Successfully generated animation
+
+application/json
+401Copy link to 401
+Invalid API token
+
+402Copy link to 402
+Insufficient credits
+
+422Copy link to 422
+Validation error
+
+429Copy link to 429
+Too many requests
+
+529Copy link to 529
+Rate limit exceeded
+
+Request Example forpost/animate-with-text
+
+Shell Curl
+
+curl https://api.pixellab.ai/v1/animate-with-text \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_SECRET_TOKEN' \
+  --data '{
+  "action": "walk",
+  "description": "human mage",
+  "direction": "south",
+  "image_size": {
+    "height": 64,
+    "width": 64
+  },
+  "view": "side"
+}'
+
+Test Request
+(post /animate-with-text)
+Status:200
+Status:401
+Status:402
+Status:422
+Status:429
+Status:529
+
+
+{
+  "usage": {
+    "type": "usd",
+    "usd": 1
+  },
+  "images": [
+    {
+      "type": "base64",
+      "base64": "string"
+    }
+  ]
+}
+Successfully generated animation
+
+Estimate skeleton​Copy link
+Estimates the skeleton of a character, returning a list of keypoints to use with the skeleton animation tool.
+
+Supported image sizes:
+
+16x16
+32x32
+64x64
+128x128
+256x256
+Using the Python client:
+
+import pixellab
+
+client = pixellab.Client(secret="YOUR_API_TOKEN")
+
+response = client.estimate_skeleton(
+    image=image_of_the_character_on_a_transparent_background,
+)
+response.keypoints
+Body
+required
+application/json
+Request model for estimate skeleton endpoint
+
+imageCopy link to image
+Type:Base64Image
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor image
+Responses
+
+200
+Successfully generated image
+
+application/json
+401Copy link to 401
+Invalid API token
+
+402Copy link to 402
+Insufficient credits
+
+422Copy link to 422
+Validation error
+
+429Copy link to 429
+Too many requests
+
+529Copy link to 529
+Rate limit exceeded
+
+Request Example forpost/estimate-skeleton
+
+Shell Curl
+
+curl https://api.pixellab.ai/v1/estimate-skeleton \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_SECRET_TOKEN' \
+  --data '{
+  "image": {
+    "type": "base64",
+    "base64": ""
+  }
+}'
+
+Test Request
+(post /estimate-skeleton)
+Status:200
+Status:401
+Status:402
+Status:422
+Status:429
+Status:529
+
+
+{
+  "usage": {
+    "type": "usd",
+    "usd": 1
+  },
+  "keypoints": [
+    {
+      "x": 1,
+      "y": 1,
+      "label": "string",
+      "z_index": 1
+    }
+  ]
+}
+Successfully generated image
+
+Rotate ​Copy link
+RotateOperations
+post
+/rotate
+Rotate character or object​Copy link
+Rotates a pixel art image based on the provided parameters. Called "Rotate" in the plugin.
+
+Supported image sizes:
+
+16x16
+32x32
+64x64
+128x128
+Supported features:
+
+Init image
+Forced palette
+Using the Python client:
+
+import pixellab
+
+client = pixellab.Client(secret="YOUR_API_TOKEN")
+
+response = client.rotate(
+    from_view="side",
+    to_view="side",
+    from_direction="south",
+    to_direction="east",
+    image_size=dict(width=16, height=16),
+    from_image=image_of_subject_facing_south,
+)
+response.image.pil_image()
+Body
+required
+application/json
+Request model for image generation endpoint
+
+from_imageCopy link to from_image
+Type:Base64Image
+required
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor from_image
+image_sizeCopy link to image_size
+Type:ImageSize
+required
+Example
+Show ImageSizefor image_size
+color_imageCopy link to color_image
+Type:Base64Image
+nullable
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor color_image
+direction_changeCopy link to direction_change
+Type:Direction Change
+min:  
+-180
+max:  
+180
+nullable
+How many degrees to rotate the subject
+
+from_directionCopy link to from_direction
+Type:Direction
+enum
+default: 
+"south"
+nullable
+From subject direction
+
+north
+north-east
+east
+south-east
+south
+south-west
+west
+north-west
+from_viewCopy link to from_view
+Type:CameraView
+enum
+default: 
+"side"
+nullable
+From camera view angle
+
+side
+low top-down
+high top-down
+image_guidance_scaleCopy link to image_guidance_scale
+Type:Image Guidance Scale
+min:  
+1
+max:  
+20
+default: 
+3
+How closely to follow the reference image
+
+init_imageCopy link to init_image
+Type:Base64Image
+nullable
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor init_image
+init_image_strengthCopy link to init_image_strength
+Type:Init Image Strength
+min:  
+1
+max:  
+999
+default: 
+300
+Strength of the initial image influence
+
+isometricCopy link to isometric
+Type:Isometric
+default: 
+false
+Generate in isometric view
+
+mask_imageCopy link to mask_image
+Type:Base64Image
+nullable
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor mask_image
+oblique_projectionCopy link to oblique_projection
+Type:Oblique Projection
+default: 
+false
+Generate in oblique projection
+
+Request model for image generation endpoint
+
+Show additional propertiesfor Request Body
+Responses
+
+200
+Successfully generated image
+
+application/json
+401Copy link to 401
+Invalid API token
+
+402Copy link to 402
+Insufficient credits
+
+422Copy link to 422
+Validation error
+
+429Copy link to 429
+Too many requests
+
+529Copy link to 529
+Rate limit exceeded
+
+Request Example forpost/rotate
+
+Shell Curl
+
+curl https://api.pixellab.ai/v1/rotate \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_SECRET_TOKEN' \
+  --data '{
+  "description": "cute dragon",
+  "from_direction": "south",
+  "from_view": "side",
+  "image_guidance_scale": 7.5,
+  "image_size": {
+    "height": 128,
+    "width": 128
+  },
+  "to_direction": "east",
+  "to_view": "side"
+}'
+
+Test Request
+(post /rotate)
+Status:200
+Status:401
+Status:402
+Status:422
+Status:429
+Status:529
+
+
+{
+  "usage": {
+    "type": "usd",
+    "usd": 1
+  },
+  "image": {
+    "type": "base64",
+    "base64": "string"
+  }
+}
+Successfully generated image
+
+Inpaint ​Copy link
+InpaintOperations
+post
+/inpaint
+Inpaint image​Copy link
+Creates a pixel art image based on the provided parameters. Called "Inpaint" in the plugin.
+
+Supported image size:
+
+Maximum area 200x200
+Supported features:
+
+Inpainting
+Init image
+Forced palette
+Transparent background
+Using the Python client:
+
+import pixellab
+
+client = pixellab.Client(secret="YOUR_API_TOKEN")
+
+response = client.inpaint(
+    description="boy with wings",
+    image_size=dict(width=16, height=16),
+    inpainting_image=image_of_boy_without_wings,
+    mask_image=mask_image,
+)
+response.image.pil_image()
+Body
+required
+application/json
+Request model for image generation endpoint
+
+descriptionCopy link to description
+Type:Description
+required
+Text description of the image to generate
+
+image_sizeCopy link to image_size
+Type:ImageSize
+required
+Example
+Show ImageSizefor image_size
+inpainting_imageCopy link to inpainting_image
+Type:Base64Image
+required
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor inpainting_image
+mask_imageCopy link to mask_image
+Type:Base64Image
+required
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor mask_image
+color_imageCopy link to color_image
+Type:Base64Image
+nullable
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor color_image
+detailCopy link to detail
+Type:Detail
+enum
+nullable
+Detail style reference
+
+low detail
+medium detail
+highly detailed
+directionCopy link to direction
+Type:Direction
+enum
+nullable
+Subject direction
+
+north
+north-east
+east
+south-east
+south
+south-west
+west
+north-west
+extra_guidance_scaleCopy link to extra_guidance_scale
+Type:Extra Guidance Scale
+min:  
+0
+max:  
+20
+default: 
+3
+(Deprecated)
+
+init_imageCopy link to init_image
+Type:Base64Image
+nullable
+A base64 encoded image.
+
+Attributes: type (Literal["base64"]): Always "base64" to indicate the image encoding type base64 (str): The base64 encoded image data
+
+Show Base64Imagefor init_image
+init_image_strengthCopy link to init_image_strength
+Type:Init Image Strength
+min:  
+1
+max:  
+999
+default: 
+300
+Strength of the initial image influence
+
+isometricCopy link to isometric
+Type:Isometric
+default: 
+false
+Generate in isometric view
+
+negative_descriptionCopy link to negative_description
+Type:Negative Description
+default: 
+""
+Text description of what to avoid in the generated image
+
+Request model for image generation endpoint
+
+Show additional propertiesfor Request Body
+Responses
+
+200
+Successfully generated image
+
+application/json
+401Copy link to 401
+Invalid API token
+
+402Copy link to 402
+Insufficient credits
+
+422Copy link to 422
+Validation error
+
+429Copy link to 429
+Too many requests
+
+529Copy link to 529
+Rate limit exceeded
+
+Request Example forpost/inpaint
+
+Shell Curl
+
+curl https://api.pixellab.ai/v1/inpaint \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer YOUR_SECRET_TOKEN' \
+  --data '{
+  "description": "cute dragon",
+  "image_size": {
+    "height": 128,
+    "width": 128
+  },
+  "no_background": true
+}'
+
+Test Request
+(post /inpaint)
+Status:200
+Status:401
+Status:402
+Status:422
+Status:429
+Status:529
+
+
+{
+  "usage": {
+    "type": "usd",
+    "usd": 1
+  },
+  "image": {
+    "type": "base64",
+    "base64": "string"
+  }
+}
+Successfully generated image
+
+Account ​Copy link
+AccountOperations
+get
+/balance
+Get balance​Copy link
+Returns the current balance for your account.
+
+Using the Python client:
+
+import pixellab
+
+client = pixellab.Client(secret="YOUR_API_TOKEN")
+balance = client.get_balance()
+print(f"Current balance: {balance.usd} USD")
+Responses
+
+200
+Successfully retrieved balance
+
+application/json
+401Copy link to 401
+Invalid API token
+
+Request Example forget/balance
+
+Shell Curl
+
+curl https://api.pixellab.ai/v1/balance \
+  --header 'Authorization: Bearer YOUR_SECRET_TOKEN'
+
+Test Request
+(get /balance)
+Status:200
+Status:401
+
+
+{
+  "type": "usd",
+  "usd": 1
+}
+Successfully retrieved balance

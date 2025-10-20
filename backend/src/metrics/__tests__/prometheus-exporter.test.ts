@@ -5,8 +5,8 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { PrometheusExporter } from './prometheus-exporter.js';
-import { MetricsCollector } from './metrics-collector.js';
+import { PrometheusExporter } from '../prometheus-exporter.js';
+import { MetricsCollector } from '../metrics-collector.js';
 import type { QueueLogger } from '../queue/logger.js';
 
 /**

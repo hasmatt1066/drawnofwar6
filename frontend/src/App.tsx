@@ -10,6 +10,7 @@ import { PromptBuilder } from './components/PromptBuilder';
 import { GenerationPage } from './pages/GenerationPage';
 import { ViewAngleTestPage } from './pages/ViewAngleTestPage';
 import { DeploymentGridDemoPage } from './pages/DeploymentGridDemoPage';
+import CreatureAnimationStudio from './pages/CreatureAnimationStudio';
 
 export const App: React.FC = () => {
   return (
@@ -29,7 +30,12 @@ export const App: React.FC = () => {
           <Route path="/test-view-angles" element={<ViewAngleTestPage />} />
 
           {/* Deployment grid demo page */}
+          <Route path="/deployment" element={<DeploymentGridDemoPage />} />
+          {/* Legacy route for backwards compatibility */}
           <Route path="/deployment-grid" element={<DeploymentGridDemoPage />} />
+
+          {/* Animation studio development page */}
+          <Route path="/animation-studio" element={<CreatureAnimationStudio />} />
 
           {/* 404 fallback */}
           <Route path="*" element={<Navigate to="/create" replace />} />

@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { InputMethodSelector } from './InputMethodSelector';
+import { InputMethodSelector } from '../InputMethodSelector';
 import { usePromptBuilderStore } from '@/stores/usePromptBuilderStore';
 
 describe('InputMethodSelector', () => {

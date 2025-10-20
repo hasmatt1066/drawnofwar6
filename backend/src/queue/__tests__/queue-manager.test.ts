@@ -8,9 +8,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import RedisMock from 'ioredis-mock';
 import { Queue } from 'bullmq';
-import { QueueManager } from './queue-manager.js';
-import { QueueLogger } from './logger.js';
-import type { QueueServiceConfig } from './queue-manager.js';
+import { QueueManager } from '../queue-manager.js';
+import { QueueLogger } from '../logger.js';
+import type { QueueServiceConfig } from '../queue-manager.js';
 
 // Mock BullMQ Queue
 vi.mock('bullmq', () => {

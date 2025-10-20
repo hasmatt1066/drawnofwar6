@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { ImageDecoder } from './image-decoder';
-import { PixelLabError, PixelLabErrorType } from './errors';
+import { ImageDecoder } from '../image-decoder';
+import { PixelLabError, PixelLabErrorType } from '../errors';
 
 describe('Image Decoder - Task 5.1: Base64 Image Decoder', () => {
   // Valid 1x1 red PNG in base64

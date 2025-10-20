@@ -1,0 +1,229 @@
+[
+  {
+    "type": "log",
+    "text": "Drag started: Warrior",
+    "args": [
+      "\"Drag started:\"",
+      "\"Warrior\""
+    ]
+  },
+  {
+    "type": "log",
+    "text": "[HexHover] During drag, updating target to: ",
+    "args": [
+      "\"[HexHover] During drag, updating target to:\"",
+      "null"
+    ]
+  },
+  {
+    "type": "log",
+    "text": "[DragOver] Mouse at pixel: JSHandle@object Hex: ",
+    "args": [
+      "\"[DragOver] Mouse at pixel:\"",
+      "{\"x\":53,\"y\":199.015625}",
+      "\"Hex:\"",
+      "null"
+    ]
+  },
+  {
+    "type": "log",
+    "text": "[HexHover] During drag, updating target to: ",
+    "args": [
+      "\"[HexHover] During drag, updating target to:\"",
+      "null"
+    ]
+  },
+  {
+    "type": "log",
+    "text": "[DragOver] Mouse at pixel: JSHandle@object Hex: ",
+    "args": [
+      "\"[DragOver] Mouse at pixel:\"",
+      "{\"x\":81,\"y\":213.015625}",
+      "\"Hex:\"",
+      "null"
+    ]
+  },
+  {
+    "type": "log",
+    "text": "[HexHover] During drag, updating target to: ",
+    "args": [
+      "\"[HexHover] During drag, updating target to:\"",
+      "null"
+    ]
+  },
+  {
+    "type": "log",
+    "text": "[DragOver] Mouse at pixel: JSHandle@object Hex: ",
+    "args": [
+      "\"[DragOver] Mouse at pixel:\"",
+      "{\"x\":109,\"y\":228.015625}",
+      "\"Hex:\"",
+      "null"
+    ]
+  },
+  {
+    "type": "log",
+    "text": "[HexHover] During drag, updating target to: ",
+    "args": [
+      "\"[HexHover] During drag, updating target to:\"",
+      "null"
+    ]
+  },
+  {
+    "type": "log",
+    "text": "[DragOver] Mouse at pixel: JSHandle@object Hex: ",
+    "args": [
+      "\"[DragOver] Mouse at pixel:\"",
+      "{\"x\":137,\"y\":242.015625}",
+      "\"Hex:\"",
+      "null"
+    ]
+  },
+  {
+    "type": "log",
+    "text": "[HexHover] During drag, updating target to: ",
+    "args": [
+      "\"[HexHover] During drag, updating target to:\"",
+      "null"
+    ]
+  },
+  {
+    "type": "log",
+    "text": "[DragOver] Mouse at pixel: JSHandle@object Hex: ",
+    "args": [
+      "\"[DragOver] Mouse at pixel:\"",
+      "{\"x\":165,\"y\":256.015625}",
+      "\"Hex:\"",
+      "null"
+    ]
+  },
+  {
+    "type": "log",
+    "text": "[HexHover] During drag, updating target to: ",
+    "args": [
+      "\"[HexHover] During drag, updating target to:\"",
+      "null"
+    ]
+  },
+  {
+    "type": "log",
+    "text": "[DragOver] Mouse at pixel: JSHandle@object Hex: ",
+    "args": [
+      "\"[DragOver] Mouse at pixel:\"",
+      "{\"x\":193,\"y\":271.015625}",
+      "\"Hex:\"",
+      "null"
+    ]
+  },
+  {
+    "type": "warn",
+    "text": "[DeploymentGridRenderer] Invalid sprite URL format for Warrior, using fallback: W",
+    "args": [
+      "\"[DeploymentGridRenderer] Invalid sprite URL format for Warrior, using fallback: W\""
+    ]
+  },
+  {
+    "type": "log",
+    "text": "[DragOver] Mouse at pixel: JSHandle@object Hex: JSHandle@object",
+    "args": [
+      "\"[DragOver] Mouse at pixel:\"",
+      "{\"x\":221,\"y\":285.015625}",
+      "\"Hex:\"",
+      "{\"q\":0,\"r\":4}"
+    ]
+  },
+  {
+    "type": "log",
+    "text": "[HexHover] During drag, updating target to: JSHandle@object",
+    "args": [
+      "\"[HexHover] During drag, updating target to:\"",
+      "{\"q\":0,\"r\":4}"
+    ]
+  },
+  {
+    "type": "error",
+    "text": "[DeploymentGridRenderer] Failed to load sprite: JSHandle@error",
+    "args": [
+      "\"[DeploymentGridRenderer] Failed to load sprite:\"",
+      "{}"
+    ]
+  },
+  {
+    "type": "warn",
+    "text": "[DeploymentGridRenderer] Invalid sprite URL format for Warrior, using fallback: W",
+    "args": [
+      "\"[DeploymentGridRenderer] Invalid sprite URL format for Warrior, using fallback: W\""
+    ]
+  },
+  {
+    "type": "log",
+    "text": "[DragOver] Mouse at pixel: JSHandle@object Hex: JSHandle@object",
+    "args": [
+      "\"[DragOver] Mouse at pixel:\"",
+      "{\"x\":250,\"y\":299.015625}",
+      "\"Hex:\"",
+      "{\"q\":1,\"r\":3}"
+    ]
+  },
+  {
+    "type": "log",
+    "text": "[HexHover] During drag, updating target to: JSHandle@object",
+    "args": [
+      "\"[HexHover] During drag, updating target to:\"",
+      "{\"q\":1,\"r\":3}"
+    ]
+  },
+  {
+    "type": "error",
+    "text": "[DeploymentGridRenderer] Failed to load sprite: JSHandle@error",
+    "args": [
+      "\"[DeploymentGridRenderer] Failed to load sprite:\"",
+      "{}"
+    ]
+  },
+  {
+    "type": "log",
+    "text": "Placement success: true",
+    "args": [
+      "\"Placement success:\"",
+      "true"
+    ]
+  },
+  {
+    "type": "warn",
+    "text": "[DeploymentGridRenderer] Invalid sprite URL format for Warrior, using fallback: W",
+    "args": [
+      "\"[DeploymentGridRenderer] Invalid sprite URL format for Warrior, using fallback: W\""
+    ]
+  },
+  {
+    "type": "log",
+    "text": "Drag ended from roster",
+    "args": [
+      "\"Drag ended from roster\""
+    ]
+  },
+  {
+    "type": "log",
+    "text": "Cancelling invalid drag",
+    "args": [
+      "\"Cancelling invalid drag\""
+    ]
+  },
+  {
+    "type": "log",
+    "text": "Drop on hex: JSHandle@object",
+    "args": [
+      "\"Drop on hex:\"",
+      "{\"q\":1,\"r\":3}"
+    ]
+  },
+  {
+    "type": "error",
+    "text": "[DeploymentGridRenderer] Failed to load sprite: JSHandle@error",
+    "args": [
+      "\"[DeploymentGridRenderer] Failed to load sprite:\"",
+      "{}"
+    ]
+  }
+]

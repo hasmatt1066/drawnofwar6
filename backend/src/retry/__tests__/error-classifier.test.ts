@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { ErrorClassifier, ErrorType, ClassifiedError } from './error-classifier';
+import { ErrorClassifier, ErrorType, ClassifiedError } from '../error-classifier';
 import { PixelLabError, PixelLabErrorType } from '../pixellab/errors';
 
 describe('ErrorClassifier', () => {

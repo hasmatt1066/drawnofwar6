@@ -40,9 +40,9 @@ export interface DeploymentGridWithDragDropProps {
 }
 
 export const DeploymentGridWithDragDrop: React.FC<DeploymentGridWithDragDropProps> = ({
-  width = 1000,
-  height = 600,
-  hexSize = 32,
+  width = 1200,
+  height = 700,
+  hexSize = 38,
   showCoordinates = false,
   onHexClick,
   onHexHover,
@@ -75,7 +75,8 @@ export const DeploymentGridWithDragDrop: React.FC<DeploymentGridWithDragDropProp
           width: 12,
           height: 8,
           hexSize: hexSize,
-          orientation: 'flat-top'
+          orientation: 'flat-top',
+          projection: 'isometric'
         },
         showCoordinates: debugMode,
         onHexHover: handleHexHover,
@@ -143,8 +144,9 @@ export const DeploymentGridWithDragDrop: React.FC<DeploymentGridWithDragDropProp
         placement.hex,
         placement.creature.name,
         placement.creature.playerId,
-        placement.creature.sprite, // Pass sprite URL
-        0.5 // 50% opacity for opponent creatures
+        placement.creature, // Pass entire creature object (contains battlefieldDirectionalViews with idleFrames)
+        0.5, // 50% opacity for opponent creatures
+        placement.creature.facing // Pass facing direction
       );
     });
 
@@ -154,7 +156,9 @@ export const DeploymentGridWithDragDrop: React.FC<DeploymentGridWithDragDropProp
         placement.hex,
         placement.creature.name,
         placement.creature.playerId,
-        placement.creature.sprite // Pass sprite URL
+        placement.creature, // Pass entire creature object (contains battlefieldDirectionalViews with idleFrames)
+        1.0, // Full opacity
+        placement.creature.facing // Pass facing direction
       );
     });
   }, [placements, opponentPlacements, isInitialized]);
@@ -172,7 +176,8 @@ export const DeploymentGridWithDragDrop: React.FC<DeploymentGridWithDragDropProp
         dragTargetHex,
         draggingCreature.name,
         draggingCreature.playerId,
-        draggingCreature.sprite // Pass sprite URL
+        draggingCreature, // Pass entire creature object (contains battlefieldDirectionalViews with idleFrames)
+        draggingCreature.facing // Pass facing direction (will update based on movement)
       );
 
       // Update highlight based on validity
@@ -185,11 +190,33 @@ export const DeploymentGridWithDragDrop: React.FC<DeploymentGridWithDragDropProp
     }
   }, [draggingCreature, dragTargetHex, isDragValid, isInitialized]);
 
-  // Handle drag over grid
+  // Handle drag over grid - CRITICAL: Update hex hover during HTML5 drag
   const handleDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
-  }, []);
+
+    // Get mouse position relative to canvas
+    if (rendererRef.current && containerRef.current) {
+      const canvas = containerRef.current.querySelector('canvas');
+      if (canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        // Get hex at mouse position
+        const hex = rendererRef.current.getHexAtPixel(x, y);
+
+        console.log('[DragOver] Mouse at pixel:', { x, y }, 'Hex:', hex);
+
+        // Update current hex (triggers onHexHover callback)
+        if (hex) {
+          handleHexHover(hex);
+        } else {
+          handleHexHover(null);
+        }
+      }
+    }
+  }, [handleHexHover]);
 
   // Handle drop on grid
   const handleDropOnGrid = useCallback((event: React.DragEvent) => {

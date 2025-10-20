@@ -8,10 +8,13 @@
 import type {
   MatchState,
   MatchDeploymentStatus,
-  PlayerReadyState,
   MatchPhase,
   CreaturePlacement
 } from '@drawn-of-war/shared';
+import { combatStateManager } from './combat/combat-state-manager.js';
+import { getDeploymentNamespace } from '../sockets/index.js';
+import { getCombatSocket } from '../sockets/combat-socket.js';
+import type { DeploymentState } from '@drawn-of-war/shared';
 
 /**
  * Match data stored in memory
@@ -245,11 +248,101 @@ function cancelCountdown(matchId: string): void {
 }
 
 /**
+ * Convert match data to deployment state for combat system
+ */
+function convertToDeploymentState(match: MatchData): DeploymentState {
+  console.log(`[Match ${match.matchId}] Converting to deployment state:`);
+  console.log(`  Player 1 placements: ${match.player1Placements.length}`);
+  console.log(`  Player 2 placements: ${match.player2Placements.length}`);
+
+  return {
+    player1: {
+      playerId: 'player1',
+      placements: match.player1Placements,
+      roster: [],
+      maxCreatures: 8,
+      isLocked: true,
+      isReady: true,
+      readyAt: match.deploymentStatus.player1.readyAt
+    },
+    player2: {
+      playerId: 'player2',
+      placements: match.player2Placements,
+      roster: [],
+      maxCreatures: 8,
+      isLocked: true,
+      isReady: true,
+      readyAt: match.deploymentStatus.player2.readyAt
+    },
+    currentPlayer: 'player1',
+    countdownSeconds: null,
+    countdownStartedAt: null,
+    isComplete: true
+  };
+}
+
+/**
+ * Start combat for a completed deployment
+ */
+async function startCombatForMatch(matchId: string, deployment: DeploymentState): Promise<void> {
+  try {
+    await combatStateManager.startCombat(
+      matchId,
+      deployment,
+      undefined,
+      (result) => {
+        onCombatComplete(matchId, result);
+      }
+    );
+
+    // Start broadcasting combat state updates via socket
+    const combatSocket = getCombatSocket();
+    combatSocket.startBroadcasting(matchId);
+    console.log(`[Match ${matchId}] Combat socket broadcasting started`);
+
+    const deploymentNs = getDeploymentNamespace();
+    deploymentNs.to(`match-${matchId}`).emit('deployment:combat-started', { matchId });
+
+    console.log(`[Match ${matchId}] Combat started successfully`);
+  } catch (error) {
+    console.error(`[Match ${matchId}] Failed to start combat:`, error);
+  }
+}
+
+/**
+ * Handle combat completion
+ */
+function onCombatComplete(matchId: string, result: any): void {
+  const match = activeMatches.get(matchId);
+  if (!match) return;
+
+  match.phase = 'complete';
+
+  const deploymentNs = getDeploymentNamespace();
+  deploymentNs.to(`match-${matchId}`).emit('deployment:combat-completed', {
+    matchId,
+    winner: result.winner,
+    reason: result.reason,
+    duration: result.duration
+  });
+
+  console.log(`[Match ${matchId}] Combat completed - Winner: ${result.winner}`);
+}
+
+/**
  * Lock both players (finalize deployment)
  */
 function lockBothPlayers(matchId: string): void {
   const match = activeMatches.get(matchId);
   if (!match) {
+    return;
+  }
+
+  // Validate placements exist before starting combat
+  if (match.player1Placements.length === 0 || match.player2Placements.length === 0) {
+    console.error(`[Match ${matchId}] Cannot start combat - missing placements`);
+    console.error(`  Player 1: ${match.player1Placements.length} creatures`);
+    console.error(`  Player 2: ${match.player2Placements.length} creatures`);
     return;
   }
 
@@ -268,9 +361,15 @@ function lockBothPlayers(matchId: string): void {
 
   console.log(`[Match ${matchId}] Both players locked - deployment complete`);
 
-  // TODO: Transition to combat phase (next feature)
-  // For now, just transition to 'countdown' phase to show deployment is locked
-  match.phase = 'countdown';
+  // Transition to combat phase
+  match.phase = 'combat';
+  match.phaseStartedAt = now;
+
+  const deploymentState = convertToDeploymentState(match);
+
+  startCombatForMatch(matchId, deploymentState).catch(err => {
+    console.error(`[Match ${matchId}] Failed to start combat:`, err);
+  });
 }
 
 /**

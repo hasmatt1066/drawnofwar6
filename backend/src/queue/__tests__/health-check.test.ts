@@ -6,10 +6,10 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { HealthCheck, HealthStatus } from './health-check.js';
-import { QueueManager } from './queue-manager.js';
-import { QueueLogger } from './logger.js';
-import type { QueueServiceConfig } from './queue-manager.js';
+import { HealthCheck, HealthStatus } from '../health-check.js';
+import { QueueManager } from '../queue-manager.js';
+import { QueueLogger } from '../logger.js';
+import type { QueueServiceConfig } from '../queue-manager.js';
 
 describe('HealthCheck - Task 7.4: Implement Health Check Endpoint', () => {
   let mockLogger: QueueLogger;

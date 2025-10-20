@@ -4,8 +4,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { hexDistance } from './distance';
-import { AxialCoordinate } from './types';
+import { hexDistance } from '../distance';
+import { AxialCoordinate } from '../types';
 
 describe('Hex Distance Calculation', () => {
   describe('Basic distance calculations', () => {

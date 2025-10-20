@@ -110,6 +110,21 @@ export interface DeploymentServerEvents {
    * Opponent disconnected
    */
   'deployment:opponent-disconnected': (data: { playerId: 'player1' | 'player2' }) => void;
+
+  /**
+   * Combat has started for this match
+   */
+  'deployment:combat-started': (data: { matchId: string }) => void;
+
+  /**
+   * Combat has completed with result
+   */
+  'deployment:combat-completed': (data: {
+    matchId: string;
+    winner: 'player1' | 'player2' | 'draw';
+    reason: string;
+    duration: number;
+  }) => void;
 }
 
 /**

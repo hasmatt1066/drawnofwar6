@@ -33,25 +33,61 @@ export function cubeToAxial(cube: CubeCoordinate): AxialCoordinate {
 }
 
 /**
+ * Apply isometric projection to 2D coordinates (2:1 dimetric)
+ * Transforms flat coordinates into isometric view
+ *
+ * @param pixel - Flat 2D pixel coordinate
+ * @returns Isometric pixel coordinate
+ */
+export function applyIsometricProjection(pixel: PixelCoordinate): PixelCoordinate {
+  return {
+    x: (pixel.x - pixel.y) * 0.5,
+    y: (pixel.x + pixel.y) * 0.25
+  };
+}
+
+/**
+ * Reverse isometric projection to 2D coordinates
+ * Transforms isometric view back to flat coordinates
+ *
+ * @param pixel - Isometric pixel coordinate
+ * @returns Flat 2D pixel coordinate
+ */
+export function reverseIsometricProjection(pixel: PixelCoordinate): PixelCoordinate {
+  return {
+    x: pixel.x + 2 * pixel.y,
+    y: -pixel.x + 2 * pixel.y
+  };
+}
+
+/**
  * Convert hex to pixel coordinates
  *
  * @param hex - Axial hex coordinate
- * @param config - Grid configuration (size, orientation)
+ * @param config - Grid configuration (size, orientation, projection)
  * @returns Pixel coordinate for hex center
  */
 export function hexToPixel(hex: AxialCoordinate, config: HexGridConfig): PixelCoordinate {
   const size = config.hexSize;
+  let pixel: PixelCoordinate;
 
   if (config.orientation === 'flat-top') {
     const x = size * (3/2 * hex.q);
     const y = size * (Math.sqrt(3)/2 * hex.q + Math.sqrt(3) * hex.r);
-    return { x, y };
+    pixel = { x, y };
   } else {
     // Pointy-top orientation
     const x = size * (Math.sqrt(3) * hex.q + Math.sqrt(3)/2 * hex.r);
     const y = size * (3/2 * hex.r);
-    return { x, y };
+    pixel = { x, y };
   }
+
+  // Apply isometric projection if enabled
+  if (config.projection === 'isometric') {
+    pixel = applyIsometricProjection(pixel);
+  }
+
+  return pixel;
 }
 
 /**
@@ -59,20 +95,27 @@ export function hexToPixel(hex: AxialCoordinate, config: HexGridConfig): PixelCo
  * Returns nearest hex to pixel position
  *
  * @param pixel - Pixel coordinate
- * @param config - Grid configuration (size, orientation)
+ * @param config - Grid configuration (size, orientation, projection)
  * @returns Nearest axial hex coordinate
  */
 export function pixelToHex(pixel: PixelCoordinate, config: HexGridConfig): AxialCoordinate {
   const size = config.hexSize;
+  let workingPixel = pixel;
+
+  // Reverse isometric projection if enabled
+  if (config.projection === 'isometric') {
+    workingPixel = reverseIsometricProjection(pixel);
+  }
+
   let q: number, r: number;
 
   if (config.orientation === 'flat-top') {
-    q = (2/3 * pixel.x) / size;
-    r = (-1/3 * pixel.x + Math.sqrt(3)/3 * pixel.y) / size;
+    q = (2/3 * workingPixel.x) / size;
+    r = (-1/3 * workingPixel.x + Math.sqrt(3)/3 * workingPixel.y) / size;
   } else {
     // Pointy-top orientation
-    q = (Math.sqrt(3)/3 * pixel.x - 1/3 * pixel.y) / size;
-    r = (2/3 * pixel.y) / size;
+    q = (Math.sqrt(3)/3 * workingPixel.x - 1/3 * workingPixel.y) / size;
+    r = (2/3 * workingPixel.y) / size;
   }
 
   return hexRound({ q, r });

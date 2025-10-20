@@ -36,7 +36,7 @@ export class CreatureSpriteLoader {
   private loadingSprites: Set<string> = new Set();
   private baseUrl: string;
 
-  constructor(baseUrl: string = 'http://localhost:3001') {
+  constructor(baseUrl: string = '') {
     this.baseUrl = baseUrl;
   }
 
@@ -231,8 +231,8 @@ let loaderInstance: CreatureSpriteLoader | null = null;
  */
 export function getCreatureSpriteLoader(): CreatureSpriteLoader {
   if (!loaderInstance) {
-    const apiUrl = (import.meta.env?.VITE_API_URL as string | undefined) || 'http://localhost:3001';
-    loaderInstance = new CreatureSpriteLoader(apiUrl);
+    // Use relative paths to allow Vite proxy to handle API requests
+    loaderInstance = new CreatureSpriteLoader('');
   }
   return loaderInstance;
 }

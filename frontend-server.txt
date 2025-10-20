@@ -1,0 +1,10 @@
+
+> @drawn-of-war/frontend@0.1.0 dev /mnt/c/Users/mhast/Desktop/drawnofwar6/frontend
+> node node_modules/vite/bin/vite.js
+
+
+  [32m[1mVITE[22m v5.4.20[39m  [2mready in [0m[1m943[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5175[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://10.255.255.254:[1m5175[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://10.0.0.48:[1m5175[22m/[39m

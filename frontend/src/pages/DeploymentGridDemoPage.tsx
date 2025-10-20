@@ -5,9 +5,10 @@
  * Shows creature roster, drag-and-drop placement, and deployment state.
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
+import * as PIXI from 'pixi.js';
 import { DeploymentGridWithDragDrop } from '../components/DeploymentGrid/DeploymentGridWithDragDrop';
 import { CreatureRoster } from '../components/DeploymentGrid/CreatureRoster';
 import { ReadyPanel } from '../components/DeploymentGrid/ReadyPanel';
@@ -15,7 +16,16 @@ import { ConnectionStatus } from '../components/DeploymentGrid/ConnectionStatus'
 import { MatchSharing } from '../components/DeploymentGrid/MatchSharing';
 import { useDeploymentState } from '../components/DeploymentGrid/useDeploymentState';
 import { useDeploymentSocketSync } from '../hooks/useDeploymentSocketSync';
+import { useRosterFromUrl } from '../hooks/useRosterFromUrl';
+import { useCreatureRoster } from '../hooks/useCreatureRoster';
+import { transformManyToDeploymentCreatures } from '../services/creature-transform.service';
 import { getCreatureSpriteLoader } from '../services/creature-sprite-loader';
+import { combatSocket } from '../services/combat-socket';
+import { deploymentSocket } from '../services/deployment-socket';
+import { CombatVisualizationManager } from '../services/combat-visualization-manager';
+import { CombatGridRenderer } from '../components/CombatGrid/CombatGridRenderer';
+import { CombatLogPanel } from '../components/CombatLogPanel/CombatLogPanel';
+import { CombatLog, CombatEventType } from '../services/combat-log';
 import type { AxialCoordinate, DeploymentCreature, CreaturePlacement, MatchDeploymentStatus } from '@drawn-of-war/shared';
 
 // Initial mock creature data (sprites will be loaded dynamically)
@@ -30,8 +40,17 @@ const INITIAL_PLAYER1_CREATURES: DeploymentCreature[] = [
   { id: 'p1-ranger', name: 'Ranger', sprite: 'G', playerId: 'player1', stats: { health: 85, attack: 22, defense: 7 } }
 ];
 
-// Mock creature data for Player 2 (just for demonstration)
-const INITIAL_PLAYER2_CREATURES: DeploymentCreature[] = [];
+// Mock creature data for Player 2 (mirror of Player 1's roster)
+const INITIAL_PLAYER2_CREATURES: DeploymentCreature[] = [
+  { id: 'p2-warrior', name: 'Warrior', sprite: 'W', playerId: 'player2', stats: { health: 100, attack: 15, defense: 10 } },
+  { id: 'p2-archer', name: 'Archer', sprite: 'A', playerId: 'player2', stats: { health: 80, attack: 20, defense: 5 } },
+  { id: 'p2-mage', name: 'Mage', sprite: 'M', playerId: 'player2', stats: { health: 60, attack: 30, defense: 3 } },
+  { id: 'p2-tank', name: 'Tank', sprite: 'T', playerId: 'player2', stats: { health: 150, attack: 10, defense: 20 } },
+  { id: 'p2-rogue', name: 'Rogue', sprite: 'R', playerId: 'player2', stats: { health: 70, attack: 25, defense: 5 } },
+  { id: 'p2-cleric', name: 'Cleric', sprite: 'C', playerId: 'player2', stats: { health: 90, attack: 12, defense: 8 } },
+  { id: 'p2-paladin', name: 'Paladin', sprite: 'P', playerId: 'player2', stats: { health: 120, attack: 18, defense: 15 } },
+  { id: 'p2-ranger', name: 'Ranger', sprite: 'G', playerId: 'player2', stats: { health: 85, attack: 22, defense: 7 } }
+];
 
 export const DeploymentGridDemoPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -48,31 +67,93 @@ export const DeploymentGridDemoPage: React.FC = () => {
   // Redirect to add URL params if not present
   useEffect(() => {
     if (!matchIdFromUrl || !playerIdFromUrl) {
-      navigate(`/deployment-grid?matchId=${matchId}&playerId=${playerIdFromUrl || 'player1'}`, { replace: true });
+      const currentPath = window.location.pathname;
+      const basePath = currentPath.includes('deployment-grid') ? '/deployment-grid' : '/deployment';
+
+      // Preserve existing query parameters (like creatures)
+      const params = new URLSearchParams(searchParams);
+      if (!matchIdFromUrl) {
+        params.set('matchId', matchId);
+      }
+      if (!playerIdFromUrl) {
+        params.set('playerId', 'player1');
+      }
+
+      navigate(`${basePath}?${params.toString()}`, { replace: true });
     }
-  }, [matchIdFromUrl, playerIdFromUrl, matchId, navigate]);
+  }, [matchIdFromUrl, playerIdFromUrl, matchId, navigate, searchParams]);
 
   const [currentPlayerId] = useState<'player1' | 'player2'>(() => {
     return playerIdFromUrl || 'player1';
   });
 
-  const [player1Creatures, setPlayer1Creatures] = useState<DeploymentCreature[]>(INITIAL_PLAYER1_CREATURES);
-  const [player2Creatures] = useState<DeploymentCreature[]>(INITIAL_PLAYER2_CREATURES);
+  // Parse creature IDs from URL
+  const { creatureIds, hasCreatures } = useRosterFromUrl();
+
+  // Load creatures from library if IDs provided
+  const { creatures: loadedCreatures, loading: loadingCreatures, error: loadError } = useCreatureRoster(
+    creatureIds,
+    currentPlayerId === 'player1' ? 'demo-player1' : 'demo-player2',
+    hasCreatures
+  );
+
+  // Transform loaded creatures to deployment format
+  const loadedDeploymentCreatures = React.useMemo(() => {
+    if (loadedCreatures.length > 0) {
+      return transformManyToDeploymentCreatures(loadedCreatures, currentPlayerId);
+    }
+    return [];
+  }, [loadedCreatures, currentPlayerId]);
+
+  // Use loaded creatures if available, otherwise fall back to mock data
+  const [player1Creatures, setPlayer1Creatures] = useState<DeploymentCreature[]>(
+    currentPlayerId === 'player1' && hasCreatures ? [] : INITIAL_PLAYER1_CREATURES
+  );
+  const [player2Creatures, setPlayer2Creatures] = useState<DeploymentCreature[]>(
+    currentPlayerId === 'player2' && hasCreatures ? [] : INITIAL_PLAYER2_CREATURES
+  );
   const [opponentPlacements, setOpponentPlacements] = useState<CreaturePlacement[]>([]);
   const [deploymentStatus, setDeploymentStatus] = useState<MatchDeploymentStatus | null>(null);
+  const [combatState, setCombatState] = useState<any | null>(null);
+  const [combatActive, setCombatActive] = useState(false);
 
-  // Load creature sprites on mount
+  // Combat visualization state
+  const [combatVisualizationManager, setCombatVisualizationManager] = useState<CombatVisualizationManager | null>(null);
+  const [combatGridRenderer, setCombatGridRenderer] = useState<CombatGridRenderer | null>(null);
+  const [combatLog] = useState(() => new CombatLog({ maxEntries: 100, showTimestamps: false }));
+  const combatCanvasRef = useRef<HTMLDivElement>(null);
+
+  // Update creatures when loaded from library
   useEffect(() => {
+    if (!loadingCreatures && loadedDeploymentCreatures.length > 0) {
+      console.log('[DeploymentDemo] Using loaded creatures from library:', loadedDeploymentCreatures.length);
+      if (currentPlayerId === 'player1') {
+        setPlayer1Creatures(loadedDeploymentCreatures);
+      } else {
+        setPlayer2Creatures(loadedDeploymentCreatures);
+      }
+    }
+  }, [loadingCreatures, loadedDeploymentCreatures, currentPlayerId]);
+
+  // Load creature sprites on mount (for mock data only)
+  useEffect(() => {
+    // Skip if using loaded creatures from library
+    if (hasCreatures) {
+      console.log('[DeploymentDemo] Skipping sprite loading - using creatures from library');
+      return;
+    }
+
     const loadSprites = async () => {
       const spriteLoader = getCreatureSpriteLoader();
 
-      // Load sprites for Player 1 creatures
+      // Load sprites for both players' creatures
+      const allCreatures = [...INITIAL_PLAYER1_CREATURES, ...INITIAL_PLAYER2_CREATURES];
       const results = await spriteLoader.loadBatch(
-        INITIAL_PLAYER1_CREATURES.map(c => ({ id: c.id, name: c.name }))
+        allCreatures.map(c => ({ id: c.id, name: c.name }))
       );
 
-      // Update creatures with loaded sprites
-      const updatedCreatures = INITIAL_PLAYER1_CREATURES.map(creature => {
+      // Update Player 1 creatures with loaded sprites
+      const updatedPlayer1Creatures = INITIAL_PLAYER1_CREATURES.map(creature => {
         const result = results.get(creature.id);
         if (result?.success && result.sprite) {
           return {
@@ -88,12 +169,30 @@ export const DeploymentGridDemoPage: React.FC = () => {
         };
       });
 
-      setPlayer1Creatures(updatedCreatures);
-      console.log('[DeploymentDemo] Loaded sprites for', updatedCreatures.length, 'creatures');
+      // Update Player 2 creatures with loaded sprites
+      const updatedPlayer2Creatures = INITIAL_PLAYER2_CREATURES.map(creature => {
+        const result = results.get(creature.id);
+        if (result?.success && result.sprite) {
+          return {
+            ...creature,
+            sprite: result.sprite.imageBase64,
+            spriteLoading: false,
+          };
+        }
+        return {
+          ...creature,
+          spriteLoading: false,
+          spriteError: result?.error || 'Failed to load sprite',
+        };
+      });
+
+      setPlayer1Creatures(updatedPlayer1Creatures);
+      setPlayer2Creatures(updatedPlayer2Creatures);
+      console.log('[DeploymentDemo] Loaded sprites for', allCreatures.length, 'creatures (P1:', updatedPlayer1Creatures.length, ', P2:', updatedPlayer2Creatures.length, ')');
     };
 
     loadSprites();
-  }, []);
+  }, [hasCreatures]);
 
   // Use deployment state hook
   const {
@@ -108,7 +207,9 @@ export const DeploymentGridDemoPage: React.FC = () => {
     getPlacementCount,
     markReady,
     markUnready,
-    canMarkReady
+    markLocked,
+    canMarkReady,
+    syncPlacementsFromServer
   } = useDeploymentState(player1Creatures, player2Creatures, currentPlayerId);
 
   // Use Socket.IO sync hook
@@ -125,15 +226,47 @@ export const DeploymentGridDemoPage: React.FC = () => {
     playerId: currentPlayerId,
     enabled: true,
     onStateReceived: (data) => {
-      console.log('[DeploymentDemo] Received initial state:', data);
-      // Update opponent placements
+      console.log('[DeploymentDemo] ===== INITIAL STATE RECEIVED =====');
+      console.log('[DeploymentDemo] Full data:', data);
+
+      // Restore BOTH players' placements from server
+      const currentPlayerPlacementsData = currentPlayerId === 'player1' ? data.player1Placements : data.player2Placements;
       const opponentId = currentPlayerId === 'player1' ? 'player2' : 'player1';
       const opponentPlacementsData = opponentId === 'player1' ? data.player1Placements : data.player2Placements;
+
+      // Sync current player's placements
+      console.log('[DeploymentDemo] Syncing current player placements:', {
+        playerId: currentPlayerId,
+        count: currentPlayerPlacementsData.length,
+        creatures: currentPlayerPlacementsData.map(p => p.creature.name)
+      });
+      syncPlacementsFromServer(currentPlayerId, currentPlayerPlacementsData);
+
+      // Update opponent placements
+      console.log('[DeploymentDemo] Setting opponent placements:', {
+        opponentId,
+        count: opponentPlacementsData.length,
+        placements: opponentPlacementsData.map(p => ({
+          creatureId: p.creature.id,
+          creatureName: p.creature.name,
+          hasBattlefieldViews: !!p.creature.battlefieldDirectionalViews
+        }))
+      });
       setOpponentPlacements(opponentPlacementsData);
       setDeploymentStatus(data.deploymentStatus);
     },
     onOpponentPlaced: (placement) => {
-      console.log('[DeploymentDemo] Opponent placed:', placement);
+      console.log('[DeploymentDemo] ===== OPPONENT PLACED =====');
+      console.log('[DeploymentDemo] Full placement:', placement);
+      console.log('[DeploymentDemo] Creature ID:', placement.creature.id);
+      console.log('[DeploymentDemo] Creature name:', placement.creature.name);
+      console.log('[DeploymentDemo] Has battlefieldDirectionalViews:', !!placement.creature.battlefieldDirectionalViews);
+      if (placement.creature.battlefieldDirectionalViews) {
+        console.log('[DeploymentDemo] Directional views:', placement.creature.battlefieldDirectionalViews);
+        console.log('[DeploymentDemo] E direction:', placement.creature.battlefieldDirectionalViews.E);
+      } else {
+        console.log('[DeploymentDemo] ❌ NO battlefieldDirectionalViews - this is the problem!');
+      }
       setOpponentPlacements(prev => [...prev, placement]);
     },
     onOpponentRemoved: (creatureId) => {
@@ -153,15 +286,272 @@ export const DeploymentGridDemoPage: React.FC = () => {
     }
   });
 
+  // Listen for combat start from deployment socket (registration only, no cleanup)
+  useEffect(() => {
+    console.log('[DeploymentDemo] Registering combat start listener');
+
+    deploymentSocket.onCombatStarted(async (data: { matchId: string }) => {
+      console.log('[DeploymentDemo] ===== COMBAT STARTED =====');
+      console.log('[DeploymentDemo] Match ID:', data.matchId);
+
+      // Mark combat as active FIRST - this will trigger the separate combat lifecycle effect
+      setCombatActive(true);
+      console.log('[DeploymentDemo] ✓ Combat active flag set');
+    });
+
+    // NO cleanup here - the combat start listener stays registered
+    // Cleanup happens in the separate combat lifecycle effect below
+  }, []); // Empty deps - register once on mount
+
+  // Separate combat lifecycle management - only runs when combat becomes active
+  useEffect(() => {
+    if (!combatActive) {
+      console.log('[DeploymentDemo] Combat not active, skipping combat setup');
+      return;
+    }
+
+    console.log('[DeploymentDemo] Combat lifecycle: Starting initialization');
+    let isCleanedUp = false;
+    let renderer: CombatGridRenderer | null = null;
+    let vizManager: CombatVisualizationManager | null = null;
+
+    const initializeCombat = async () => {
+      if (isCleanedUp) {
+        console.log('[DeploymentDemo] Combat lifecycle: Already cleaned up, aborting init');
+        return;
+      }
+
+      // Join combat socket FIRST and wait for confirmation
+      try {
+        console.log('[DeploymentDemo] Attempting to join combat socket...');
+        await combatSocket.join(matchId);
+        console.log('[DeploymentDemo] ✓ Successfully joined combat socket');
+      } catch (error) {
+        console.error('[DeploymentDemo] ✗ Failed to join combat socket:', error);
+        return;
+      }
+
+      if (isCleanedUp) {
+        console.log('[DeploymentDemo] Combat lifecycle: Cleaned up after socket join, aborting');
+        combatSocket.leave();
+        return;
+      }
+
+      // Initialize combat grid renderer
+      try {
+        console.log('[DeploymentDemo] Initializing combat grid renderer...');
+        const gridConfig = {
+          width: 14,
+          height: 9,
+          hexSize: 38,
+          projection: 'isometric' as const
+        };
+
+        renderer = new CombatGridRenderer({
+          canvasWidth: 1200,
+          canvasHeight: 700,
+          hexGridConfig: gridConfig,
+          showCoordinates: false
+        });
+
+        const canvas = await renderer.init();
+        console.log('[DeploymentDemo] ✓ Combat grid renderer initialized');
+
+        if (isCleanedUp) {
+          console.log('[DeploymentDemo] Combat lifecycle: Cleaned up during renderer init, aborting');
+          renderer.destroy();
+          combatSocket.leave();
+          return;
+        }
+
+        // Add canvas to DOM
+        if (combatCanvasRef.current) {
+          combatCanvasRef.current.innerHTML = '';
+          combatCanvasRef.current.appendChild(canvas);
+          console.log('[DeploymentDemo] ✓ Canvas added to DOM');
+        }
+
+        setCombatGridRenderer(renderer);
+
+        // Create socket adapter for CombatVisualizationManager
+        console.log('[DeploymentDemo] Creating socket adapter...');
+        const socketAdapter = {
+          onCombatState: (callback: (state: any) => void) => {
+            console.log('[DeploymentDemo] Socket adapter: registering state callback');
+            combatSocket.onState((state) => {
+              console.log('[DeploymentDemo] Socket adapter: received state, forwarding to callback');
+              callback(state);
+            });
+          },
+          onCombatCompleted: (callback: (result: any) => void) => {
+            console.log('[DeploymentDemo] Socket adapter: registering completion callback');
+            combatSocket.onCompleted((result) => {
+              console.log('[DeploymentDemo] Socket adapter: received completion, forwarding to callback');
+              callback(result);
+            });
+          },
+          onError: (callback: (error: Error) => void) => {
+            console.log('[DeploymentDemo] Socket adapter: registering error callback');
+            combatSocket.onError((data) => {
+              console.error('[DeploymentDemo] Socket adapter: received error, forwarding to callback');
+              callback(new Error(data.message));
+            });
+          }
+        };
+
+        // Create combat visualization manager
+        console.log('[DeploymentDemo] Creating CombatVisualizationManager...');
+        vizManager = new CombatVisualizationManager(
+          socketAdapter as any,
+          new PIXI.Container(), // Stage container (will be added to renderer)
+          renderer as any // Grid renderer interface
+        );
+
+        if (isCleanedUp) {
+          console.log('[DeploymentDemo] Combat lifecycle: Cleaned up during viz manager creation, aborting');
+          vizManager.destroy();
+          renderer.destroy();
+          combatSocket.leave();
+          return;
+        }
+
+        // CRITICAL FIX: Load creature sprite data into the visualization manager
+        // This allows combat to render actual creature sprites instead of placeholders
+        // IMPORTANT: Include creatures from BOTH local rosters AND opponent placements
+        // because opponent placements may contain creatures with sprite data we don't have locally
+        const currentPlayerPlacements = currentPlayerState.placements.map(p => p.creature);
+        const opponentCreatures = opponentPlacements.map(p => p.creature);
+        const allCreatures = [...player1Creatures, ...player2Creatures, ...currentPlayerPlacements, ...opponentCreatures];
+
+        // Deduplicate by creature ID (later entries override earlier ones)
+        const creatureMap = new Map<string, DeploymentCreature>();
+        allCreatures.forEach(c => creatureMap.set(c.id, c));
+        const uniqueCreatures = Array.from(creatureMap.values());
+
+        console.log('[DeploymentDemo] Loading creature sprite data into visualization manager:', uniqueCreatures.length, 'unique creatures');
+        vizManager.setCreatureData(uniqueCreatures);
+
+        console.log('[DeploymentDemo] Starting visualization manager...');
+        vizManager.start();
+        setCombatVisualizationManager(vizManager);
+        console.log('[DeploymentDemo] ✓ Combat visualization manager started');
+
+        // Listen for combat state updates and feed to combat log
+        combatSocket.onState((state) => {
+          console.log('[DeploymentDemo] ===== COMBAT STATE UPDATE =====');
+          console.log('[DeploymentDemo] Tick:', state.tick);
+          console.log('[DeploymentDemo] Units:', state.units?.length || 0);
+          console.log('[DeploymentDemo] Projectiles:', state.projectiles?.length || 0);
+          console.log('[DeploymentDemo] Events:', state.events?.length || 0);
+
+          setCombatState(state);
+
+          // Add log entry for tick
+          if (state.tick !== undefined) {
+            combatLog.addEntry({
+              type: CombatEventType.STATUS,
+              message: `Tick ${state.tick}`
+            });
+          }
+
+          // Add log entries for events
+          if (state.events && Array.isArray(state.events)) {
+            state.events.slice(-5).forEach((event: any) => {
+              if (event.type === 'damage') {
+                combatLog.addEntry({
+                  type: CombatEventType.ATTACK,
+                  message: `${event.attackerId} dealt ${event.damage} damage to ${event.targetId}`
+                });
+              } else if (event.type === 'death') {
+                combatLog.addEntry({
+                  type: CombatEventType.DEATH,
+                  message: `${event.unitId} was defeated`
+                });
+              }
+            });
+          }
+        });
+
+        // Listen for combat completion
+        combatSocket.onCompleted((result) => {
+          console.log('[DeploymentDemo] ===== COMBAT COMPLETED =====');
+          console.log('[DeploymentDemo] Winner:', result.winner);
+          console.log('[DeploymentDemo] Result:', result);
+
+          setCombatActive(false);
+          setCombatState(result);
+
+          // Add completion log entry
+          combatLog.addEntry({
+            type: CombatEventType.STATUS,
+            message: `Combat ended - Winner: ${result.winner || 'Draw'}`
+          });
+
+          // Cleanup will happen in the useEffect cleanup when combatActive becomes false
+        });
+
+        console.log('[DeploymentDemo] ✓ Combat initialization complete');
+
+      } catch (error) {
+        console.error('[DeploymentDemo] ✗ Failed to initialize combat visualization:', error);
+        if (renderer) renderer.destroy();
+        if (vizManager) vizManager.destroy();
+        combatSocket.leave();
+      }
+    };
+
+    initializeCombat();
+
+    // Cleanup only when combat ends or component unmounts
+    return () => {
+      console.log('[DeploymentDemo] Combat lifecycle: Cleanup triggered');
+      isCleanedUp = true;
+
+      if (vizManager) {
+        console.log('[DeploymentDemo] Stopping and destroying visualization manager');
+        vizManager.stop();
+        vizManager.destroy();
+      }
+      if (renderer) {
+        console.log('[DeploymentDemo] Destroying combat grid renderer');
+        renderer.destroy();
+      }
+
+      console.log('[DeploymentDemo] Leaving combat socket and removing listeners');
+      combatSocket.removeAllListeners();
+      combatSocket.leave();
+
+      setCombatVisualizationManager(null);
+      setCombatGridRenderer(null);
+    };
+  }, [combatActive, matchId, combatLog, player1Creatures, player2Creatures]); // Include creature rosters in dependencies
+
   const currentPlayerState = deploymentState[currentPlayerId];
+
+  // Log placements whenever they change (for debugging disappearance bug)
+  useEffect(() => {
+    console.log(`[DeploymentDemo] currentPlayerState.placements changed:`, {
+      playerId: currentPlayerId,
+      count: currentPlayerState.placements.length,
+      isLocked: currentPlayerState.isLocked,
+      isReady: currentPlayerState.isReady,
+      placements: currentPlayerState.placements.map(p => ({
+        creatureId: p.creature.id,
+        creatureName: p.creature.name,
+        hex: p.hex
+      }))
+    });
+  }, [currentPlayerState.placements, currentPlayerId, currentPlayerState.isLocked, currentPlayerState.isReady]);
 
   // Sync local lock state with server
   useEffect(() => {
     if (deploymentStatus?.isLocked && !currentPlayerState.isLocked) {
-      // Server says locked, update local state
-      clearAllPlacements();
+      console.log(`[DeploymentDemo] Syncing lock state - calling markLocked(${currentPlayerId})`);
+      console.log(`[DeploymentDemo] Current placements before lock:`, currentPlayerState.placements.length);
+      // Just update the locked flag, DON'T clear placements
+      markLocked(currentPlayerId);
     }
-  }, [deploymentStatus?.isLocked, currentPlayerState.isLocked, clearAllPlacements]);
+  }, [deploymentStatus?.isLocked, currentPlayerState.isLocked, currentPlayerId, markLocked, currentPlayerState.placements]);
 
   // Handle drag start from roster
   const handleRosterDragStart = useCallback((creature: DeploymentCreature, _event: React.DragEvent | React.TouchEvent) => {
@@ -169,22 +559,27 @@ export const DeploymentGridDemoPage: React.FC = () => {
     startDrag(creature);
   }, [startDrag]);
 
-  // Handle drag end from roster
-  const handleRosterDragEnd = useCallback((_event: React.DragEvent | React.TouchEvent) => {
-    console.log('Drag ended from roster');
-    // Don't end drag here, wait for drop on grid
-  }, []);
-
   // Handle hex hover (update drag target)
   const handleHexHover = useCallback((hex: AxialCoordinate | null) => {
     if (dragState.phase === 'dragging') {
+      console.log('[HexHover] During drag, updating target to:', hex ? `{q: ${hex.q}, r: ${hex.r}}` : 'null');
       updateDrag(hex);
     }
   }, [dragState.phase, updateDrag]);
 
-  // Handle drop on grid
+  // Handle drop on grid - MUST BE DEFINED BEFORE handleRosterDragEnd
   const handleDrop = useCallback((hex: AxialCoordinate) => {
-    console.log('Drop on hex:', hex);
+    console.log('Drop on hex:', `{q: ${hex.q}, r: ${hex.r}}`);
+    console.log('Current player ID:', currentPlayerId);
+    console.log('Drag state:', { isValid: dragState.isValid, creature: dragState.creature?.name, creaturePlayerId: dragState.creature?.playerId });
+
+    // Check if socket is connected before allowing placement
+    if (!isConnected) {
+      console.warn('[DeploymentDemo] Cannot place creature - socket not connected');
+      cancelDrag();
+      return;
+    }
+
     const success = endDrag(hex);
     console.log('Placement success:', success);
 
@@ -194,9 +589,30 @@ export const DeploymentGridDemoPage: React.FC = () => {
         hex,
         creature: dragState.creature
       };
+      console.log('[DeploymentDemo] Emitting placement to server:', placement);
       emitPlacement(placement);
     }
-  }, [endDrag, dragState.creature, emitPlacement]);
+  }, [endDrag, dragState, emitPlacement, currentPlayerId, isConnected, cancelDrag]);
+
+  // Handle drag end from roster - Uses handleDrop, so must come AFTER
+  const handleRosterDragEnd = useCallback((_event: React.DragEvent | React.TouchEvent) => {
+    console.log('Drag ended from roster');
+
+    // If drag is no longer active, it was already handled (prevents race condition)
+    if (dragState.phase === 'idle') {
+      console.log('Drag already completed, skipping');
+      return;
+    }
+
+    // Complete the drag operation if we have a valid target
+    if (dragState.phase === 'dragging' && dragState.targetHex && dragState.isValid) {
+      console.log('Auto-completing drag to target hex:', dragState.targetHex);
+      handleDrop(dragState.targetHex);
+    } else {
+      console.log('Cancelling invalid drag');
+      cancelDrag();
+    }
+  }, [dragState.phase, dragState.targetHex, dragState.isValid, handleDrop, cancelDrag]);
 
   // Handle hex click (for moving existing creatures)
   const handleHexClick = useCallback((hex: AxialCoordinate) => {
@@ -251,6 +667,80 @@ export const DeploymentGridDemoPage: React.FC = () => {
   const isLocked = deploymentStatus?.isLocked || false;
   const countdownSeconds = deploymentStatus?.countdownSeconds || null;
 
+  // Show loading state if creatures are being loaded from library
+  if (hasCreatures && loadingCreatures) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(to bottom, #0a0e27 0%, #1a1a2e 100%)',
+        padding: '40px 20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div style={{
+          textAlign: 'center',
+          color: '#ecf0f1'
+        }}>
+          <div style={{
+            fontSize: '48px',
+            marginBottom: '20px'
+          }}>
+            Loading creatures...
+          </div>
+          <p style={{ color: '#95a5a6' }}>
+            Fetching {creatureIds.length} creature{creatureIds.length !== 1 ? 's' : ''} from library
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if failed to load creatures
+  if (hasCreatures && loadError) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(to bottom, #0a0e27 0%, #1a1a2e 100%)',
+        padding: '40px 20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div style={{
+          textAlign: 'center',
+          color: '#ecf0f1',
+          maxWidth: '600px'
+        }}>
+          <div style={{
+            fontSize: '48px',
+            marginBottom: '20px',
+            color: '#e74c3c'
+          }}>
+            Error Loading Creatures
+          </div>
+          <p style={{ color: '#95a5a6', marginBottom: '20px' }}>
+            {loadError}
+          </p>
+          <button
+            onClick={() => window.location.href = '/deployment'}
+            style={{
+              padding: '12px 24px',
+              fontSize: '16px',
+              borderRadius: '8px',
+              border: 'none',
+              background: '#3498db',
+              color: 'white',
+              cursor: 'pointer'
+            }}
+          >
+            Use Default Creatures
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -279,6 +769,11 @@ export const DeploymentGridDemoPage: React.FC = () => {
           }}>
             Drag creatures from the roster onto the hex grid to deploy them.
             Click placed creatures to reposition. Press ESC to cancel drag.
+            {hasCreatures && loadedCreatures.length > 0 && (
+              <span style={{ color: '#27ae60', fontWeight: 'bold', marginLeft: '10px' }}>
+                ({loadedCreatures.length} creature{loadedCreatures.length !== 1 ? 's' : ''} loaded from library)
+              </span>
+            )}
           </p>
           <div style={{
             fontSize: '14px',
@@ -307,55 +802,207 @@ export const DeploymentGridDemoPage: React.FC = () => {
           />
         </div>
 
-        {/* Main Layout: Roster + Grid */}
-        <div style={{
-          display: 'flex',
-          gap: '30px',
-          alignItems: 'flex-start',
-          justifyContent: 'center',
-          flexWrap: 'wrap'
-        }}>
-          {/* Creature Roster */}
-          <CreatureRoster
-            creatures={player1Creatures}
-            placedCreatureIds={placedCreatureIds}
-            onDragStart={handleRosterDragStart}
-            onDragEnd={handleRosterDragEnd}
-            isLocked={currentPlayerState.isLocked}
-            playerId={currentPlayerId}
-          />
-
-          {/* Deployment Grid */}
-          <div style={{ flex: 1, minWidth: '600px', maxWidth: '1000px' }}>
-            <DeploymentGridWithDragDrop
-              width={1000}
-              height={600}
-              hexSize={32}
-              showCoordinates={false}
-              onHexClick={handleHexClick}
-              onHexHover={handleHexHover}
-              placements={currentPlayerState.placements}
-              opponentPlacements={opponentPlacements}
-              draggingCreature={dragState.creature}
-              dragTargetHex={dragState.targetHex}
-              isDragValid={dragState.isValid}
-              onDrop={handleDrop}
-              currentPlayerId={currentPlayerId}
+        {/* Main Layout: Roster + Grid (HIDE during combat) */}
+        {!combatActive && (
+          <div style={{
+            display: 'flex',
+            gap: '30px',
+            alignItems: 'flex-start',
+            justifyContent: 'center',
+            flexWrap: 'wrap'
+          }}>
+            {/* Creature Roster */}
+            <CreatureRoster
+              creatures={currentPlayerId === 'player1' ? player1Creatures : player2Creatures}
+              placedCreatureIds={placedCreatureIds}
+              onDragStart={handleRosterDragStart}
+              onDragEnd={handleRosterDragEnd}
+              isLocked={currentPlayerState.isLocked}
+              playerId={currentPlayerId}
             />
 
-            {/* Ready Panel */}
-            <ReadyPanel
-              currentPlayerId={currentPlayerId}
-              player1Ready={deploymentStatus?.player1.isReady || false}
-              player2Ready={deploymentStatus?.player2.isReady || false}
-              isLocked={isLocked}
-              countdownSeconds={countdownSeconds}
-              canMarkReady={canMarkReady(currentPlayerId)}
-              onReady={handleReady}
-              onUnready={handleUnready}
-            />
+            {/* Deployment Grid */}
+            <div style={{ flex: 1, minWidth: '600px', maxWidth: '1200px' }}>
+              <DeploymentGridWithDragDrop
+                width={1200}
+                height={700}
+                hexSize={38}
+                showCoordinates={false}
+                onHexClick={handleHexClick}
+                onHexHover={handleHexHover}
+                placements={currentPlayerState.placements}
+                opponentPlacements={opponentPlacements}
+                draggingCreature={dragState.creature}
+                dragTargetHex={dragState.targetHex}
+                isDragValid={dragState.isValid}
+                onDrop={handleDrop}
+                currentPlayerId={currentPlayerId}
+              />
+
+              {/* Ready Panel */}
+              <ReadyPanel
+                currentPlayerId={currentPlayerId}
+                player1Ready={deploymentStatus?.player1.isReady || false}
+                player2Ready={deploymentStatus?.player2.isReady || false}
+                isLocked={isLocked}
+                countdownSeconds={countdownSeconds}
+                canMarkReady={canMarkReady(currentPlayerId)}
+                onReady={handleReady}
+                onUnready={handleUnready}
+              />
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Combat Viewer (REPLACES deployment grid when active) */}
+        {combatActive && (
+          <div style={{
+            marginTop: '30px',
+            padding: '20px',
+            background: 'rgba(139, 0, 0, 0.2)',
+            borderRadius: '8px',
+            border: '2px solid #e74c3c',
+            boxShadow: '0 0 20px rgba(231, 76, 60, 0.3)'
+          }}>
+            <h3 style={{
+              margin: '0 0 15px 0',
+              color: '#e74c3c',
+              fontSize: '24px',
+              textAlign: 'center',
+              textShadow: '0 0 10px rgba(231, 76, 60, 0.5)'
+            }}>
+              Combat in Progress
+            </h3>
+
+            {/* Combat Visualization Canvas and Log */}
+            <div style={{
+              display: 'flex',
+              gap: '20px',
+              marginBottom: '20px'
+            }}>
+              {/* Combat Grid Canvas */}
+              <div
+                ref={combatCanvasRef}
+                style={{
+                  flex: 1,
+                  background: '#1a1a1a',
+                  borderRadius: '4px',
+                  border: '1px solid #444',
+                  minHeight: '700px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              />
+
+              {/* Combat Log */}
+              <div style={{ width: '350px' }}>
+                <CombatLogPanel
+                  combatLog={combatLog}
+                  enableFiltering={true}
+                  autoScroll={true}
+                  showClearButton={true}
+                  maxHeight="700px"
+                />
+              </div>
+            </div>
+
+            {/* Combat Stats Summary */}
+            {combatState && (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gap: '20px',
+                color: '#ecf0f1'
+              }}>
+                {/* Current Tick */}
+                <div style={{
+                  padding: '15px',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  borderRadius: '4px',
+                  border: '1px solid #3498db'
+                }}>
+                  <strong style={{ color: '#3498db' }}>Current Tick:</strong>{' '}
+                  <span style={{ fontSize: '20px', color: '#fff' }}>
+                    {combatState.tick || 0}
+                  </span>
+                </div>
+
+                {/* Player 1 Units */}
+                <div style={{
+                  padding: '15px',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  borderRadius: '4px',
+                  border: '1px solid #3498db'
+                }}>
+                  <strong style={{ color: '#3498db' }}>Player 1 Units:</strong>{' '}
+                  <span style={{ fontSize: '20px', color: '#fff' }}>
+                    {combatState.units?.filter((u: any) => u.playerId === 'player1' && u.currentHealth > 0).length || 0}
+                  </span>
+                </div>
+
+                {/* Player 2 Units */}
+                <div style={{
+                  padding: '15px',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  borderRadius: '4px',
+                  border: '1px solid #e74c3c'
+                }}>
+                  <strong style={{ color: '#e74c3c' }}>Player 2 Units:</strong>{' '}
+                  <span style={{ fontSize: '20px', color: '#fff' }}>
+                    {combatState.units?.filter((u: any) => u.playerId === 'player2' && u.currentHealth > 0).length || 0}
+                  </span>
+                </div>
+
+                {/* Combat Winner */}
+                {combatState.winner && (
+                  <div style={{
+                    padding: '15px',
+                    background: 'rgba(0, 0, 0, 0.3)',
+                    borderRadius: '4px',
+                    border: '2px solid #2ecc71',
+                    gridColumn: '1 / -1',
+                    textAlign: 'center'
+                  }}>
+                    <strong style={{ color: '#2ecc71', fontSize: '24px' }}>
+                      Winner: {combatState.winner === 'player1' ? 'Player 1' : combatState.winner === 'player2' ? 'Player 2' : 'Draw'}
+                    </strong>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Raw Combat State (for debugging) */}
+            {combatState && (
+              <details style={{ marginTop: '20px' }}>
+                <summary style={{
+                  cursor: 'pointer',
+                  color: '#95a5a6',
+                  fontSize: '14px',
+                  padding: '10px',
+                  background: 'rgba(0, 0, 0, 0.2)',
+                  borderRadius: '4px',
+                  userSelect: 'none'
+                }}>
+                  Show Full Combat State (Debug)
+                </summary>
+                <pre style={{
+                  marginTop: '10px',
+                  padding: '15px',
+                  background: 'rgba(0, 0, 0, 0.5)',
+                  borderRadius: '4px',
+                  color: '#2ecc71',
+                  fontSize: '12px',
+                  overflow: 'auto',
+                  maxHeight: '400px',
+                  border: '1px solid #34495e'
+                }}>
+                  {JSON.stringify(combatState, null, 2)}
+                </pre>
+              </details>
+            )}
+          </div>
+        )}
 
         {/* Deployment State Info */}
         <div style={{

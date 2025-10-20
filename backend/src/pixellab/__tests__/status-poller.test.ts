@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { StatusPoller, PollingConfig } from './status-poller';
-import { HttpClient } from './http-client';
-import { JobStatus } from './status-parser';
-import { PixelLabError, PixelLabErrorType } from './errors';
+import { StatusPoller, PollingConfig } from '../status-poller';
+import { HttpClient } from '../http-client';
+import { JobStatus } from '../status-parser';
+import { PixelLabError, PixelLabErrorType } from '../errors';
 import MockAdapter from 'axios-mock-adapter';
 
 describe('Status Poller - Task 4.1: Basic Status Polling', () => {

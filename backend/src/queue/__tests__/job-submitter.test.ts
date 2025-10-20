@@ -6,11 +6,11 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { JobSubmitter, StructuredPrompt, JobSubmissionResponse, QueueOverflowWarning } from './job-submitter.js';
-import { QueueManager, QueueServiceConfig } from './queue-manager.js';
-import { QueueLogger } from './logger.js';
-import { JobStatus } from '../pixellab/status-parser.js';
-import type { GenerationResult } from '../pixellab/result-builder.js';
+import { JobSubmitter, StructuredPrompt, JobSubmissionResponse, QueueOverflowWarning } from '../job-submitter.js';
+import { QueueManager, QueueServiceConfig } from '../queue-manager.js';
+import { QueueLogger } from '../logger.js';
+import { JobStatus } from '../../pixellab/status-parser.js';
+import type { GenerationResult } from '../../pixellab/result-builder.js';
 
 describe('JobSubmitter - Task 1.3: Implement Job Submission with Validation', () => {
   let mockQueueManager: QueueManager;

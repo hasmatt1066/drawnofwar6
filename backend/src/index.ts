@@ -16,8 +16,10 @@ import libraryAnimationsRouter from './api/routes/library-animations.routes.js';
 import { viewAngleTestRouter } from './api/routes/view-angle-test.routes.js';
 import { deploymentRouter } from './api/routes/deployment.routes.js';
 import creatureSpritesRouter from './api/routes/creature-sprites.routes.js';
+import { creaturesRouter } from './api/routes/creatures.routes.js';
 import { combatRouter } from './api/routes/combat.routes.js';
 import { validateClaudeConfig } from './config/claude.config.js';
+import { initializeSocketIO, getCombatNamespace, getDeploymentNamespace } from './sockets/index.js';
 import { initializeCombatSocket } from './sockets/combat-socket.js';
 import { initializeDeploymentSocket } from './sockets/deployment-socket.js';
 
@@ -72,6 +74,7 @@ app.use('/api/library-animations', libraryAnimationsRouter);
 app.use('/api/test', viewAngleTestRouter);
 app.use('/api/deployment', deploymentRouter);
 app.use('/api/creatures', creatureSpritesRouter);
+app.use('/api/creature-library', creaturesRouter);
 app.use('/api/combat', combatRouter);
 
 // 404 handler
@@ -104,16 +107,56 @@ async function startServer() {
     console.log('[Startup] Validating Claude API configuration...');
     validateClaudeConfig();
 
+    // Initialize Firebase Admin SDK (non-blocking)
+    console.log('[Startup] Initializing Firebase Admin SDK...');
+    try {
+      const { initializeFirebase, checkFirebaseConnection } = await import('./config/firebase.config.js');
+      initializeFirebase();
+
+      // Check connection but don't block startup if it fails
+      const isConnected = await Promise.race([
+        checkFirebaseConnection(),
+        new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 3000)) // 3 second timeout
+      ]);
+
+      if (isConnected) {
+        console.log('[Startup] Firebase connection verified');
+      } else {
+        console.warn('[Startup] Firebase connection check failed or timed out - creature library features may not work');
+        console.warn('[Startup] Make sure Firebase emulator is running if USE_FIREBASE_EMULATOR=true');
+      }
+    } catch (error) {
+      console.error('[Startup] Firebase initialization failed:', error);
+      console.warn('[Startup] Continuing without Firebase - creature library features will not be available');
+    }
+
+    // Initialize sprite manager BEFORE accepting requests (prevents async deadlock)
+    console.log('[Startup] Initializing creature sprite manager...');
+    try {
+      const { getCreatureSpriteManager } = await import('./services/creature-sprite-manager.js');
+      await getCreatureSpriteManager();
+      console.log('[Startup] Creature sprite manager initialized');
+    } catch (error) {
+      console.error('[Startup] Failed to initialize sprite manager:', error);
+      console.warn('[Startup] Continuing without sprite manager - deployment features may not work correctly');
+    }
+
     // Create HTTP server (needed for Socket.IO)
     const httpServer = createServer(app);
 
-    // Initialize Socket.IO for combat
-    console.log('[Startup] Initializing Socket.IO for combat...');
-    initializeCombatSocket(httpServer);
+    // Initialize unified Socket.IO server with namespaces
+    console.log('[Startup] Initializing Socket.IO server...');
+    initializeSocketIO(httpServer);
 
-    // Initialize Socket.IO for deployment
-    console.log('[Startup] Initializing Socket.IO for deployment...');
-    initializeDeploymentSocket(httpServer);
+    // Initialize combat socket handler with /combat namespace
+    console.log('[Startup] Initializing combat socket handler...');
+    const combatNamespace = getCombatNamespace();
+    initializeCombatSocket(combatNamespace);
+
+    // Initialize deployment socket handler with /deployment namespace
+    console.log('[Startup] Initializing deployment socket handler...');
+    const deploymentNamespace = getDeploymentNamespace();
+    initializeDeploymentSocket(deploymentNamespace);
 
     // Start listening
     httpServer.listen(PORT, () => {

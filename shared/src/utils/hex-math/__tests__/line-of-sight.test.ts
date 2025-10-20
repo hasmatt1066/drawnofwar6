@@ -4,9 +4,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { hexLine, hexLerp } from './line-of-sight';
-import { hexDistance } from './distance';
-import { AxialCoordinate } from './types';
+import { hexLine, hexLerp } from '../line-of-sight';
+import { hexDistance } from '../distance';
+import { AxialCoordinate } from '../types';
 
 describe('Line of Sight', () => {
   describe('hexLerp', () => {

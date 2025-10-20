@@ -10,10 +10,10 @@
  */
 
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
-import { FirestoreBackup, type CacheEntry } from './firestore-backup.js';
+import { FirestoreBackup, type CacheEntry } from '../firestore-backup.js';
 import type { Firestore, CollectionReference, DocumentReference } from 'firebase-admin/firestore';
-import type { QueueServiceConfig } from '../queue/queue-manager.js';
-import type { QueueLogger } from '../queue/logger.js';
+import type { QueueServiceConfig } from '../../queue/queue-manager.js';
+import type { QueueLogger } from '../../queue/logger.js';
 
 // Mock Firestore types
 interface MockDocumentSnapshot {

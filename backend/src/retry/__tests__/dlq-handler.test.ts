@@ -7,10 +7,10 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Job, Queue } from 'bullmq';
-import { DLQHandler, DLQEntry } from './dlq-handler';
-import { ClassifiedError, ErrorType } from './error-classifier';
-import { QueueLogger } from '../queue/logger';
-import { QueueServiceConfig } from '../queue/queue-manager';
+import { DLQHandler, DLQEntry } from '../dlq-handler';
+import { ClassifiedError, ErrorType } from '../error-classifier';
+import { QueueLogger } from '../../queue/logger';
+import { QueueServiceConfig } from '../../queue/queue-manager';
 import { PixelLabError, PixelLabErrorType } from '../pixellab/errors';
 
 describe('DLQHandler', () => {

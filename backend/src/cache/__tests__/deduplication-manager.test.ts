@@ -7,9 +7,9 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import RedisMock from 'ioredis-mock';
-import { DeduplicationManager } from './deduplication-manager.js';
-import type { QueueServiceConfig } from '../queue/queue-manager.js';
-import { QueueLogger } from '../queue/logger.js';
+import { DeduplicationManager } from '../deduplication-manager.js';
+import type { QueueServiceConfig } from '../../queue/queue-manager.js';
+import { QueueLogger } from '../../queue/logger.js';
 
 describe('DeduplicationManager', () => {
   let redis: RedisMock;

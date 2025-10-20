@@ -72,15 +72,57 @@ export class CombatEngine {
   ): void {
     const units: CombatCreature[] = [];
 
+    // Log placement counts BEFORE processing
+    console.log('[CombatEngine] initializeFromDeployment - Input:', {
+      matchId,
+      player1Placements: deployment.player1.placements.length,
+      player2Placements: deployment.player2.placements.length
+    });
+
     // Convert player 1 placements to combat units
     for (const placement of deployment.player1.placements) {
-      units.push(this.createCombatCreature(placement.creature.id, 'player1', placement.hex));
+      try {
+        const unit = this.createCombatCreature(placement.creature.id, 'player1', placement.hex);
+        units.push(unit);
+        console.log('[CombatEngine] Created player1 unit:', {
+          unitId: unit.unitId,
+          creatureId: placement.creature.id,
+          position: placement.hex
+        });
+      } catch (error) {
+        console.error('[CombatEngine] ERROR creating player1 unit:', {
+          creatureId: placement.creature.id,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
     }
 
     // Convert player 2 placements to combat units
     for (const placement of deployment.player2.placements) {
-      units.push(this.createCombatCreature(placement.creature.id, 'player2', placement.hex));
+      try {
+        const unit = this.createCombatCreature(placement.creature.id, 'player2', placement.hex);
+        units.push(unit);
+        console.log('[CombatEngine] Created player2 unit:', {
+          unitId: unit.unitId,
+          creatureId: placement.creature.id,
+          position: placement.hex
+        });
+      } catch (error) {
+        console.error('[CombatEngine] ERROR creating player2 unit:', {
+          creatureId: placement.creature.id,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
     }
+
+    // Log final unit counts AFTER processing
+    const player1Units = units.filter(u => u.ownerId === 'player1').length;
+    const player2Units = units.filter(u => u.ownerId === 'player2').length;
+    console.log('[CombatEngine] initializeFromDeployment - Units created:', {
+      totalUnits: units.length,
+      player1Units,
+      player2Units
+    });
 
     this.state = {
       matchId,
@@ -110,6 +152,14 @@ export class CombatEngine {
     if (this.isRunning) {
       throw new Error('Combat is already running');
     }
+
+    console.log('[CombatEngine] start() - Starting combat simulation:', {
+      matchId: this.state.matchId,
+      totalUnits: this.state.units.length,
+      player1Units: this.state.units.filter(u => u.ownerId === 'player1').length,
+      player2Units: this.state.units.filter(u => u.ownerId === 'player2').length,
+      tickRate: this.config.tickRate
+    });
 
     this.onStateUpdate = onStateUpdate;
     this.onComplete = onComplete;
@@ -160,6 +210,17 @@ export class CombatEngine {
    */
   private tick(): void {
     this.state.tick++;
+
+    // Log initial state on tick 0
+    if (this.state.tick === 1) {
+      const aliveUnits = this.state.units.filter(u => u.status === 'alive');
+      console.log('[CombatEngine] tick() - Tick 0 state:', {
+        totalUnits: this.state.units.length,
+        aliveUnits: aliveUnits.length,
+        player1Alive: aliveUnits.filter(u => u.ownerId === 'player1').length,
+        player2Alive: aliveUnits.filter(u => u.ownerId === 'player2').length
+      });
+    }
 
     // Update all alive units
     const aliveUnits = this.state.units.filter(u => u.status === 'alive');
@@ -616,7 +677,17 @@ export class CombatEngine {
       u => u.ownerId === 'player2' && u.status === 'alive'
     ).length;
 
-    return player1Alive === 0 || player2Alive === 0;
+    const victoryMet = player1Alive === 0 || player2Alive === 0;
+
+    if (victoryMet) {
+      console.log('[CombatEngine] checkVictoryCondition - Victory condition met:', {
+        tick: this.state.tick,
+        player1Alive,
+        player2Alive
+      });
+    }
+
+    return victoryMet;
   }
 
   /**
@@ -646,6 +717,16 @@ export class CombatEngine {
     if (reason === 'timeout' && winner === 'draw') {
       winner = 'player2';
     }
+
+    console.log('[CombatEngine] endCombat - Combat ending:', {
+      matchId: this.state.matchId,
+      reason,
+      winner,
+      tick: this.state.tick,
+      player1Alive,
+      player2Alive,
+      totalUnits: this.state.units.length
+    });
 
     this.state.endTime = Date.now();
 

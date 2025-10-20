@@ -4,8 +4,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { HexGrid } from './HexGrid';
-import { AxialCoordinate } from './types';
+import { HexGrid } from '../HexGrid';
+import { AxialCoordinate } from '../types';
 
 describe('HexGrid Class', () => {
   const grid = new HexGrid({

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { CorrelationIdManager, CorrelationContext } from './correlation';
+import { CorrelationIdManager, CorrelationContext } from '../correlation';
 
 describe('Correlation ID Manager - Task 8.2: Correlation IDs', () => {
   describe('correlation ID generation', () => {

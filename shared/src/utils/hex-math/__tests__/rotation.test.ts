@@ -4,9 +4,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { hexRotate, hexRotateLeft, hexRotateRight } from './rotation';
-import { hexDistance } from './distance';
-import { AxialCoordinate } from './types';
+import { hexRotate, hexRotateLeft, hexRotateRight } from '../rotation';
+import { hexDistance } from '../distance';
+import { AxialCoordinate } from '../types';
 
 describe('Rotation', () => {
   describe('hexRotate', () => {

@@ -62,7 +62,7 @@ export const SpellCastDemo: React.FC<SpellCastDemoProps> = ({
   const loadCastEffect = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:3001/api/library-animations/cast_spell_default');
+      const response = await fetch('/api/library-animations/cast_spell_default');
       const data: LibraryAnimation = await response.json();
       setCastEffect(data);
     } catch (error) {

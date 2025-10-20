@@ -6,10 +6,10 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { PollingManager } from './polling-manager.js';
-import type { JobStatusTracker, QueueJob, JobStatus } from '../queue/job-status-tracker.js';
-import type { QueueServiceConfig } from '../queue/queue-manager.js';
-import type { QueueLogger } from '../queue/logger.js';
+import { PollingManager } from '../polling-manager.js';
+import type { JobStatusTracker, QueueJob, JobStatus } from '../../queue/job-status-tracker.js';
+import type { QueueServiceConfig } from '../../queue/queue-manager.js';
+import type { QueueLogger } from '../../queue/logger.js';
 
 describe('PollingManager', () => {
   let pollingManager: PollingManager;

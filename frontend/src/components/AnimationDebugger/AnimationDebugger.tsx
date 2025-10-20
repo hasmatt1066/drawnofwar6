@@ -65,7 +65,7 @@ export const AnimationDebugger: React.FC<AnimationDebuggerProps> = ({
     setLoadingAnimations(prev => new Set(prev).add(animationId));
 
     try {
-      const response = await fetch(`http://localhost:3001/api/library-animations/${animationId}`);
+      const response = await fetch(`/api/library-animations/${animationId}`);
       if (!response.ok) {
         throw new Error(`Failed to load library animation: ${animationId}`);
       }

@@ -4,9 +4,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { hexNeighbors, isValidHex } from './neighbors';
-import { hexDistance } from './distance';
-import { AxialCoordinate, HexGridConfig } from './types';
+import { hexNeighbors, isValidHex } from '../neighbors';
+import { hexDistance } from '../distance';
+import { AxialCoordinate, HexGridConfig } from '../types';
 
 describe('Neighbor Finding', () => {
   const flatTopConfig: HexGridConfig = {

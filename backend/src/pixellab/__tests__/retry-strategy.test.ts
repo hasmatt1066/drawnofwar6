@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { RetryStrategy, RetryConfig } from './retry-strategy';
-import { PixelLabError, PixelLabErrorType } from './errors';
+import { RetryStrategy, RetryConfig } from '../retry-strategy';
+import { PixelLabError, PixelLabErrorType } from '../errors';
 
 describe('Retry Strategy - Task 7.2: Retry Strategy', () => {
   beforeEach(() => {

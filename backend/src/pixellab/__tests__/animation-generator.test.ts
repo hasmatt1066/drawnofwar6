@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { AnimationGenerator, AnimationRequest, AnimationResponse } from './animation-generator';
-import { HttpClient } from './http-client';
-import { PixelLabError } from './errors';
+import { AnimationGenerator, AnimationRequest, AnimationResponse } from '../animation-generator';
+import { HttpClient } from '../http-client';
+import { PixelLabError } from '../errors';
 import MockAdapter from 'axios-mock-adapter';
 
 describe('Animation Generator - Task 3.2: Animation Generation Request', () => {

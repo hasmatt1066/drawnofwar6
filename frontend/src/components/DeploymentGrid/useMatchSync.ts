@@ -8,7 +8,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { MatchDeploymentStatus } from '@drawn-of-war/shared';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// Use relative paths to allow Vite proxy to handle API requests
+const API_BASE_URL = '';
 
 export interface UseMatchSyncOptions {
   /** Match ID */

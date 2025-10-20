@@ -6,10 +6,10 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { SSEManager } from './sse-manager.js';
-import type { ProgressUpdate } from './sse-manager.js';
-import type { QueueServiceConfig } from '../queue/queue-manager.js';
-import type { QueueLogger } from '../queue/logger.js';
+import { SSEManager } from '../sse-manager.js';
+import type { ProgressUpdate } from '../sse-manager.js';
+import type { QueueServiceConfig } from '../../queue/queue-manager.js';
+import type { QueueLogger } from '../../queue/logger.js';
 
 /**
  * Mock Response object for SSE testing

@@ -4,9 +4,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { hexesInRange } from './range';
-import { hexDistance } from './distance';
-import { AxialCoordinate, HexGridConfig } from './types';
+import { hexesInRange } from '../range';
+import { hexDistance } from '../distance';
+import { AxialCoordinate, HexGridConfig } from '../types';
 
 describe('Range Queries', () => {
   const config: HexGridConfig = {

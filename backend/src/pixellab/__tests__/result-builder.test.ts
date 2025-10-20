@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { ResultBuilder, GenerationResult, DirectionResult } from './result-builder';
-import { PixelLabError } from './errors';
+import { ResultBuilder, GenerationResult, DirectionResult } from '../result-builder';
+import { PixelLabError } from '../errors';
 
 describe('Result Builder - Task 5.3: Generation Result Builder', () => {
   // Valid 1x1 red PNG in base64

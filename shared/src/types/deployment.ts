@@ -4,7 +4,35 @@
  * Types for managing creature placement on the deployment grid.
  */
 
-import type { AxialCoordinate } from '../utils/hex-math/types.js';
+import type { AxialCoordinate, HexDirection } from '../utils/hex-math/types.js';
+
+/**
+ * Directional sprite data for a single direction
+ */
+export interface DirectionalSprite {
+  /** Static sprite image (base64) */
+  sprite: string;
+  /** Walk animation frames (base64 array) */
+  walkFrames: string[];
+  /** Idle animation frames (base64 array) - optional for backward compatibility */
+  idleFrames?: string[];
+}
+
+/**
+ * Battlefield directional views
+ * Uses 3 generated directions + 3 mirrored directions for cost efficiency
+ */
+export interface BattlefieldDirectionalViews {
+  // Generated directions (low top-down perspective)
+  E: DirectionalSprite;   // East
+  NE: DirectionalSprite;  // Northeast
+  SE: DirectionalSprite;  // Southeast
+
+  // Mirrored directions (use horizontal flip in renderer)
+  // W: mirror of E
+  // NW: mirror of NE
+  // SW: mirror of SE
+}
 
 /**
  * Creature data for deployment
@@ -28,6 +56,10 @@ export interface DeploymentCreature {
   spriteLoading?: boolean;
   /** Sprite load error (managed by frontend) */
   spriteError?: string;
+  /** Multi-directional battlefield views (NEW) */
+  battlefieldDirectionalViews?: BattlefieldDirectionalViews;
+  /** Current facing direction (defaults to E if not set) */
+  facing?: HexDirection;
 }
 
 /**

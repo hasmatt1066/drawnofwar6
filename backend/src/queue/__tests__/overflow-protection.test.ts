@@ -6,9 +6,9 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { OverflowProtection } from './overflow-protection.js';
-import type { QueueSizeMonitor, QueueSizeMetrics } from './queue-size-monitor.js';
-import type { QueueLogger } from './logger.js';
+import { OverflowProtection } from '../overflow-protection.js';
+import type { QueueSizeMonitor, QueueSizeMetrics } from '../queue-size-monitor.js';
+import type { QueueLogger } from '../logger.js';
 
 /**
  * Mock QueueSizeMonitor for testing

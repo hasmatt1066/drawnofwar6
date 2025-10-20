@@ -10,8 +10,8 @@ import {
   hexToPixel,
   pixelToHex,
   hexRound
-} from './coordinate-conversion';
-import { AxialCoordinate, CubeCoordinate, HexGridConfig } from './types';
+} from '../coordinate-conversion';
+import { AxialCoordinate, CubeCoordinate, HexGridConfig } from '../types';
 
 describe('Axial ↔ Cube Conversion', () => {
   describe('axialToCube', () => {

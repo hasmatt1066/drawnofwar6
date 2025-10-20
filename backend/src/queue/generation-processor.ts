@@ -19,6 +19,7 @@ import { pixelLabPromptBuilder } from '../services/pixellab-prompt-builder.js';
 import { HttpClient } from '../pixellab/http-client.js';
 import { SpriteGenerator } from '../pixellab/sprite-generator.js';
 import { TextAnimator } from '../pixellab/text-animator.js';
+import { RotateSprite } from '../pixellab/rotate-sprite.js';
 import type { GenerationResult } from '../types/generation.js';
 import type { NormalizedImage } from '../types/input/index.js';
 
@@ -53,11 +54,12 @@ export async function processGenerationJob(job: Job<GenerationJobData>): Promise
   let result: GenerationResult;
 
   if (inputType === 'text') {
-    // TEXT-ONLY PATH: Generate sprite from text description using PixelLab
-    console.log('[Generation Processor] Text-only path (PixelLab direct generation)');
+    // TEXT-ONLY PATH: Generate sprite from text description using PixelLab → Claude Vision analysis
+    console.log('[Generation Processor] Text-only path (PixelLab → Claude Vision)');
 
-    await job.updateProgress(30);
-    console.log('[Generation Processor] Generating sprite from text description...');
+    // Step 1: Generate sprite from text description (20% progress)
+    await job.updateProgress(20);
+    console.log('[Generation Processor] Step 1: Generating sprite from text description...');
 
     // Create PixelLab client and sprite generator
     const pixelLabClient = createPixelLabClient();
@@ -77,16 +79,41 @@ export async function processGenerationJob(job: Job<GenerationJobData>): Promise
 
     console.log('[Generation Processor] PixelLab request:', pixelLabRequest);
 
-    await job.updateProgress(40);
-
     // Submit generation to PixelLab (returns image immediately)
     const generationResponse = await spriteGenerator.submitGeneration(pixelLabRequest);
     console.log('[Generation Processor] PixelLab sprite generated, cost:', generationResponse.costUsd, 'USD');
 
-    await job.updateProgress(65);
+    // Step 2: Analyze generated sprite with Claude Vision (40% progress)
+    await job.updateProgress(40);
+    console.log('[Generation Processor] Step 2: Analyzing generated sprite with Claude Vision...');
 
-    // Generate walk animation using text-based animator
-    console.log('[Generation Processor] Generating walk animation frames...');
+    const claudeAnalysis = await claudeVisionService.analyzeCreature({
+      image: {
+        base64: generationResponse.imageBase64,
+        format: 'png',
+      },
+      textContext: textDescription ?? 'fantasy creature',
+    });
+
+    // Step 3: Map animations from Claude analysis (50% progress)
+    await job.updateProgress(50);
+    console.log('[Generation Processor] Step 3: Mapping animations from Claude analysis...');
+
+    const animations = animationMapper.mapAnimations(claudeAnalysis);
+
+    // Step 4: Extract combat attributes (60% progress)
+    await job.updateProgress(60);
+    console.log('[Generation Processor] Step 4: Extracting combat attributes...');
+
+    const combatAttributes = await attributeExtractor.extractAttributes(
+      claudeAnalysis.abilities,
+      animations.animationSet
+    );
+
+    // Step 5: Generate walk animation using text-based animator (70% progress)
+    await job.updateProgress(70);
+    console.log('[Generation Processor] Step 5: Generating walk animation frames...');
+
     const textAnimator = new TextAnimator(pixelLabClient);
     const walkAnimation = await textAnimator.animateWithText({
       description: textDescription || 'fantasy creature',
@@ -97,19 +124,139 @@ export async function processGenerationJob(job: Job<GenerationJobData>): Promise
     });
     console.log('[Generation Processor] Walk animation generated with', walkAnimation.frames.length, 'frames, cost:', walkAnimation.costUsd, 'USD');
 
-    await job.updateProgress(85);
+    // Track total cost across all API calls
+    let totalCost = generationResponse.costUsd + walkAnimation.costUsd;
 
-    // Assign default animations for text-based creatures
-    const defaultAnimations = animationMapper.assignDefaultAnimations();
+    await job.updateProgress(70);
 
-    await job.updateProgress(95);
+    // Step 6: Generate multi-directional battlefield views using rotation API
+    console.log('[Generation Processor] Step 6: Generating multi-directional battlefield views (rotation-based)...');
 
+    let battlefieldDirectionalViews: GenerationResult['battlefieldDirectionalViews'] | undefined;
+    let battlefieldSprite: string | undefined;
+    let battlefieldWalkFrames: string[] | undefined;
+    let viewAngles: { menu: 'side'; battlefield?: 'low top-down' } = { menu: 'side' };
+
+    try {
+      // Create rotation service
+      const rotateService = new RotateSprite(pixelLabClient);
+
+      // Define 3 directional views to generate: E, NE, SE
+      // W, NW, SW will be mirrored from these in the renderer
+      // Rotate API uses hyphens for diagonal directions, text-animator also uses hyphens
+      const directions = [
+        {
+          key: 'E' as const,
+          rotateDirection: 'east' as const,
+          animateDirection: 'east' as const
+        },
+        {
+          key: 'NE' as const,
+          rotateDirection: 'north-east' as const,
+          animateDirection: 'north-east' as const
+        },
+        {
+          key: 'SE' as const,
+          rotateDirection: 'south-east' as const,
+          animateDirection: 'south-east' as const
+        }
+      ];
+
+      const directionalViews: Partial<GenerationResult['battlefieldDirectionalViews']> = {};
+      let progressStep = 72;
+      const progressIncrement = 18 / directions.length; // 18% total (72% → 90%)
+
+      for (const dir of directions) {
+        console.log(`[Generation Processor] Generating ${dir.key} direction using rotation API...`);
+
+        // Step 6.1: Rotate base sprite to target direction
+        const rotatedSprite = await rotateService.rotateToTopDown(
+          generationResponse.imageBase64,
+          dir.rotateDirection
+        );
+
+        totalCost += rotatedSprite.costUsd;
+        console.log(`[Generation Processor] ${dir.key} sprite rotated, cost: ${rotatedSprite.costUsd.toFixed(4)} USD`);
+
+        // Step 6.2: Generate walk animation for rotated sprite
+        const walkAnimation = await textAnimator.animateWithText({
+          description: textDescription || 'fantasy creature',
+          action: 'walk cycle',
+          referenceImage: rotatedSprite.imageBase64,
+          nFrames: 4,
+          view: 'low top-down',
+          direction: dir.animateDirection
+        });
+
+        totalCost += walkAnimation.costUsd;
+        console.log(`[Generation Processor] ${dir.key} walk animation generated with ${walkAnimation.frames.length} frames, cost: ${walkAnimation.costUsd.toFixed(4)} USD`);
+
+        // Step 6.3: Generate idle animation for rotated sprite
+        const idleAnimation = await textAnimator.animateWithText({
+          description: textDescription || 'fantasy creature',
+          action: 'idle breathing',
+          referenceImage: rotatedSprite.imageBase64,
+          nFrames: 4,
+          view: 'low top-down',
+          direction: dir.animateDirection
+        });
+
+        totalCost += idleAnimation.costUsd;
+        console.log(`[Generation Processor] ${dir.key} idle animation generated with ${idleAnimation.frames.length} frames, cost: ${idleAnimation.costUsd.toFixed(4)} USD`);
+
+        // Store sprite, walk frames, and idle frames for this direction
+        directionalViews[dir.key] = {
+          sprite: rotatedSprite.imageBase64,
+          walkFrames: walkAnimation.frames,
+          idleFrames: idleAnimation.frames
+        };
+
+        progressStep += progressIncrement;
+        await job.updateProgress(Math.round(progressStep));
+      }
+
+      // Validate all directions were generated
+      if (directionalViews.E && directionalViews.NE && directionalViews.SE) {
+        battlefieldDirectionalViews = directionalViews as GenerationResult['battlefieldDirectionalViews'];
+
+        // Set legacy fields for backward compatibility (use E direction)
+        battlefieldSprite = directionalViews.E.sprite;
+        battlefieldWalkFrames = directionalViews.E.walkFrames;
+        viewAngles = {
+          menu: 'side',
+          battlefield: 'low top-down'
+        };
+
+        console.log('[Generation Processor] Multi-directional battlefield views generation complete (rotation-based)');
+      } else {
+        throw new Error('Failed to generate all required directional views');
+      }
+    } catch (error) {
+      console.warn('[Generation Processor] Failed to generate multi-directional battlefield views, continuing without them:', error);
+      // Non-fatal: battlefield views are optional
+    }
+
+    await job.updateProgress(90);
+
+    console.log(`[Generation Processor] Total API cost: ${totalCost.toFixed(4)} USD`);
+
+    // Determine baseline attack type from attack animation
+    const baselineAttackType = determineAttackType(animations.animationSet.attack);
+
+    // Build complete result
     result = {
       inputType: 'text',
       textDescription: textDescription ?? undefined,
+      claudeAnalysis,
+      animations,
+      combatAttributes,
+      baselineAttackType,
       spriteImageBase64: generationResponse.imageBase64,
       animationFrames: walkAnimation.frames,
-      animations: defaultAnimations,
+      battlefieldDirectionalViews,
+      battlefieldSprite,
+      battlefieldWalkFrames,
+      viewAngles,
       generatedAt: new Date(),
       processingTimeMs: Date.now() - startTime,
     };
@@ -145,7 +292,7 @@ export async function processGenerationJob(job: Job<GenerationJobData>): Promise
     await job.updateProgress(35);
     console.log('[Generation Processor] Step 2.5: Extracting combat attributes...');
 
-    const combatAttributes = attributeExtractor.extractAttributes(
+    const combatAttributes = await attributeExtractor.extractAttributes(
       claudeAnalysis.abilities,
       animations.animationSet
     );
@@ -181,6 +328,9 @@ export async function processGenerationJob(job: Job<GenerationJobData>): Promise
     const originalImageBuffer = Buffer.from(normalizedImage.base64, 'base64');
     const styleValidation = await styleValidator.validate(originalImageBuffer, generatedSpriteBuffer);
 
+    // Determine baseline attack type from attack animation
+    const baselineAttackType = determineAttackType(animations.animationSet.attack);
+
     // Build complete result
     result = {
       inputType,
@@ -189,6 +339,7 @@ export async function processGenerationJob(job: Job<GenerationJobData>): Promise
       claudeAnalysis,
       animations,
       combatAttributes,
+      baselineAttackType,
       styleValidation,
       spriteImageBase64: generationResponse.imageBase64,
       generatedAt: new Date(),
@@ -201,6 +352,20 @@ export async function processGenerationJob(job: Job<GenerationJobData>): Promise
   console.log(`[Generation Processor] Job ${job.id} completed in ${result.processingTimeMs}ms`);
 
   return result;
+}
+
+/**
+ * Determine baseline attack type from attack animation ID
+ *
+ * @param attackAnimationId - The attack animation ID from the animation set
+ * @returns 'melee' | 'ranged'
+ */
+function determineAttackType(attackAnimationId: string): 'melee' | 'ranged' {
+  if (attackAnimationId.includes('ranged')) {
+    return 'ranged';
+  }
+  // Default to melee for melee animations and any other types
+  return 'melee';
 }
 
 /**

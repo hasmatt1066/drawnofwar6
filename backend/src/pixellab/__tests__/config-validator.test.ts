@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { ConfigValidator, PixelLabClientConfig } from './config-validator';
-import { PixelLabError } from './errors';
+import { ConfigValidator, PixelLabClientConfig } from '../config-validator';
+import { PixelLabError } from '../errors';
 
 describe('ConfigValidator - Task 2.3: Configuration Validation', () => {
   const validConfig: PixelLabClientConfig = {

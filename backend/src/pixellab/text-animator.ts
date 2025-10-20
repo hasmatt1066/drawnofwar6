@@ -20,7 +20,7 @@ export interface TextAnimationRequest {
   view?: 'side' | 'low top-down' | 'high top-down';
 
   /** Character direction */
-  direction?: 'north' | 'south' | 'east' | 'west' | 'northeast' | 'northwest' | 'southeast' | 'southwest';
+  direction?: 'north' | 'south' | 'east' | 'west' | 'north-east' | 'north-west' | 'south-east' | 'south-west';
 
   /** Text guidance scale */
   textGuidanceScale?: number;

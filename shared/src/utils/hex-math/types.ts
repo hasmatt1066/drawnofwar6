@@ -50,6 +50,12 @@ export interface HexGridConfig {
   hexSize: number;
   /** Hex orientation */
   orientation: 'flat-top' | 'pointy-top';
+  /**
+   * Projection mode for rendering
+   * - 'flat': Traditional top-down view (default)
+   * - 'isometric': 2:1 dimetric projection (Mechabellum-style)
+   */
+  projection?: 'flat' | 'isometric';
 }
 
 /**

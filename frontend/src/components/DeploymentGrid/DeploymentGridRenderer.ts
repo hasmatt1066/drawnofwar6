@@ -127,16 +127,54 @@ export class HexGridRenderer {
   }
 
   /**
+   * Calculate actual rendered bounding box of the grid
+   * Accounts for isometric projection transformation
+   */
+  private calculateGridBounds(): { width: number; height: number; minX: number; minY: number } {
+    const { width, height } = this.hexGrid.getConfig();
+
+    let minX = Infinity, maxX = -Infinity;
+    let minY = Infinity, maxY = -Infinity;
+
+    // Sample all edge hexes to find true bounds after projection
+    for (let q = 0; q < width; q++) {
+      for (let r = 0; r < height; r++) {
+        // Only check edge hexes for efficiency
+        if (q === 0 || q === width - 1 || r === 0 || r === height - 1) {
+          const pixel = this.hexGrid.toPixel({ q, r });
+          minX = Math.min(minX, pixel.x);
+          maxX = Math.max(maxX, pixel.x);
+          minY = Math.min(minY, pixel.y);
+          maxY = Math.max(maxY, pixel.y);
+        }
+      }
+    }
+
+    // Add hex size padding
+    const padding = this.hexGrid.hexSize;
+
+    return {
+      width: maxX - minX + padding * 2,
+      height: maxY - minY + padding * 2,
+      minX: minX - padding,
+      minY: minY - padding
+    };
+  }
+
+  /**
    * Render the static hex grid
    */
   private renderStaticGrid(): void {
     const { width, height } = this.hexGrid.getConfig();
+    const isIsometric = this.config.hexGridConfig.projection === 'isometric';
 
-    // Calculate grid offset to center it
-    const gridPixelWidth = width * this.hexGrid.hexSize * 1.5;
-    const gridPixelHeight = height * this.hexGrid.hexSize * Math.sqrt(3);
-    const offsetX = (this.config.canvasWidth - gridPixelWidth) / 2;
-    const offsetY = (this.config.canvasHeight - gridPixelHeight) / 2;
+    // Calculate actual grid bounds (accounts for isometric projection)
+    const bounds = this.calculateGridBounds();
+
+    // Apply centering with optional visual bias for isometric view
+    const verticalBias = isIsometric ? 50 : 0; // Move grid down slightly for better visual balance
+    const offsetX = (this.config.canvasWidth - bounds.width) / 2 - bounds.minX;
+    const offsetY = (this.config.canvasHeight - bounds.height) / 2 - bounds.minY + verticalBias;
 
     // Render all hexes
     for (let q = 0; q < width; q++) {
@@ -196,17 +234,27 @@ export class HexGridRenderer {
 
   /**
    * Get hex vertices for flat-top orientation
+   * Applies isometric projection if enabled in config
    */
   private getHexVertices(size: number): number[] {
     const angles = [0, 60, 120, 180, 240, 300]; // Degrees for flat-top
     const vertices: number[] = [];
+    const isIsometric = this.config.hexGridConfig.projection === 'isometric';
 
     for (const angle of angles) {
       const rad = (Math.PI / 180) * angle;
-      vertices.push(
-        size * Math.cos(rad),
-        size * Math.sin(rad)
-      );
+      let x = size * Math.cos(rad);
+      let y = size * Math.sin(rad);
+
+      // Apply isometric projection to vertices if enabled
+      if (isIsometric) {
+        const x_iso = (x - y) * 0.5;
+        const y_iso = (x + y) * 0.25;
+        x = x_iso;
+        y = y_iso;
+      }
+
+      vertices.push(x, y);
     }
 
     return vertices;
@@ -305,12 +353,12 @@ export class HexGridRenderer {
     this.app.stage.on('pointermove', (event) => {
       const point = event.global;
 
-      // Calculate grid offset
-      const { width, height } = this.hexGrid.getConfig();
-      const gridPixelWidth = width * this.hexGrid.hexSize * 1.5;
-      const gridPixelHeight = height * this.hexGrid.hexSize * Math.sqrt(3);
-      const offsetX = (this.config.canvasWidth - gridPixelWidth) / 2;
-      const offsetY = (this.config.canvasHeight - gridPixelHeight) / 2;
+      // Calculate grid offset using consistent bounds calculation
+      const isIsometric = this.config.hexGridConfig.projection === 'isometric';
+      const bounds = this.calculateGridBounds();
+      const verticalBias = isIsometric ? 50 : 0;
+      const offsetX = (this.config.canvasWidth - bounds.width) / 2 - bounds.minX;
+      const offsetY = (this.config.canvasHeight - bounds.height) / 2 - bounds.minY + verticalBias;
 
       // Convert to hex coordinate
       const hex = this.hexGrid.fromPixel({
@@ -364,11 +412,12 @@ export class HexGridRenderer {
   private createHighlight(hex: AxialCoordinate, state: HighlightState): PIXI.Graphics | null {
     if (state === HighlightState.NONE) return null;
 
-    const { width, height } = this.hexGrid.getConfig();
-    const gridPixelWidth = width * this.hexGrid.hexSize * 1.5;
-    const gridPixelHeight = height * this.hexGrid.hexSize * Math.sqrt(3);
-    const offsetX = (this.config.canvasWidth - gridPixelWidth) / 2;
-    const offsetY = (this.config.canvasHeight - gridPixelHeight) / 2;
+    // Calculate position using consistent bounds calculation
+    const isIsometric = this.config.hexGridConfig.projection === 'isometric';
+    const bounds = this.calculateGridBounds();
+    const verticalBias = isIsometric ? 50 : 0;
+    const offsetX = (this.config.canvasWidth - bounds.width) / 2 - bounds.minX;
+    const offsetY = (this.config.canvasHeight - bounds.height) / 2 - bounds.minY + verticalBias;
 
     const pixel = this.hexGrid.toPixel(hex);
     const graphic = new PIXI.Graphics();
@@ -428,10 +477,13 @@ export class HexGridRenderer {
     // Create coordinate texts if they don't exist
     if (this.showCoordinates && this.coordinateTexts.size === 0) {
       const { width, height } = this.hexGrid.getConfig();
-      const gridPixelWidth = width * this.hexGrid.hexSize * 1.5;
-      const gridPixelHeight = height * this.hexGrid.hexSize * Math.sqrt(3);
-      const offsetX = (this.config.canvasWidth - gridPixelWidth) / 2;
-      const offsetY = (this.config.canvasHeight - gridPixelHeight) / 2;
+
+      // Calculate grid offset using consistent bounds calculation
+      const isIsometric = this.config.hexGridConfig.projection === 'isometric';
+      const bounds = this.calculateGridBounds();
+      const verticalBias = isIsometric ? 50 : 0;
+      const offsetX = (this.config.canvasWidth - bounds.width) / 2 - bounds.minX;
+      const offsetY = (this.config.canvasHeight - bounds.height) / 2 - bounds.minY + verticalBias;
 
       for (let q = 0; q < width; q++) {
         for (let r = 0; r < height; r++) {
@@ -453,9 +505,22 @@ export class HexGridRenderer {
    * @param hex - Hex coordinate to render at
    * @param creatureName - Name of the creature (used for fallback)
    * @param playerId - Player ID for color theming
-   * @param spriteUrl - Optional sprite image URL (base64 or HTTP)
+   * @param spriteData - Sprite image URL (base64 or HTTP) OR DeploymentCreature object with battlefield directional views
+   * @param opacity - Opacity for the sprite (0-1)
+   * @param direction - Facing direction for multi-directional sprites (defaults to E)
    */
-  renderCreature(hex: AxialCoordinate, creatureName: string, playerId: 'player1' | 'player2', spriteUrl?: string, opacity: number = 1.0): void {
+  renderCreature(
+    hex: AxialCoordinate,
+    creatureName: string,
+    playerId: 'player1' | 'player2',
+    spriteData?: string | import('@drawn-of-war/shared').DeploymentCreature | {
+      spriteImageBase64?: string;
+      battlefieldSprite?: string;
+      battlefieldDirectionalViews?: import('@drawn-of-war/shared').BattlefieldDirectionalViews;
+    },
+    opacity: number = 1.0,
+    direction: number = 1 // HexDirection.E = 1 (East is default)
+  ): void {
     const hash = this.hexGrid.hash(hex);
 
     // Remove existing sprite if any
@@ -464,21 +529,103 @@ export class HexGridRenderer {
       this.creatureLayer.removeChild(existingSprite);
     }
 
-    // Calculate position
-    const { width, height } = this.hexGrid.getConfig();
-    const gridPixelWidth = width * this.hexGrid.hexSize * 1.5;
-    const gridPixelHeight = height * this.hexGrid.hexSize * Math.sqrt(3);
-    const offsetX = (this.config.canvasWidth - gridPixelWidth) / 2;
-    const offsetY = (this.config.canvasHeight - gridPixelHeight) / 2;
+    // Calculate position using consistent bounds calculation
+    const isIsometric = this.config.hexGridConfig.projection === 'isometric';
+    const bounds = this.calculateGridBounds();
+    const verticalBias = isIsometric ? 50 : 0;
+    const offsetX = (this.config.canvasWidth - bounds.width) / 2 - bounds.minX;
+    const offsetY = (this.config.canvasHeight - bounds.height) / 2 - bounds.minY + verticalBias;
     const pixel = this.hexGrid.toPixel(hex);
+
+    console.log(`[DeploymentGridRenderer] renderCreature called for ${creatureName}`);
+    console.log(`[DeploymentGridRenderer] spriteData type:`, typeof spriteData);
+    console.log(`[DeploymentGridRenderer] spriteData:`, spriteData);
+    console.log(`[DeploymentGridRenderer] direction:`, direction);
+
+    // Extract sprite URL and animation frames with directional support
+    let spriteUrl: string | undefined;
+    let idleFrames: string[] | undefined;
+    let walkFrames: string[] | undefined;
+    let shouldMirror = false;
+
+    if (typeof spriteData === 'string') {
+      // Legacy: direct base64 string
+      spriteUrl = spriteData;
+      console.log(`[DeploymentGridRenderer] Legacy mode - direct sprite URL`);
+    } else if (spriteData && typeof spriteData === 'object') {
+      // NEW: Multi-directional support
+      console.log(`[DeploymentGridRenderer] Object mode - checking for battlefieldDirectionalViews`);
+      console.log(`[DeploymentGridRenderer] Has battlefieldDirectionalViews:`, !!spriteData.battlefieldDirectionalViews);
+
+      if (spriteData.battlefieldDirectionalViews) {
+        const dirViews = spriteData.battlefieldDirectionalViews;
+        console.log(`[DeploymentGridRenderer] Directional views:`, dirViews);
+
+        // Map direction to sprite and animation frames (with mirroring for W, NW, SW)
+        switch (direction) {
+          case 1: // E (East)
+            spriteUrl = dirViews.E.sprite;
+            idleFrames = dirViews.E.idleFrames;
+            walkFrames = dirViews.E.walkFrames;
+            shouldMirror = false;
+            console.log(`[DeploymentGridRenderer] Direction E - idleFrames:`, idleFrames);
+            console.log(`[DeploymentGridRenderer] Direction E - idleFrames length:`, idleFrames?.length);
+            break;
+          case 0: // NE (Northeast)
+            spriteUrl = dirViews.NE.sprite;
+            idleFrames = dirViews.NE.idleFrames;
+            walkFrames = dirViews.NE.walkFrames;
+            shouldMirror = false;
+            break;
+          case 2: // SE (Southeast)
+            spriteUrl = dirViews.SE.sprite;
+            idleFrames = dirViews.SE.idleFrames;
+            walkFrames = dirViews.SE.walkFrames;
+            shouldMirror = false;
+            break;
+          case 4: // W (West) - mirror of E
+            spriteUrl = dirViews.E.sprite;
+            idleFrames = dirViews.E.idleFrames;
+            walkFrames = dirViews.E.walkFrames;
+            shouldMirror = true;
+            break;
+          case 5: // NW (Northwest) - mirror of NE
+            spriteUrl = dirViews.NE.sprite;
+            idleFrames = dirViews.NE.idleFrames;
+            walkFrames = dirViews.NE.walkFrames;
+            shouldMirror = true;
+            break;
+          case 3: // SW (Southwest) - mirror of SE
+            spriteUrl = dirViews.SE.sprite;
+            idleFrames = dirViews.SE.idleFrames;
+            walkFrames = dirViews.SE.walkFrames;
+            shouldMirror = true;
+            break;
+          default:
+            // Fallback to E if unknown direction
+            spriteUrl = dirViews.E.sprite;
+            idleFrames = dirViews.E.idleFrames;
+            walkFrames = dirViews.E.walkFrames;
+            shouldMirror = false;
+        }
+      } else {
+        // Fallback to legacy battlefield sprite or menu sprite
+        spriteUrl = spriteData.battlefieldSprite || spriteData.spriteImageBase64;
+      }
+    }
+
+    console.log(`[DeploymentGridRenderer] After extraction - idleFrames:`, idleFrames);
+    console.log(`[DeploymentGridRenderer] After extraction - walkFrames:`, walkFrames);
+    console.log(`[DeploymentGridRenderer] After extraction - spriteUrl:`, spriteUrl);
 
     // Create sprite container
     const spriteContainer = new PIXI.Container();
     spriteContainer.alpha = opacity; // Set opacity for entire container
 
-    if (spriteUrl) {
-      // Load and render actual sprite image
-      this.loadAndRenderSprite(spriteContainer, spriteUrl, playerId);
+    if (spriteUrl || idleFrames || walkFrames) {
+      // Load and render actual sprite image or animation
+      console.log(`[DeploymentGridRenderer] Calling loadAndRenderSprite with idleFrames:`, idleFrames?.length ?? 0);
+      this.loadAndRenderSprite(spriteContainer, spriteUrl, playerId, creatureName, shouldMirror, idleFrames, walkFrames);
     } else {
       // Fallback: Create circular background with text
       const bg = new PIXI.Graphics();
@@ -511,36 +658,130 @@ export class HexGridRenderer {
   }
 
   /**
-   * Load and render a sprite image into a container
+   * Load and render a sprite image or animation into a container
+   * @param shouldMirror - Whether to horizontally mirror the sprite
+   * @param idleFrames - Optional array of idle animation frame URLs
+   * @param walkFrames - Optional array of walk animation frame URLs
    */
-  private async loadAndRenderSprite(container: PIXI.Container, spriteUrl: string, playerId: 'player1' | 'player2'): Promise<void> {
+  private async loadAndRenderSprite(
+    container: PIXI.Container,
+    spriteUrl: string | undefined,
+    playerId: 'player1' | 'player2',
+    creatureName: string,
+    shouldMirror: boolean = false,
+    idleFrames?: string[],
+    walkFrames?: string[]
+  ): Promise<void> {
     try {
-      // Load texture from URL
-      const texture = await PIXI.Assets.load(spriteUrl);
+      // PRIORITY 1: Use idle animation frames if available
+      if (idleFrames && idleFrames.length > 0) {
+        console.log(`[DeploymentGridRenderer] Loading idle animation with ${idleFrames.length} frames for ${creatureName}`);
 
-      // Create sprite from texture
-      const sprite = new PIXI.Sprite(texture);
+        // Load all frame textures in parallel
+        const textures = await Promise.all(
+          idleFrames.map(url => PIXI.Assets.load(url))
+        );
 
-      // Scale sprite to fit hex (with some padding)
-      const targetSize = this.hexGrid.hexSize * 1.2; // Slightly smaller than hex
-      const scale = Math.min(
-        targetSize / texture.width,
-        targetSize / texture.height
-      );
-      sprite.scale.set(scale);
+        // Create animated sprite
+        const animatedSprite = new PIXI.AnimatedSprite(textures);
 
-      // Center sprite
-      sprite.anchor.set(0.5);
+        // Configure animation
+        animatedSprite.animationSpeed = 0.08; // Slow speed for subtle idle breathing (about 1-2 FPS)
+        animatedSprite.play(); // Start animation loop
+        animatedSprite.loop = true; // Ensure looping
 
-      // Add subtle background glow for team color
-      const glow = new PIXI.Graphics();
-      const glowColor = playerId === 'player1' ? 0x3498db : 0xe74c3c;
-      glow.circle(0, 0, this.hexGrid.hexSize * 0.65);
-      glow.fill({ color: glowColor, alpha: 0.2 });
-      container.addChild(glow);
+        // Scale sprite to fit hex (with some padding)
+        const targetSize = this.hexGrid.hexSize * 1.2;
+        const baseScale = Math.min(
+          targetSize / textures[0].width,
+          targetSize / textures[0].height
+        );
 
-      // Add sprite
-      container.addChild(sprite);
+        // Apply mirroring if needed
+        if (shouldMirror) {
+          animatedSprite.scale.set(-baseScale, baseScale); // Negative X scale for horizontal flip
+        } else {
+          animatedSprite.scale.set(baseScale, baseScale);
+        }
+
+        // Center sprite
+        animatedSprite.anchor.set(0.5);
+
+        // Add subtle background glow for team color
+        const glow = new PIXI.Graphics();
+        const glowColor = playerId === 'player1' ? 0x3498db : 0xe74c3c;
+        glow.circle(0, 0, this.hexGrid.hexSize * 0.65);
+        glow.fill({ color: glowColor, alpha: 0.2 });
+        container.addChild(glow);
+
+        // Add animated sprite
+        container.addChild(animatedSprite);
+
+        console.log(`[DeploymentGridRenderer] Idle animation loaded and playing for ${creatureName}`);
+        return;
+      }
+
+      // PRIORITY 2: Fallback to static sprite if available
+      if (spriteUrl) {
+        // Check if spriteUrl is a valid image URL or base64 data
+        const isValidImageUrl = spriteUrl.startsWith('data:image/') ||
+                                spriteUrl.startsWith('http://') ||
+                                spriteUrl.startsWith('https://') ||
+                                spriteUrl.startsWith('/');
+
+        if (!isValidImageUrl) {
+          // Not a valid image URL, use fallback rendering
+          console.warn(`[DeploymentGridRenderer] Invalid sprite URL format for ${creatureName}, using fallback: ${spriteUrl}`);
+          throw new Error(`Invalid sprite URL format: ${spriteUrl}`);
+        }
+
+        // Load texture from URL
+        const texture = await PIXI.Assets.load(spriteUrl);
+
+        // Check if texture loaded successfully
+        if (!texture) {
+          throw new Error(`Failed to load texture from URL: ${spriteUrl}`);
+        }
+
+        // Validate texture has required properties
+        if (!texture.width || !texture.height) {
+          throw new Error(`Invalid texture dimensions: ${texture.width}x${texture.height}`);
+        }
+
+        // Create sprite from texture
+        const sprite = new PIXI.Sprite(texture);
+
+        // Scale sprite to fit hex (with some padding)
+        const targetSize = this.hexGrid.hexSize * 1.2; // Slightly smaller than hex
+        const baseScale = Math.min(
+          targetSize / texture.width,
+          targetSize / texture.height
+        );
+
+        // Apply mirroring if needed
+        if (shouldMirror) {
+          sprite.scale.set(-baseScale, baseScale); // Negative X scale for horizontal flip
+        } else {
+          sprite.scale.set(baseScale, baseScale);
+        }
+
+        // Center sprite
+        sprite.anchor.set(0.5);
+
+        // Add subtle background glow for team color
+        const glow = new PIXI.Graphics();
+        const glowColor = playerId === 'player1' ? 0x3498db : 0xe74c3c;
+        glow.circle(0, 0, this.hexGrid.hexSize * 0.65);
+        glow.fill({ color: glowColor, alpha: 0.2 });
+        container.addChild(glow);
+
+        // Add sprite
+        container.addChild(sprite);
+        return;
+      }
+
+      // PRIORITY 3: No sprite data available
+      throw new Error('No sprite data available (neither idleFrames nor spriteUrl)');
     } catch (error) {
       console.error('[DeploymentGridRenderer] Failed to load sprite:', error);
 
@@ -552,7 +793,7 @@ export class HexGridRenderer {
       container.addChild(bg);
 
       const text = new PIXI.Text({
-        text: '?',
+        text: creatureName.charAt(0).toUpperCase(),
         style: {
           fontSize: 24,
           fill: 0xffffff,
@@ -589,19 +830,78 @@ export class HexGridRenderer {
   /**
    * Render a ghost/preview of a creature being dragged
    */
-  renderDragPreview(hex: AxialCoordinate, creatureName: string, playerId: 'player1' | 'player2', spriteUrl?: string): void {
+  renderDragPreview(
+    hex: AxialCoordinate,
+    creatureName: string,
+    playerId: 'player1' | 'player2',
+    spriteData?: string | import('@drawn-of-war/shared').DeploymentCreature | {
+      spriteImageBase64?: string;
+      battlefieldSprite?: string;
+      battlefieldDirectionalViews?: import('@drawn-of-war/shared').BattlefieldDirectionalViews;
+    },
+    direction: number = 1 // HexDirection.E = 1 (East is default)
+  ): void {
     // First clear any existing preview
     this.clearDragPreview();
 
     const hash = 'drag-preview';
 
-    // Calculate position
-    const { width, height } = this.hexGrid.getConfig();
-    const gridPixelWidth = width * this.hexGrid.hexSize * 1.5;
-    const gridPixelHeight = height * this.hexGrid.hexSize * Math.sqrt(3);
-    const offsetX = (this.config.canvasWidth - gridPixelWidth) / 2;
-    const offsetY = (this.config.canvasHeight - gridPixelHeight) / 2;
+    // Calculate position using consistent bounds calculation
+    const isIsometric = this.config.hexGridConfig.projection === 'isometric';
+    const bounds = this.calculateGridBounds();
+    const verticalBias = isIsometric ? 50 : 0;
+    const offsetX = (this.config.canvasWidth - bounds.width) / 2 - bounds.minX;
+    const offsetY = (this.config.canvasHeight - bounds.height) / 2 - bounds.minY + verticalBias;
     const pixel = this.hexGrid.toPixel(hex);
+
+    // Extract sprite URL with directional support
+    let spriteUrl: string | undefined;
+    let shouldMirror = false;
+
+    if (typeof spriteData === 'string') {
+      // Legacy: direct base64 string
+      spriteUrl = spriteData;
+    } else if (spriteData && typeof spriteData === 'object') {
+      // NEW: Multi-directional support
+      if (spriteData.battlefieldDirectionalViews) {
+        const dirViews = spriteData.battlefieldDirectionalViews;
+
+        // Map direction to sprite (with mirroring for W, NW, SW)
+        switch (direction) {
+          case 1: // E (East)
+            spriteUrl = dirViews.E.sprite;
+            shouldMirror = false;
+            break;
+          case 0: // NE (Northeast)
+            spriteUrl = dirViews.NE.sprite;
+            shouldMirror = false;
+            break;
+          case 2: // SE (Southeast)
+            spriteUrl = dirViews.SE.sprite;
+            shouldMirror = false;
+            break;
+          case 4: // W (West) - mirror of E
+            spriteUrl = dirViews.E.sprite;
+            shouldMirror = true;
+            break;
+          case 5: // NW (Northwest) - mirror of NE
+            spriteUrl = dirViews.NE.sprite;
+            shouldMirror = true;
+            break;
+          case 3: // SW (Southwest) - mirror of SE
+            spriteUrl = dirViews.SE.sprite;
+            shouldMirror = true;
+            break;
+          default:
+            // Fallback to E if unknown direction
+            spriteUrl = dirViews.E.sprite;
+            shouldMirror = false;
+        }
+      } else {
+        // Fallback to legacy battlefield sprite or menu sprite
+        spriteUrl = spriteData.battlefieldSprite || spriteData.spriteImageBase64;
+      }
+    }
 
     // Create sprite container
     const spriteContainer = new PIXI.Container();
@@ -609,7 +909,7 @@ export class HexGridRenderer {
 
     if (spriteUrl) {
       // Load and render actual sprite image (with ghost effect)
-      this.loadAndRenderSprite(spriteContainer, spriteUrl, playerId);
+      this.loadAndRenderSprite(spriteContainer, spriteUrl, playerId, creatureName, shouldMirror);
     } else {
       // Fallback: Create circular background
       const bg = new PIXI.Graphics();
@@ -682,5 +982,31 @@ export class HexGridRenderer {
    */
   getHexGrid(): HexGrid {
     return this.hexGrid;
+  }
+
+  /**
+   * Get hex coordinate at pixel position (relative to canvas)
+   * Used for HTML5 drag-and-drop hit detection
+   */
+  getHexAtPixel(x: number, y: number): AxialCoordinate | null {
+    // Calculate grid offset using consistent bounds calculation
+    const isIsometric = this.config.hexGridConfig.projection === 'isometric';
+    const bounds = this.calculateGridBounds();
+    const verticalBias = isIsometric ? 50 : 0;
+    const offsetX = (this.config.canvasWidth - bounds.width) / 2 - bounds.minX;
+    const offsetY = (this.config.canvasHeight - bounds.height) / 2 - bounds.minY + verticalBias;
+
+    // Convert pixel coordinates to hex coordinates
+    const hex = this.hexGrid.fromPixel({
+      x: x - offsetX,
+      y: y - offsetY
+    });
+
+    // Validate hex is within grid bounds
+    if (this.hexGrid.isValid(hex)) {
+      return hex;
+    }
+
+    return null;
   }
 }

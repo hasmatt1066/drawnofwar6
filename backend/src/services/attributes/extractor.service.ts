@@ -7,9 +7,16 @@
  * Mirrors the structure of AnimationMapperService for consistency.
  */
 
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import type { AnimationSet } from '../animations/types.js';
 import type { AttributeMappingResult, CombatAttribute } from './types.js';
 import { extractUniqueAttributes } from './attribute-map.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const LIBRARY_ANIMATIONS_DIR = path.join(__dirname, '../../../../assets/library-animations');
 
 /**
  * Attribute Extractor Service
@@ -28,15 +35,16 @@ class AttributeExtractorService {
    * - Limits to top 3 most important attributes
    * - Always includes at least 1 attack attribute if available
    * - Ensures sprite animation exists in the provided animation set
+   * - Loads effect animation frames for each selected attribute
    *
    * @param abilities - Array of ability strings from Claude Vision
    * @param animationSet - Animation set containing available sprite animations
    * @returns Attribute mapping result with 1-3 attributes
    */
-  extractAttributes(
+  async extractAttributes(
     abilities: string[],
     animationSet: AnimationSet
-  ): AttributeMappingResult {
+  ): Promise<AttributeMappingResult> {
     console.log('[Attribute Extractor] Extracting combat attributes...');
     console.log(`[Attribute Extractor] Input abilities: ${abilities.length}`);
 
@@ -89,10 +97,16 @@ class AttributeExtractorService {
       console.log(`  - ${attr.name} (${attr.category}, priority: ${attr.priority}, animation: ${attr.spriteAnimationId})`);
     });
 
+    // Step 6: Load effect frames for each selected attribute
+    console.log('[Attribute Extractor] Loading effect animation frames...');
+    const attributesWithFrames = await Promise.all(
+      selectedAttributes.map(attr => this.loadEffectFrames(attr))
+    );
+
     const confidence = this.calculateConfidence(selectedAttributes.length, allAttributes.length);
 
     return {
-      attributes: selectedAttributes,
+      attributes: attributesWithFrames,
       totalExtracted: allAttributes.length,
       confidence
     };
@@ -156,6 +170,42 @@ class AttributeExtractorService {
     }
 
     return selected;
+  }
+
+  /**
+   * Load effect animation frames from library
+   *
+   * @param attribute - Combat attribute to load frames for
+   * @returns Attribute with effect frames loaded
+   */
+  private async loadEffectFrames(attribute: CombatAttribute): Promise<CombatAttribute> {
+    try {
+      const animDir = path.join(LIBRARY_ANIMATIONS_DIR, attribute.spriteAnimationId);
+
+      // Read metadata to get frame count
+      const metadataPath = path.join(animDir, 'metadata.json');
+      const metadataContent = await fs.readFile(metadataPath, 'utf-8');
+      const metadata = JSON.parse(metadataContent);
+
+      // Read all frames
+      const frames: string[] = [];
+      for (let i = 0; i < metadata.frameCount; i++) {
+        const framePath = path.join(animDir, `frame-${i}.png`);
+        const frameBuffer = await fs.readFile(framePath);
+        frames.push(frameBuffer.toString('base64'));
+      }
+
+      console.log(`[Attribute Extractor] Loaded ${frames.length} frames for ${attribute.name}`);
+
+      return {
+        ...attribute,
+        effectFrames: frames
+      };
+    } catch (error) {
+      console.error(`[Attribute Extractor] Failed to load effect frames for ${attribute.name}:`, error);
+      // Return attribute without frames if loading fails
+      return attribute;
+    }
   }
 
   /**

@@ -8,10 +8,10 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { Job, Queue } from 'bullmq';
-import { UserLimits, UserLimitResult, UserLimitsConfig } from './user-limits.js';
-import type { QueueManager } from './queue-manager.js';
-import type { JobStatusTracker, JobStatus } from './job-status-tracker.js';
-import type { QueueLogger } from './logger.js';
+import { UserLimits, UserLimitResult, UserLimitsConfig } from '../user-limits.js';
+import type { QueueManager } from '../queue-manager.js';
+import type { JobStatusTracker, JobStatus } from '../job-status-tracker.js';
+import type { QueueLogger } from '../logger.js';
 
 /**
  * Mock QueueManager for testing

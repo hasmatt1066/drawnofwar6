@@ -20,6 +20,17 @@ export interface JobStatus {
   completedAt?: string;
 }
 
+export interface CombatAttribute {
+  attributeId: string;
+  name: string;
+  category: string;
+  spriteAnimationId: string;
+  damageType: string;
+  attackType: string;
+  priority: number;
+  effectFrames?: string[];
+}
+
 export interface GenerationResult {
   inputType: 'text' | 'draw' | 'upload';
   textDescription?: string;
@@ -46,6 +57,12 @@ export interface GenerationResult {
     };
     totalAnimations: number;
   };
+  combatAttributes?: {
+    attributes: CombatAttribute[];
+    totalExtracted: number;
+    confidence: number;
+  };
+  baselineAttackType?: 'melee' | 'ranged';
   styleValidation?: {
     passed: boolean;
     colorSimilarity: number;

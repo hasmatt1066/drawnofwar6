@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { MetricsTracker, RequestMetrics } from './metrics-tracker';
+import { MetricsTracker, RequestMetrics } from '../metrics-tracker';
 
 describe('Metrics Tracker - Task 8.3: Performance Metrics', () => {
   beforeEach(() => {

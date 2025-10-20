@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Logger, LogLevel, LogEntry } from './logger';
+import { Logger, LogLevel, LogEntry } from '../logger';
 
 describe('Logger - Task 8.1: Structured Logging', () => {
   let consoleLogSpy: any;

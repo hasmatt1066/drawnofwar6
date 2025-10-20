@@ -1,0 +1,95 @@
+/**
+ * TASK-VIZ-023: Combat Log Panel Styles
+ */
+
+.combatLogPanel {
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(0, 0, 0, 0.8);
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #444;
+}
+
+.title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.filterSelect {
+  padding: 4px 8px;
+  background-color: #333;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 3px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.filterSelect:hover {
+  background-color: #444;
+}
+
+.clearButton {
+  padding: 4px 12px;
+  background-color: #d44;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.clearButton:hover {
+  background-color: #e55;
+}
+
+.clearButton:active {
+  background-color: #c33;
+}
+
+.logContainer {
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 3px;
+  padding: 8px;
+}
+
+.logList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.logEntry {
+  padding: 4px 0;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.emptyState {
+  color: #888;
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+}

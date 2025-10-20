@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { RequestValidator, GenerationRequest } from './request-validator';
-import { PixelLabError, PixelLabErrorType } from './errors';
+import { RequestValidator, GenerationRequest } from '../request-validator';
+import { PixelLabError, PixelLabErrorType } from '../errors';
 
 describe('Request Validator - Task 3.3: Payload Validation', () => {
   const validRequest: GenerationRequest = {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { HttpClient, PixelLabClientConfig } from './http-client';
+import { HttpClient, PixelLabClientConfig } from '../http-client';
 
 describe('HttpClient - Task 1.1: Base HTTP Client Class', () => {
   let validConfig: PixelLabClientConfig;

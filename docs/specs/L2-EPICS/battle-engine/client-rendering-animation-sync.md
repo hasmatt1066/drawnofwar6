@@ -2,9 +2,9 @@
 
 **Epic ID**: `battle-client-render`
 **Parent Theme**: Battle Engine (L1)
-**Status**: PLANNING
-**Version**: 1.0
-**Last Updated**: 2025-10-03
+**Status**: REFINEMENT COMPLETE
+**Version**: 1.1
+**Last Updated**: 2025-10-05
 
 ---
 
@@ -26,9 +26,19 @@ The Client Rendering & Animation Sync epic is essential because it's what player
 2. **Effect Synchronization**: Projectiles must spawn when attack animation reaches the "release" frame
 3. **Latency Compensation**: Client interpolates between delayed server updates to maintain 60fps rendering
 4. **Visual Feedback**: Damage numbers, health bars, impact effects, and screen shake make combat readable
-5. **Performance**: Maintain 30+ FPS with 20+ animated creatures on screen (per L0 metric)
+5. **Performance**: Maintain 30+ FPS with 16 animated creatures (8v8 MVP) on screen
 
 Without proper rendering and sync, battles feel disconnected—units teleport instead of moving, attacks look wrong, and players can't follow the action. This epic transforms server state into cinematic gameplay.
+
+### AI-Driven Creature Stats
+
+All creature combat stats are assigned by Claude during generation, not selected by players:
+- **Speed**: Determines movement rate (1-3 hexes/turn), assigned based on creature archetype
+- **Abilities**: 1-3 unique abilities per creature with cooldowns, selected from abilities catalog
+- **Ability Cooldowns**: 2-5 turn cooldowns per ability, balanced during generation
+- **Stats**: HP, damage, armor assigned based on creature theme and role
+
+Players see creatures with fully-defined combat capabilities immediately after generation. The client renders these stats through health bars, cooldown indicators, and visual effects. This ensures every battle has tactical variety without requiring manual stat configuration.
 
 ---
 
@@ -46,8 +56,9 @@ Without proper rendering and sync, battles feel disconnected—units teleport in
   - Layered rendering (ground → creatures → projectiles → UI)
 
 - **State Update Processing**
-  - WebSocket state update reception (30-60 updates/sec)
-  - State delta parsing (only changes per tick)
+  - WebSocket state update reception (60 updates/sec fixed rate)
+  - State delta compression (only changed fields per tick)
+  - 100ms client-side buffer for smooth interpolation
   - Local state cache (previous state for interpolation)
   - Event queue (damage, death, ability use events)
   - Snapshot reconciliation (full state updates every 10 ticks)
@@ -61,6 +72,8 @@ Without proper rendering and sync, battles feel disconnected—units teleport in
   - Death animation (one-shot, unit despawns after completion)
   - Animation transitions (blend between states)
   - Frame-based event triggers (spawn projectile at frame 8 of attack)
+  - Timestamp-based synchronization (±100ms tolerance between client/server)
+  - Server sends animation start timestamps for deterministic playback
 
 - **Interpolation & Prediction**
   - Position interpolation (smooth movement between server positions)
@@ -76,6 +89,13 @@ Without proper rendering and sync, battles feel disconnected—units teleport in
   - Effect overlay positioning (centered on creature, offset for weapons)
   - Animation frame synchronization (creature + effect frame alignment)
 
+- **Multi-Directional Sprite Integration**
+  - 6-directional sprite support (N, NE, SE, S, SW, NW)
+  - Automatic direction selection based on movement vector
+  - Crossfade transitions between directions (100-200ms blend)
+  - Direction-specific attack animations (face target before attack)
+  - Fallback to nearest direction if specific angle not available
+
 - **Projectile Rendering**
   - Projectile sprite loading (arrows, fireballs, spells)
   - Projectile trajectory rendering (linear path from source to target)
@@ -85,13 +105,21 @@ Without proper rendering and sync, battles feel disconnected—units teleport in
   - Impact effect spawning (explosion, splash, hit spark)
 
 - **Visual Feedback & Polish**
-  - Damage numbers (floating text above damaged units)
-  - Health bars (above each creature, red/green gradient)
-  - Cooldown indicators (circular progress bars on abilities)
-  - Hit flash (brief white/red tint on damaged unit)
-  - Screen shake on big impacts (AOE abilities, deaths)
-  - Unit outline on hover (highlight selected creature)
-  - Combat log feed (scrolling text: "Knight dealt 25 damage to Goblin")
+  - **Priority 1 (Core Feedback)**:
+    - Damage numbers (floating text above damaged units)
+    - Health bars (above each creature, red/green gradient)
+    - Movement animations (smooth hex-to-hex transitions)
+  - **Priority 2 (Combat Clarity)**:
+    - Attack animations (ranged/melee with projectiles)
+    - Projectile effects (arrows, fireballs traveling)
+    - Impact effects (hit sparks, explosions on contact)
+  - **Priority 3 (Polish)**:
+    - Screen shake (camera shake on big impacts/AOE)
+    - Hit flash (brief white/red tint on damaged unit)
+    - Cooldown indicators (circular progress bars on abilities)
+  - **Priority 4 (Optional Enhancement)**:
+    - Unit outline on hover (highlight selected creature)
+    - Combat log feed (scrolling text: "Knight dealt 25 damage to Goblin")
 
 - **Performance Optimization**
   - Sprite pooling (reuse sprite objects for effects)
@@ -108,16 +136,24 @@ Without proper rendering and sync, battles feel disconnected—units teleport in
   - Victory/defeat announcement (full-screen overlay)
   - Pause overlay (waiting for opponent, reconnection)
 
+- **Camera Control System**
+  - Player-controlled pan (mouse drag or WASD keys)
+  - Player-controlled zoom (mouse wheel or +/- keys)
+  - Zoom constraints (min/max zoom levels to prevent disorientation)
+  - Optional auto-follow mode (camera tracks current action)
+  - Reset to center view (spacebar or button to recenter)
+  - Smooth camera transitions (eased movement, no jarring jumps)
+
 ### Explicitly Excluded
 
 - **Particle Systems**: No custom particle effects for MVP (use pre-generated sprites only)
 - **Post-Processing**: No shaders, bloom, motion blur (post-MVP for polish)
-- **Camera Cinematics**: No auto-focus on action, smooth panning (post-MVP)
 - **Replay Playback**: No scrubbing, rewind, slow-motion (post-MVP)
 - **Spectator Mode**: No rendering other players' battles (post-MVP)
 - **Mobile Touch Controls**: Desktop-only for MVP (mouse input)
 - **Dynamic Lighting**: No shadows, light sources (post-MVP)
 - **Terrain Rendering**: Flat battlefield only, no elevation or texture variation
+- **Advanced Camera Cinematics**: Auto-follow is optional; no dramatic angle changes or cinematic cuts
 
 ---
 
@@ -337,39 +373,72 @@ interface RenderConfig {
 class StateUpdateProcessor {
   private currentState: ClientGameState;
   private previousState: ClientGameState;
+  private updateBuffer: StateUpdate[] = []; // 100ms buffer for smooth interpolation
+  private readonly BUFFER_DURATION_MS = 100;
+  private readonly UPDATE_RATE_HZ = 60; // Server sends 60 updates/sec
 
   processUpdate(update: StateUpdate) {
+    // Add to buffer with timestamp
+    update.receivedAt = Date.now();
+    this.updateBuffer.push(update);
+
+    // Remove updates older than buffer duration
+    const cutoffTime = Date.now() - this.BUFFER_DURATION_MS;
+    this.updateBuffer = this.updateBuffer.filter(u => u.receivedAt >= cutoffTime);
+
+    // Apply buffered update (100ms delayed for smoothness)
+    const bufferedUpdate = this.updateBuffer[0];
+    if (!bufferedUpdate) return;
+
     this.previousState = this.currentState;
 
-    // Apply state delta
-    for (const unitUpdate of update.unitUpdates) {
+    // Apply state delta (only changed fields sent by server)
+    for (const unitUpdate of bufferedUpdate.unitUpdates) {
       const unit = this.findUnit(unitUpdate.unitId);
       if (unit) {
         // Update authoritative server state
-        unit.serverPosition = unitUpdate.position;
-        unit.serverHealth = unitUpdate.health;
-        unit.serverStatus = unitUpdate.status;
+        if (unitUpdate.position) unit.serverPosition = unitUpdate.position;
+        if (unitUpdate.health !== undefined) unit.serverHealth = unitUpdate.health;
+        if (unitUpdate.status) unit.serverStatus = unitUpdate.status;
 
-        // If animation changed, trigger transition
-        if (unitUpdate.animation && unitUpdate.animation !== unit.currentAnimation.name) {
-          this.transitionAnimation(unit, unitUpdate.animation);
+        // Animation sync with server timestamp
+        if (unitUpdate.animationChange) {
+          this.syncAnimation(unit, {
+            name: unitUpdate.animationChange.name,
+            startTimestamp: unitUpdate.animationChange.serverTimestamp
+          });
         }
       }
     }
 
     // Process events (damage, death, ability)
-    for (const event of update.events) {
+    for (const event of bufferedUpdate.events) {
       this.eventQueue.push(event);
     }
 
     // Add new projectiles
-    for (const projectile of update.newProjectiles) {
+    for (const projectile of bufferedUpdate.newProjectiles) {
       this.spawnProjectile(projectile);
     }
 
     // Remove expired projectiles
-    for (const projectileId of update.removedProjectiles) {
+    for (const projectileId of bufferedUpdate.removedProjectiles) {
       this.despawnProjectile(projectileId);
+    }
+  }
+
+  syncAnimation(unit: ClientUnit, animData: { name: string, startTimestamp: number }) {
+    const serverTime = animData.startTimestamp;
+    const clientTime = Date.now();
+    const timeDelta = clientTime - serverTime;
+
+    // If within ±100ms tolerance, sync to server timeline
+    if (Math.abs(timeDelta) <= 100) {
+      const elapsedFrames = (timeDelta / 1000) * unit.currentAnimation.fps;
+      this.transitionAnimation(unit, animData.name, elapsedFrames);
+    } else {
+      // Too far desynced, hard reset to server timeline
+      this.transitionAnimation(unit, animData.name, 0);
     }
   }
 
@@ -515,23 +584,54 @@ class StateUpdateProcessor {
 
 ### MVP Definition of Done
 
-- [ ] Battlefield renders at 60 FPS with 0 units, 30+ FPS with 20 units (per L0 metric)
-- [ ] Creatures play idle animations when stationary (8 FPS loops)
-- [ ] Creatures transition to walk animations when moving
-- [ ] Attack animations trigger at correct moments (server-controlled)
-- [ ] Projectiles spawn at attachment points during attack animations
-- [ ] Projectiles travel smoothly along trajectories (5 hexes/sec)
-- [ ] Impact effects play on projectile collision
-- [ ] Damage numbers appear above damaged units and float upward
-- [ ] Health bars update smoothly (interpolated, not instant)
-- [ ] Death animations play fully before unit despawns
-- [ ] Library animations (55 effects) load on demand and composite correctly
-- [ ] Blend modes (screen, multiply) work for magical effects
+**Performance & Technical**
+- [ ] Battlefield renders at 60 FPS with 0 units, 30+ FPS with 16 units (8v8 MVP scope)
+- [ ] State updates arrive at 60/sec with delta compression (only changed fields)
+- [ ] 100ms client-side buffer provides smooth interpolation
 - [ ] State interpolation handles 100-150ms latency without visible teleportation
 - [ ] Client reconciles smoothly when server corrects client prediction
-- [ ] Combat log displays major events (damage, death, ability use)
-- [ ] UI overlays (round timer, score) render correctly
 - [ ] No memory leaks (sprites despawn correctly, no orphaned objects)
+- [ ] Timestamp-based animation sync maintains ±100ms tolerance
+
+**Animation & Sprites**
+- [ ] Creatures play idle animations when stationary (8 FPS loops)
+- [ ] Creatures transition to walk animations when moving
+- [ ] 6-directional sprite support with automatic direction selection
+- [ ] Crossfade transitions between directions (100-200ms blend, no jarring pops)
+- [ ] Attack animations trigger at correct moments (server-controlled timestamps)
+- [ ] Death animations play fully before unit despawns (ghost mode during animation)
+- [ ] Library animations (55 effects) load on demand and composite correctly
+- [ ] Blend modes (screen, multiply) work for magical effects
+
+**Projectiles & Effects**
+- [ ] Projectiles spawn from creature center position during attack animations
+- [ ] Projectiles travel smoothly along trajectories
+- [ ] Impact effects play on projectile collision
+- [ ] Frame-based event triggers work (spawn projectile at frame 8 of attack)
+
+**Visual Feedback (Priority 1-3)**
+- [ ] Damage numbers appear above damaged units and float upward
+- [ ] Health bars render above each creature and update smoothly (interpolated)
+- [ ] Movement animations show smooth hex-to-hex transitions
+- [ ] Attack animations (ranged/melee) play with projectiles
+- [ ] Impact effects (hit sparks, explosions) render on contact
+- [ ] Screen shake works on big impacts/AOE abilities
+- [ ] Hit flash (white/red tint) shows on damaged units
+- [ ] Cooldown indicators (circular progress) show on abilities
+
+**Camera & UI**
+- [ ] Player can pan camera (mouse drag or WASD keys)
+- [ ] Player can zoom camera (mouse wheel or +/- keys)
+- [ ] Zoom constraints prevent disorientation (min/max limits)
+- [ ] Optional auto-follow mode tracks current action
+- [ ] Reset to center view works (spacebar or button)
+- [ ] Smooth camera transitions (eased movement, no jarring jumps)
+- [ ] UI overlays (round timer, score, round number) render correctly
+- [ ] Victory/defeat announcements display full-screen
+
+**Battle Pacing**
+- [ ] 120-second battle duration enforced (2 minutes max)
+- [ ] Combat completes within time limit or triggers timeout resolution
 
 ### Exceptional Target (Post-MVP)
 
@@ -549,27 +649,68 @@ class StateUpdateProcessor {
 
 ## Open Questions
 
-1. **Interpolation Delay**: Should client buffer server updates for 100ms (smoother) or render immediately (more responsive)? Longer buffer = smoother, but feels laggy.
+### RESOLVED Questions (Refinement Session 2025-10-05)
 
-2. **Animation Frame Rate Sync**: Server simulates at 60 ticks/sec, animations play at 8-15 FPS. How do we ensure frame events (spawn projectile at frame 8) trigger at exact same moment on client and server?
+1. **Interpolation Delay** ✅ RESOLVED
+   - **Decision**: 100ms client-side buffer for smooth interpolation
+   - **Rationale**: Smoother visual experience outweighs minimal lag; 100ms is imperceptible to players
 
-3. **Projectile Attachment Points**: Should attachment points be baked into creature sprites (metadata), or computed dynamically based on animation frame? Baked = accurate, dynamic = flexible but complex.
+2. **Animation Frame Rate Sync** ✅ RESOLVED
+   - **Decision**: Timestamp-based synchronization with ±100ms tolerance
+   - **Rationale**: Server sends animation start timestamps; client syncs to server timeline
+   - **Implementation**: Client calculates elapsed frames from server timestamp, resumes at correct frame
 
-4. **Effect Overlay Positioning**: Should library animations overlay centered on creature, or offset based on creature size/type? Centered = simple, offset = more accurate (e.g., sword slash in front of unit).
+3. **Projectile Attachment Points** ✅ RESOLVED
+   - **Decision**: Baked metadata per animation frame (post-MVP enhancement)
+   - **MVP Decision**: Spawn projectiles from creature center position (simple, good enough)
+   - **Rationale**: Accurate attachment points are polish; center-spawn works for 90% of cases
 
-5. **Death Animation vs Server State**: When server says unit is dead, should client:
-   - Play death animation, then remove (smooth, but delays server state)
-   - Remove immediately, play death effect at position (responsive, but less smooth)
-   - Play death animation while unit "ghost" (non-interactive) (hybrid approach)
+4. **Effect Overlay Positioning** ✅ RESOLVED
+   - **Decision**: Centered on creature sprite for MVP
+   - **Post-MVP**: Offset based on creature type and animation context
+   - **Rationale**: Simple centering works for most effects; offsets add complexity without critical value
 
-6. **Performance vs Quality**: Should we target 60 FPS (buttery smooth) or 30 FPS (acceptable per L0, but easier to achieve)? 60 FPS requires more optimization effort.
+5. **Death Animation vs Server State** ✅ RESOLVED
+   - **Decision**: Hybrid approach - play death animation while unit is "ghost" (non-interactive)
+   - **Implementation**: Server marks unit as dead immediately; client plays death animation then despawns
+   - **Rationale**: Maintains server authority while allowing smooth visual transition
 
-7. **Sound Effects**: Should attack sounds play when animation triggers (client-side, immediate) or when damage applied (server-side, delayed)? Immediate feels better but can desync.
+6. **Performance vs Quality** ✅ RESOLVED
+   - **MVP Target**: 30+ FPS with 16 units (8v8)
+   - **Aspirational**: 60 FPS with optimizations (texture atlases, sprite pooling, LOD)
+   - **Rationale**: 30 FPS is acceptable per L0; 60 FPS is post-MVP polish goal
 
-8. **Damage Number Styling**: Floating numbers are readable but can clutter screen with 20 units. Should we:
-   - Show all damage numbers (verbose, but complete info)
-   - Only show critical hits (cleaner, but less feedback)
-   - Aggregate damage per second (e.g., "125 DPS" above unit)
+7. **Sound Effects** ✅ RESOLVED
+   - **Decision**: Play sounds on animation trigger (client-side, immediate)
+   - **Rationale**: Immediate audio feedback feels more responsive; slight desync is acceptable
+   - **Fallback**: Server can send audio events for critical sounds (ability activations)
+
+8. **Damage Number Styling** ✅ RESOLVED
+   - **Decision**: Show all damage numbers (Priority 1 visual feedback)
+   - **Implementation**: Floating numbers with smart positioning to avoid overlap
+   - **Rationale**: Players want complete feedback; clutter can be mitigated with good layout
+
+9. **Multi-Directional Sprites** ✅ RESOLVED
+   - **Decision**: 6-directional sprite support with crossfade transitions (100-200ms)
+   - **Implementation**: Automatic direction selection based on movement vector
+   - **Rationale**: 6 directions provide good coverage; crossfade prevents jarring transitions
+
+10. **Camera Control** ✅ RESOLVED
+    - **Decision**: Full player control (pan/zoom) with optional auto-follow mode
+    - **Implementation**: Mouse drag/WASD for pan, mouse wheel/+- for zoom
+    - **Rationale**: Players want agency over viewing angle; auto-follow is convenience feature
+
+11. **Battle Pacing** ✅ RESOLVED
+    - **Decision**: 120-second battle duration (2 minutes)
+    - **Rationale**: Balances engagement vs. attention span; prevents overly long battles
+
+12. **State Update Rate** ✅ RESOLVED
+    - **Decision**: 60 updates/sec with delta compression (only changed fields)
+    - **Rationale**: Smooth state updates with minimal bandwidth; delta compression reduces payload size
+
+### Remaining Open Questions
+
+None - all critical questions resolved during refinement session.
 
 ---
 
@@ -577,52 +718,81 @@ class StateUpdateProcessor {
 
 ### Core Rendering
 - **PixiJS Battlefield Renderer** - Main scene manager, layered rendering
-- **Hex Grid Background Layer** - Grid rendering
-- **Creature Sprite Layer** - Render 16+ creatures with Z-ordering
+- **Hex Grid Background Layer** - Grid rendering with coordinate system
+- **Creature Sprite Layer** - Render 16 creatures (8v8) with Z-ordering
 - **Projectile Rendering Layer** - Projectile sprites above creatures
 - **Effect Rendering Layer** - Impacts, auras, ground effects
 
 ### State Processing
-- **State Update Processor** - Parse server state deltas
-- **Event Queue Manager** - Queue combat events
-- **State Reconciliation** - Correct client predictions
+- **State Update Processor with Buffering** - Parse server state deltas with 100ms buffer
+- **Delta Compression Handler** - Process only changed fields (60 updates/sec)
+- **Event Queue Manager** - Queue combat events (damage, death, ability)
+- **State Reconciliation System** - Correct client predictions vs server authority
+- **Timestamp Synchronization** - Sync client/server timelines (±100ms tolerance)
 
 ### Animation System
-- **Animation Controller** - Manage animation state machine per unit
-- **Animation Library Loader** - Load 55 library animations
-- **Effect Compositor** - Overlay library effects with blend modes
-- **Frame Event Trigger** - Spawn projectiles at animation frames
-- **Animation Transition System** - Blend between animation states
+- **Animation State Machine** - Manage animation states per unit (idle/walk/attack/death)
+- **Timestamp-Based Animation Sync** - Sync animations to server timeline
+- **Animation Library Loader** - Load 55 library animations on demand
+- **Effect Compositor** - Overlay library effects with blend modes (screen/multiply)
+- **Frame Event Trigger System** - Spawn projectiles at specific animation frames
+- **Animation Transition System** - Smooth blending between animation states
 
-### Interpolation
-- **Position Interpolator** - Smooth movement between server positions
-- **Dead Reckoning Predictor** - Predict next position
-- **Server Reconciliation** - Correct client when wrong
+### Multi-Directional Sprite System
+- **6-Direction Sprite Selector** - Choose sprite direction from movement vector
+- **Direction Crossfade Renderer** - Blend between directions (100-200ms transitions)
+- **Facing Direction Calculator** - Determine unit facing based on target
+- **Direction Fallback Handler** - Use nearest direction if specific angle unavailable
 
-### Visual Effects
-- **Damage Number Renderer** - Floating damage text
-- **Health Bar System** - Health bars above creatures
-- **Hit Flash Effect** - Brief tint on damage
-- **Screen Shake Controller** - Camera shake on impacts
-- **Combat Log Renderer** - Scrolling event feed
+### Interpolation & Prediction
+- **Position Interpolator with Buffer** - Smooth movement with 100ms delay
+- **Dead Reckoning Predictor** - Predict next position based on velocity
+- **Server Reconciliation** - Correct client when prediction diverges
+- **Lag Compensation System** - Handle 100-150ms network latency
+
+### Visual Feedback System
+- **Damage Number Renderer** - Floating damage text (Priority 1)
+- **Health Bar System** - Interpolated health bars above creatures (Priority 1)
+- **Movement Animation System** - Smooth hex-to-hex transitions (Priority 1)
+- **Attack Animation Handler** - Ranged/melee attacks with projectiles (Priority 2)
+- **Impact Effect Spawner** - Hit sparks, explosions on contact (Priority 2)
+- **Screen Shake Controller** - Camera shake on big impacts (Priority 3)
+- **Hit Flash Effect** - Brief tint on damaged units (Priority 3)
+- **Cooldown Indicator Renderer** - Circular progress bars (Priority 3)
 
 ### Projectile System
 - **Projectile Renderer** - Render projectile sprites
-- **Trajectory Animator** - Animate along path
-- **Impact Effect Spawner** - Explosion/impact effects
-- **Projectile Pool Manager** - Sprite reuse
+- **Trajectory Animator** - Linear path animation from source to target
+- **Projectile Spawn Manager** - Spawn from creature center (MVP) or attachment points (post-MVP)
+- **Impact Effect Spawner** - Explosion/impact effects on collision
+- **Projectile Pool Manager** - Sprite reuse for performance
 
-### Performance
-- **Sprite Pool Manager** - Reuse sprites
-- **Texture Atlas Manager** - Combine textures
+### Camera Control System
+- **Camera Pan Controller** - Mouse drag or WASD key controls
+- **Camera Zoom Controller** - Mouse wheel or +/- key controls
+- **Zoom Constraint Manager** - Min/max zoom limits
+- **Auto-Follow Mode** - Optional camera tracking of current action
+- **Camera Reset Handler** - Spacebar or button to recenter view
+- **Camera Easing System** - Smooth transitions, no jarring jumps
+
+### Performance Optimization
+- **Sprite Pool Manager** - Reuse sprites for effects
+- **Texture Atlas Manager** - Combine textures for batching
 - **Frustum Culler** - Skip off-screen rendering
-- **LOD Manager** - Reduce quality for distant units
+- **LOD Manager** - Reduce animation quality for distant units
 - **Render Stats Collector** - FPS, draw calls, profiling
+- **Delta Compression Optimizer** - Minimize bandwidth with delta updates
 
-### UI Overlays
+### UI Overlays & HUD
 - **Battlefield HUD** - Round timer, score, round number
-- **Unit Selection Panel** - Click unit to see stats
+- **Unit Selection Panel** - Click unit to see stats/abilities
+- **Combat Log Renderer** - Scrolling event feed (Priority 4, optional)
 - **Victory/Defeat Overlay** - Full-screen announcements
+- **Pause/Reconnection Overlay** - Waiting states
+
+### Battle Pacing System
+- **120-Second Timer** - Enforce 2-minute battle duration
+- **Timeout Resolution Handler** - Resolve battles that exceed time limit
 
 ---
 
@@ -636,4 +806,34 @@ class StateUpdateProcessor {
 
 ---
 
-*This document defines the client-side rendering and animation synchronization system. Ready for L3 feature breakdown and task definition.*
+## Change Log
+
+### Version 1.1 (2025-10-05) - Refinement Complete
+
+**Major Updates:**
+1. Added "AI-Driven Creature Stats" section explaining stat assignment during generation
+2. Updated "State Update Processing" with 60/sec rate, delta compression, 100ms buffer
+3. Updated "Animation State Machine" with timestamp-based synchronization (±100ms)
+4. Added "Multi-Directional Sprite Integration" section (6 directions, crossfade)
+5. Updated "Visual Feedback & Polish" with 4-tier priority system
+6. Added "Camera Control System" section (full player control + optional auto-follow)
+7. Resolved ALL 12 open questions with final technical decisions
+8. Updated "Success Criteria" to reflect MVP scope (8v8, 30+ FPS, 120s battles)
+9. Expanded L3 feature candidates with refined subsystems
+10. Added timestamp-based animation sync pseudocode to technical examples
+
+**Key Technical Decisions:**
+- 60 updates/sec with delta compression (only changed fields)
+- 100ms client-side buffer for smooth interpolation
+- Timestamp-based animation sync with ±100ms tolerance
+- 6-directional sprites with 100-200ms crossfade transitions
+- Full player camera control (pan/zoom) with optional auto-follow
+- 120-second battle duration (2 minutes)
+- MVP scope: 8v8 (16 units) at 30+ FPS
+- All visual feedback prioritized (P1-P4) for phased implementation
+
+**Status:** Ready for L3 feature breakdown and task definition.
+
+---
+
+*This document defines the client-side rendering and animation synchronization system for the Battle Engine. All open questions have been resolved, and the epic is ready for L3 feature decomposition.*
