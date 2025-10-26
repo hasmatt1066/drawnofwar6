@@ -65,6 +65,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  /**
+   * Get current user's ID token
+   */
+  const getIdToken = async (): Promise<string | null> => {
+    // Handle demo mode
+    if (user?.uid === 'demo-player1') {
+      return 'demo-player1';
+    }
+
+    if (!auth.currentUser) return null;
+    return await auth.currentUser.getIdToken();
+  };
+
+  // Set up global auth token function for Socket.IO and API clients
+  useEffect(() => {
+    // Expose getIdToken globally for battle-api and lobby-socket
+    (window as any).__getAuthToken = async () => {
+      const token = await getIdToken();
+      if (!token) {
+        throw new Error('Authentication token not available');
+      }
+      return token;
+    };
+
+    return () => {
+      // Clean up on unmount
+      delete (window as any).__getAuthToken;
+    };
+  }, [user]);
+
   // Listen to auth state changes
   useEffect(() => {
     // Check for persisted demo user first
@@ -167,19 +197,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // For demo mode, manually clear user state
       setUser(null);
     }
-  };
-
-  /**
-   * Get current user's ID token
-   */
-  const getIdToken = async (): Promise<string | null> => {
-    // Handle demo mode
-    if (user?.uid === 'demo-player1') {
-      return 'demo-player1';
-    }
-
-    if (!auth.currentUser) return null;
-    return await auth.currentUser.getIdToken();
   };
 
   /**

@@ -239,16 +239,22 @@ describe('AuthContext', () => {
       // Arrange
       mockSignOut.mockResolvedValue(undefined);
 
+      const mockUser: any = {
+        uid: 'user-123',
+        email: 'test@example.com',
+        displayName: 'Test User',
+        getIdToken: mockGetIdToken.mockResolvedValue('token')
+      };
+
       // Start with signed-in user
       mockOnAuthStateChanged.mockImplementation((auth, callback) => {
-        callback({
-          uid: 'user-123',
-          email: 'test@example.com',
-          displayName: 'Test User',
-          getIdToken: mockGetIdToken.mockResolvedValue('token')
-        });
+        callback(mockUser);
         return vi.fn();
       });
+
+      // Mock auth.currentUser
+      const { auth } = await import('../../config/firebase');
+      (auth as any).currentUser = mockUser;
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: AuthProvider
