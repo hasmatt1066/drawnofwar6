@@ -16,6 +16,8 @@ import {
   BattleAlreadyFilledError,
   CannotJoinOwnBattleError
 } from '../services/battle-api-errors';
+import { useLobbySocket } from '../hooks/useLobbySocket';
+import type { LobbyBattle } from '../services/lobby-socket';
 
 export function BattleLobbyPage() {
   const navigate = useNavigate();
@@ -28,6 +30,11 @@ export function BattleLobbyPage() {
   const [joinError, setJoinError] = useState<string | null>(null);
   const [isQuickPlaying, setIsQuickPlaying] = useState(false);
   const [quickPlayError, setQuickPlayError] = useState<string | null>(null);
+  const [joiningBattleId, setJoiningBattleId] = useState<string | null>(null);
+  const [listJoinError, setListJoinError] = useState<string | null>(null);
+
+  // Connect to lobby socket for real-time battle list
+  const { battles, isConnected, error: socketError } = useLobbySocket();
 
   /**
    * Quick Play - Auto-match or create battle
@@ -141,6 +148,43 @@ export function BattleLobbyPage() {
         setJoinError(error.message);
       } else {
         setJoinError('Failed to join battle. Please try again.');
+      }
+    }
+  }
+
+  /**
+   * Join Battle from List
+   * Handles clicking a battle card in the lobby
+   */
+  async function handleJoinFromList(battle: LobbyBattle) {
+    setJoiningBattleId(battle.battleId);
+    setListJoinError(null);
+
+    try {
+      const result = await joinBattleByKey(battle.battleKey);
+
+      // Success - navigate to deployment page
+      navigate(`/deployment?matchId=${result.matchId}&playerId=${result.playerId}`);
+
+      // Clean up state
+      setJoiningBattleId(null);
+      setListJoinError(null);
+    } catch (error) {
+      setJoiningBattleId(null);
+
+      // Handle specific error types
+      if (error instanceof BattleNotFoundError) {
+        setListJoinError(error.message);
+      } else if (error instanceof BattleAlreadyFilledError) {
+        setListJoinError(error.message);
+      } else if (error instanceof CannotJoinOwnBattleError) {
+        setListJoinError(error.message);
+      } else if (error instanceof InsufficientCreaturesError) {
+        setListJoinError(error.message);
+      } else if (error instanceof Error) {
+        setListJoinError(error.message);
+      } else {
+        setListJoinError('Failed to join battle. Please try again.');
       }
     }
   }
@@ -322,7 +366,7 @@ export function BattleLobbyPage() {
         </div>
       </div>
 
-      {/* Browse Battles - Placeholder */}
+      {/* Browse Open Battles */}
       <div style={{
         padding: '2rem',
         backgroundColor: '#ffffff',
@@ -330,19 +374,159 @@ export function BattleLobbyPage() {
         borderRadius: '8px',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
       }}>
-        <h2 style={{ marginBottom: '1rem' }}>🔍 Browse Open Battles</h2>
+        {/* Header with connection status */}
         <div style={{
-          textAlign: 'center',
-          padding: '3rem',
-          color: '#6b7280'
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1rem'
         }}>
-          <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>
-            No open battles available
-          </p>
-          <p style={{ fontSize: '0.9rem' }}>
-            Use Quick Play or Create a new battle to get started
-          </p>
+          <h2 style={{ margin: 0 }}>🔍 Browse Open Battles</h2>
+          <div style={{
+            fontSize: '0.85rem',
+            padding: '0.25rem 0.75rem',
+            borderRadius: '12px',
+            backgroundColor: isConnected ? '#d1fae5' : '#fee2e2',
+            color: isConnected ? '#065f46' : '#991b1b'
+          }}>
+            {isConnected ? 'Connected' : 'Disconnected'}
+          </div>
         </div>
+
+        {/* Socket error */}
+        {socketError && (
+          <div style={{
+            marginBottom: '1rem',
+            padding: '0.75rem',
+            backgroundColor: '#fee2e2',
+            borderLeft: '4px solid #ef4444',
+            borderRadius: '4px',
+            color: '#991b1b',
+            fontSize: '0.9rem'
+          }}>
+            {socketError}
+          </div>
+        )}
+
+        {/* List join error */}
+        {listJoinError && (
+          <div style={{
+            marginBottom: '1rem',
+            padding: '0.75rem',
+            backgroundColor: '#fee2e2',
+            borderLeft: '4px solid #ef4444',
+            borderRadius: '4px',
+            color: '#991b1b',
+            fontSize: '0.9rem'
+          }}>
+            {listJoinError}
+          </div>
+        )}
+
+        {/* Battle count */}
+        {battles.length > 0 && (
+          <p style={{
+            color: '#6b7280',
+            marginBottom: '1.5rem',
+            fontSize: '0.9rem'
+          }}>
+            {battles.length} {battles.length === 1 ? 'battle' : 'battles'} available
+          </p>
+        )}
+
+        {/* Battle list or empty state */}
+        {battles.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '3rem',
+            color: '#6b7280'
+          }}>
+            <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>
+              No open battles available
+            </p>
+            <p style={{ fontSize: '0.9rem' }}>
+              Use Quick Play or Create a new battle to get started
+            </p>
+          </div>
+        ) : (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gap: '1rem'
+          }}>
+            {battles.map((battle) => {
+              const isJoiningThis = joiningBattleId === battle.battleId;
+              return (
+                <div
+                  key={battle.battleId}
+                  role="button"
+                  aria-disabled={isJoiningThis}
+                  onClick={() => {
+                    if (!isJoiningThis) {
+                      handleJoinFromList(battle);
+                    }
+                  }}
+                  style={{
+                    padding: '1.5rem',
+                    backgroundColor: isJoiningThis ? '#f3f4f6' : '#ffffff',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '8px',
+                    cursor: isJoiningThis ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                    opacity: isJoiningThis ? 0.6 : 1
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isJoiningThis) {
+                      e.currentTarget.style.borderColor = '#6366f1';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isJoiningThis) {
+                      e.currentTarget.style.borderColor = '#e5e7eb';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }
+                  }}
+                >
+                  {/* Battle name */}
+                  <h3 style={{
+                    margin: '0 0 0.5rem 0',
+                    fontSize: '1.1rem',
+                    fontWeight: 'bold',
+                    color: '#111827'
+                  }}>
+                    {battle.battleName}
+                  </h3>
+
+                  {/* Host info */}
+                  <p style={{
+                    margin: '0 0 0.75rem 0',
+                    fontSize: '0.9rem',
+                    color: '#6b7280'
+                  }}>
+                    Hosted by {battle.players.host.displayName}
+                  </p>
+
+                  {/* Battle key */}
+                  <div style={{
+                    display: 'inline-block',
+                    padding: '0.25rem 0.75rem',
+                    backgroundColor: '#f3f4f6',
+                    borderRadius: '6px',
+                    fontFamily: 'monospace',
+                    fontSize: '0.9rem',
+                    fontWeight: 'bold',
+                    color: '#374151'
+                  }}>
+                    {battle.battleKey}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Create Battle Modal */}

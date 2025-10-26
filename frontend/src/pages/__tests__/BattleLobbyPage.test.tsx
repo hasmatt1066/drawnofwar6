@@ -18,6 +18,8 @@ import {
   BattleAlreadyFilledError,
   CannotJoinOwnBattleError
 } from '../../services/battle-api-errors';
+import * as useLobbySocketModule from '../../hooks/useLobbySocket';
+import type { LobbyBattle } from '../../services/lobby-socket';
 
 // Mock react-router-dom navigate
 const mockNavigate = vi.fn();
@@ -32,6 +34,9 @@ vi.mock('react-router-dom', async () => {
 // Mock battle API
 vi.mock('../../services/battle-api');
 
+// Mock useLobbySocket hook
+vi.mock('../../hooks/useLobbySocket');
+
 // Helper to render with router
 function renderWithRouter(component: React.ReactElement) {
   return render(
@@ -45,6 +50,13 @@ describe('BattleLobbyPage - Create Battle Integration', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
     vi.clearAllMocks();
+
+    // Mock useLobbySocket hook with default values
+    vi.spyOn(useLobbySocketModule, 'useLobbySocket').mockReturnValue({
+      battles: [],
+      isConnected: true,
+      error: null
+    });
   });
 
   afterEach(() => {
@@ -655,6 +667,491 @@ describe('BattleLobbyPage - Create Battle Integration', () => {
       await user.click(quickPlayButton);
 
       expect(await screen.findByText(/failed to connect to server/i)).toBeInTheDocument();
+    });
+  });
+});
+
+describe('BattleLobbyPage - Real-time Battle List Integration', () => {
+  beforeEach(() => {
+    mockNavigate.mockClear();
+    vi.clearAllMocks();
+
+    // Default mock: no battles, connected, no error
+    vi.spyOn(useLobbySocketModule, 'useLobbySocket').mockReturnValue({
+      battles: [],
+      isConnected: true,
+      error: null
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  describe('Battle List Display', () => {
+    it('should display empty state when no battles are available', () => {
+      vi.spyOn(useLobbySocketModule, 'useLobbySocket').mockReturnValue({
+        battles: [],
+        isConnected: true,
+        error: null
+      });
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      expect(screen.getByText(/no open battles available/i)).toBeInTheDocument();
+      expect(screen.getByText(/use quick play or create a new battle/i)).toBeInTheDocument();
+    });
+
+    it('should display list of open battles', () => {
+      const mockBattles: LobbyBattle[] = [
+        {
+          battleId: 'b1',
+          battleKey: 'ABC123',
+          battleName: 'Epic Showdown',
+          status: 'waiting',
+          isPublic: true,
+          players: {
+            host: {
+              userId: 'user1',
+              displayName: 'Player One',
+              joinedAt: new Date().toISOString()
+            }
+          },
+          createdAt: new Date().toISOString()
+        },
+        {
+          battleId: 'b2',
+          battleKey: 'XYZ789',
+          battleName: 'Quick Match',
+          status: 'waiting',
+          isPublic: true,
+          players: {
+            host: {
+              userId: 'user2',
+              displayName: 'Player Two',
+              joinedAt: new Date().toISOString()
+            }
+          },
+          createdAt: new Date().toISOString()
+        }
+      ];
+
+      vi.spyOn(useLobbySocketModule, 'useLobbySocket').mockReturnValue({
+        battles: mockBattles,
+        isConnected: true,
+        error: null
+      });
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      expect(screen.getByText('Epic Showdown')).toBeInTheDocument();
+      expect(screen.getByText('Quick Match')).toBeInTheDocument();
+      expect(screen.getByText(/hosted by player one/i)).toBeInTheDocument();
+      expect(screen.getByText(/hosted by player two/i)).toBeInTheDocument();
+    });
+
+    it('should display battle keys in battle cards', () => {
+      const mockBattles: LobbyBattle[] = [
+        {
+          battleId: 'b1',
+          battleKey: 'ABC123',
+          battleName: 'Test Battle',
+          status: 'waiting',
+          isPublic: true,
+          players: {
+            host: {
+              userId: 'user1',
+              displayName: 'Host Player',
+              joinedAt: new Date().toISOString()
+            }
+          },
+          createdAt: new Date().toISOString()
+        }
+      ];
+
+      vi.spyOn(useLobbySocketModule, 'useLobbySocket').mockReturnValue({
+        battles: mockBattles,
+        isConnected: true,
+        error: null
+      });
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      expect(screen.getByText(/ABC123/)).toBeInTheDocument();
+    });
+
+    it('should display battle count', () => {
+      const mockBattles: LobbyBattle[] = [
+        {
+          battleId: 'b1',
+          battleKey: 'ABC123',
+          battleName: 'Battle 1',
+          status: 'waiting',
+          isPublic: true,
+          players: {
+            host: {
+              userId: 'user1',
+              displayName: 'Player One',
+              joinedAt: new Date().toISOString()
+            }
+          },
+          createdAt: new Date().toISOString()
+        },
+        {
+          battleId: 'b2',
+          battleKey: 'XYZ789',
+          battleName: 'Battle 2',
+          status: 'waiting',
+          isPublic: true,
+          players: {
+            host: {
+              userId: 'user2',
+              displayName: 'Player Two',
+              joinedAt: new Date().toISOString()
+            }
+          },
+          createdAt: new Date().toISOString()
+        }
+      ];
+
+      vi.spyOn(useLobbySocketModule, 'useLobbySocket').mockReturnValue({
+        battles: mockBattles,
+        isConnected: true,
+        error: null
+      });
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      expect(screen.getByText(/2.*battles?.*available/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('Connection Status', () => {
+    it('should show connected status when socket is connected', () => {
+      vi.spyOn(useLobbySocketModule, 'useLobbySocket').mockReturnValue({
+        battles: [],
+        isConnected: true,
+        error: null
+      });
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      expect(screen.getByText(/connected/i)).toBeInTheDocument();
+    });
+
+    it('should show disconnected status when socket is not connected', () => {
+      vi.spyOn(useLobbySocketModule, 'useLobbySocket').mockReturnValue({
+        battles: [],
+        isConnected: false,
+        error: null
+      });
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      expect(screen.getByText(/disconnected/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should display error message when socket connection fails', () => {
+      vi.spyOn(useLobbySocketModule, 'useLobbySocket').mockReturnValue({
+        battles: [],
+        isConnected: false,
+        error: 'Failed to connect to lobby server'
+      });
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      expect(screen.getByText(/failed to connect to lobby server/i)).toBeInTheDocument();
+    });
+
+    it('should display error message when authentication fails', () => {
+      vi.spyOn(useLobbySocketModule, 'useLobbySocket').mockReturnValue({
+        battles: [],
+        isConnected: false,
+        error: 'Authentication token not available'
+      });
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      expect(screen.getByText(/authentication token not available/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('Battle Card Interactions', () => {
+    it('should call joinBattleByKey when battle card is clicked', async () => {
+      const user = userEvent.setup();
+      const mockBattles: LobbyBattle[] = [
+        {
+          battleId: 'b1',
+          battleKey: 'ABC123',
+          battleName: 'Clickable Battle',
+          status: 'waiting',
+          isPublic: true,
+          players: {
+            host: {
+              userId: 'user1',
+              displayName: 'Host Player',
+              joinedAt: new Date().toISOString()
+            }
+          },
+          createdAt: new Date().toISOString()
+        }
+      ];
+
+      vi.spyOn(useLobbySocketModule, 'useLobbySocket').mockReturnValue({
+        battles: mockBattles,
+        isConnected: true,
+        error: null
+      });
+
+      const mockJoinBattleByKey = vi.fn().mockResolvedValue({
+        success: true,
+        battleId: 'b1',
+        matchId: 'match-123',
+        playerId: 'player2'
+      });
+
+      vi.spyOn(battleApi, 'joinBattleByKey').mockImplementation(mockJoinBattleByKey);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      // Click the battle card (using battle name as identifier)
+      const battleCard = screen.getByText('Clickable Battle').closest('div[role="button"]');
+      expect(battleCard).toBeInTheDocument();
+
+      await user.click(battleCard!);
+
+      expect(mockJoinBattleByKey).toHaveBeenCalledWith('ABC123');
+    });
+
+    it('should navigate to deployment after successfully joining from battle list', async () => {
+      const user = userEvent.setup();
+      const mockBattles: LobbyBattle[] = [
+        {
+          battleId: 'b1',
+          battleKey: 'ABC123',
+          battleName: 'Test Battle',
+          status: 'waiting',
+          isPublic: true,
+          players: {
+            host: {
+              userId: 'user1',
+              displayName: 'Host Player',
+              joinedAt: new Date().toISOString()
+            }
+          },
+          createdAt: new Date().toISOString()
+        }
+      ];
+
+      vi.spyOn(useLobbySocketModule, 'useLobbySocket').mockReturnValue({
+        battles: mockBattles,
+        isConnected: true,
+        error: null
+      });
+
+      const mockJoinBattleByKey = vi.fn().mockResolvedValue({
+        success: true,
+        battleId: 'b1',
+        matchId: 'match-456',
+        playerId: 'player2'
+      });
+
+      vi.spyOn(battleApi, 'joinBattleByKey').mockImplementation(mockJoinBattleByKey);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const battleCard = screen.getByText('Test Battle').closest('div[role="button"]');
+      await user.click(battleCard!);
+
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/deployment?matchId=match-456&playerId=player2');
+      });
+    });
+
+    it('should show error when joining battle from list fails', async () => {
+      const user = userEvent.setup();
+      const mockBattles: LobbyBattle[] = [
+        {
+          battleId: 'b1',
+          battleKey: 'ABC123',
+          battleName: 'Full Battle',
+          status: 'waiting',
+          isPublic: true,
+          players: {
+            host: {
+              userId: 'user1',
+              displayName: 'Host Player',
+              joinedAt: new Date().toISOString()
+            }
+          },
+          createdAt: new Date().toISOString()
+        }
+      ];
+
+      vi.spyOn(useLobbySocketModule, 'useLobbySocket').mockReturnValue({
+        battles: mockBattles,
+        isConnected: true,
+        error: null
+      });
+
+      const mockJoinBattleByKey = vi.fn().mockRejectedValue(
+        new BattleAlreadyFilledError('This battle has already started or is full')
+      );
+
+      vi.spyOn(battleApi, 'joinBattleByKey').mockImplementation(mockJoinBattleByKey);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const battleCard = screen.getByText('Full Battle').closest('div[role="button"]');
+      await user.click(battleCard!);
+
+      expect(await screen.findByText(/already started or is full/i)).toBeInTheDocument();
+    });
+
+    it('should disable battle cards during join operation', async () => {
+      const user = userEvent.setup();
+      const mockBattles: LobbyBattle[] = [
+        {
+          battleId: 'b1',
+          battleKey: 'ABC123',
+          battleName: 'Test Battle',
+          status: 'waiting',
+          isPublic: true,
+          players: {
+            host: {
+              userId: 'user1',
+              displayName: 'Host Player',
+              joinedAt: new Date().toISOString()
+            }
+          },
+          createdAt: new Date().toISOString()
+        }
+      ];
+
+      vi.spyOn(useLobbySocketModule, 'useLobbySocket').mockReturnValue({
+        battles: mockBattles,
+        isConnected: true,
+        error: null
+      });
+
+      let resolveJoin: any;
+      const mockJoinBattleByKey = vi.fn().mockImplementation(() =>
+        new Promise((resolve) => {
+          resolveJoin = resolve;
+        })
+      );
+
+      vi.spyOn(battleApi, 'joinBattleByKey').mockImplementation(mockJoinBattleByKey);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const battleCard = screen.getByText('Test Battle').closest('div[role="button"]');
+      await user.click(battleCard!);
+
+      // Battle card should be disabled during join
+      expect(battleCard).toHaveAttribute('aria-disabled', 'true');
+
+      // Clean up
+      resolveJoin({
+        success: true,
+        battleId: 'b1',
+        matchId: 'match-1',
+        playerId: 'player2'
+      });
+    });
+  });
+
+  describe('Real-time Updates', () => {
+    it('should update battle list when new battles are added', () => {
+      const { rerender } = renderWithRouter(<BattleLobbyPage />);
+
+      // Initially no battles
+      vi.spyOn(useLobbySocketModule, 'useLobbySocket').mockReturnValue({
+        battles: [],
+        isConnected: true,
+        error: null
+      });
+
+      expect(screen.getByText(/no open battles available/i)).toBeInTheDocument();
+
+      // New battle added
+      const newBattle: LobbyBattle = {
+        battleId: 'b1',
+        battleKey: 'ABC123',
+        battleName: 'New Battle',
+        status: 'waiting',
+        isPublic: true,
+        players: {
+          host: {
+            userId: 'user1',
+            displayName: 'New Host',
+            joinedAt: new Date().toISOString()
+          }
+        },
+        createdAt: new Date().toISOString()
+      };
+
+      vi.spyOn(useLobbySocketModule, 'useLobbySocket').mockReturnValue({
+        battles: [newBattle],
+        isConnected: true,
+        error: null
+      });
+
+      rerender(
+        <BrowserRouter>
+          <BattleLobbyPage />
+        </BrowserRouter>
+      );
+
+      expect(screen.getByText('New Battle')).toBeInTheDocument();
+      expect(screen.queryByText(/no open battles available/i)).not.toBeInTheDocument();
+    });
+
+    it('should update battle list when battles are removed', () => {
+      const battle: LobbyBattle = {
+        battleId: 'b1',
+        battleKey: 'ABC123',
+        battleName: 'Temporary Battle',
+        status: 'waiting',
+        isPublic: true,
+        players: {
+          host: {
+            userId: 'user1',
+            displayName: 'Host',
+            joinedAt: new Date().toISOString()
+          }
+        },
+        createdAt: new Date().toISOString()
+      };
+
+      // Initially has battle
+      vi.spyOn(useLobbySocketModule, 'useLobbySocket').mockReturnValue({
+        battles: [battle],
+        isConnected: true,
+        error: null
+      });
+
+      const { rerender } = renderWithRouter(<BattleLobbyPage />);
+
+      expect(screen.getByText('Temporary Battle')).toBeInTheDocument();
+
+      // Battle removed
+      vi.spyOn(useLobbySocketModule, 'useLobbySocket').mockReturnValue({
+        battles: [],
+        isConnected: true,
+        error: null
+      });
+
+      rerender(
+        <BrowserRouter>
+          <BattleLobbyPage />
+        </BrowserRouter>
+      );
+
+      expect(screen.queryByText('Temporary Battle')).not.toBeInTheDocument();
+      expect(screen.getByText(/no open battles available/i)).toBeInTheDocument();
     });
   });
 });
