@@ -2,8 +2,9 @@
 
 **Epic**: Matchmaking & Session Management
 **Feature ID**: LOBBY-001
-**Status**: Planning
+**Status**: Partially Implemented
 **Created**: 2025-10-25
+**Last Updated**: 2025-01-25
 
 ---
 
@@ -24,16 +25,20 @@ Implement a real-time battle lobby system that allows players to create public/p
 ## Acceptance Criteria
 
 ### Must Have (MVP)
-- [ ] Players can create new battles (with user-entered name)
-- [ ] Battles default to public (with toggle for private)
-- [ ] Each battle gets a unique 6-character battle key
-- [ ] Players can join battles by entering battle key
-- [ ] Players can browse list of open public battles
-- [ ] Quick Play auto-matches or creates public battle
-- [ ] Battle list updates in real-time as games fill/start
-- [ ] Only players with 3+ creatures can create/join battles
-- [ ] Players can only be in one active battle at a time
-- [ ] Battle transitions to deployment when second player joins
+- [ ] Players can create new battles (with user-entered name) - UI implemented, API pending
+- [ ] Battles default to public (with toggle for private) - UI implemented, API pending
+- [ ] Each battle gets a unique 6-character battle key - Pending
+- [ ] Players can join battles by entering battle key - UI implemented, API pending
+- [ ] Players can browse list of open public battles - Pending
+- [ ] Quick Play auto-matches or creates public battle - Pending
+- [ ] Battle list updates in real-time as games fill/start - Pending
+- [ ] Only players with 3+ creatures can create/join battles - Pending
+- [ ] Players can only be in one active battle at a time - Pending
+- [ ] Battle transitions to deployment when second player joins - Pending
+
+**Implementation Status**:
+- ✅ Implemented: UI components for battle creation, join by key input
+- ⏳ Pending: All backend API endpoints, battle key generation, matchmaking logic, Socket.IO lobby namespace
 
 ### Should Have (Post-MVP)
 - [ ] Battle settings (time limits, creature limits, ranked vs casual)

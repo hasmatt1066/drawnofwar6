@@ -2,8 +2,9 @@
 
 **Epic**: Matchmaking & Session Management
 **Feature ID**: STATS-001
-**Status**: Planning
+**Status**: Partially Implemented
 **Created**: 2025-10-25
+**Last Updated**: 2025-01-25
 
 ---
 
@@ -24,15 +25,19 @@ Implement a reliable stats tracking system that persists battle results, updates
 ## Acceptance Criteria
 
 ### Must Have (MVP)
-- [ ] Battle results persisted to Firestore after combat completes
-- [ ] Player stats updated atomically (no race conditions)
-- [ ] Win/loss counters increment correctly
-- [ ] Win streak tracking (current and best)
-- [ ] Battle history stored per user (subcollection)
-- [ ] Stats update via BullMQ queue (fault tolerant with retries)
-- [ ] Disconnects tracked separately from losses
-- [ ] Stats API returns current user stats
-- [ ] Battle history API with pagination
+- [ ] Battle results persisted to Firestore after combat completes - Pending
+- [ ] Player stats updated atomically (no race conditions) - Pending
+- [ ] Win/loss counters increment correctly - Pending
+- [ ] Win streak tracking (current and best) - Pending
+- [ ] Battle history stored per user (subcollection) - Pending
+- [ ] Stats update via BullMQ queue (fault tolerant with retries) - Pending
+- [ ] Disconnects tracked separately from losses - Pending
+- [x] Stats API returns current user stats - Implemented
+- [ ] Battle history API with pagination - Pending
+
+**Implementation Status**:
+- ✅ Implemented: User profile creation with stats initialization, GET /api/users/me/profile endpoint
+- ⏳ Pending: Battle result processing queue, stats update logic, battle history subcollections, win streak calculations
 
 ### Should Have (Post-MVP)
 - [ ] Per-creature stats (most wins, highest damage, etc.)

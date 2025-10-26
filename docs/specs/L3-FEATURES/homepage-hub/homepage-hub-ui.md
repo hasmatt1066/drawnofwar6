@@ -2,8 +2,9 @@
 
 **Epic**: Matchmaking & Session Management
 **Feature ID**: HOME-001
-**Status**: Planning
+**Status**: Partially Implemented
 **Created**: 2025-10-25
+**Last Updated**: 2025-01-25
 
 ---
 
@@ -24,18 +25,22 @@ Create a persistent homepage hub that serves as the central navigation point aft
 ## Acceptance Criteria
 
 ### Must Have (MVP)
-- [ ] Homepage displays at `/home` after successful login
-- [ ] Persistent navigation bar appears on all pages
-- [ ] Four main sections visible without scrolling:
-  - Battle stats (wins, losses, win rate, streak)
-  - Quick actions (Quick Play, Browse Games, Create Battle, Join by Key)
-  - Creature gallery preview (6 most recent creatures)
-  - User menu (profile, logout)
-- [ ] Empty states for users with no creatures
-- [ ] Empty states for users with no battle history
-- [ ] Responsive layout (desktop + mobile)
-- [ ] Clicking creature card navigates to `/creatures/:id`
-- [ ] All navigation links work correctly
+- [x] Homepage displays at `/home` after successful login
+- [x] Persistent navigation bar appears on all pages
+- [x] Four main sections visible without scrolling:
+  - [x] Battle stats (wins, losses, win rate, streak)
+  - [ ] Quick actions (Quick Play, Browse Games, Create Battle, Join by Key) - UI implemented, backend pending
+  - [ ] Creature gallery preview (6 most recent creatures) - Pending
+  - [x] User menu (profile, logout)
+- [ ] Empty states for users with no creatures - Pending
+- [x] Empty states for users with no battle history
+- [x] Responsive layout (desktop + mobile)
+- [ ] Clicking creature card navigates to `/creatures/:id` - Pending creature gallery
+- [x] All navigation links work correctly
+
+**Implementation Status**:
+- ✅ Implemented: HomePage component, NavBar, StatsCard, routing
+- ⏳ Pending: Quick actions backend integration (battle creation API), creature gallery preview, empty states for creatures
 
 ### Should Have (Post-MVP)
 - [ ] Recent battle history on homepage

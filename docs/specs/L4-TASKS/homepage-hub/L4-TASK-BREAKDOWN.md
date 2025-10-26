@@ -26,25 +26,28 @@ Each task is designed to be:
 
 ## PHASE 1: Firebase Auth Integration (Week 1)
 
+**Status**: ✅ Completed (2025-01-25)
 **Dependencies**: None (foundation layer)
 **Estimated Time**: 5 days (8 tasks)
+**Test Coverage**: 77 passing tests
 
 ---
 
-### L4-AUTH-001: Backend Auth Middleware
+### L4-AUTH-001: Backend Auth Middleware ✅
 
+**Status**: Completed
 **Description**: Implement Firebase token verification middleware for backend API routes
 
 **User Story**: As a backend developer, I want to verify Firebase ID tokens on protected routes so that only authenticated users can access them.
 
 **Acceptance Criteria**:
-- [ ] Middleware extracts Bearer token from Authorization header
-- [ ] Middleware verifies token using Firebase Admin SDK
-- [ ] Valid token → sets req.user with { uid, email, displayName }
-- [ ] Invalid token → returns 401 with error message
-- [ ] Missing token → returns 401 with error message
-- [ ] Demo accounts ('demo-player1', 'demo-player2') bypass verification for testing
-- [ ] All unit tests pass (100% coverage)
+- [x] Middleware extracts Bearer token from Authorization header
+- [x] Middleware verifies token using Firebase Admin SDK
+- [x] Valid token → sets req.user with { uid, email, displayName }
+- [x] Invalid token → returns 401 with error message
+- [x] Missing token → returns 401 with error message
+- [x] Demo accounts ('demo-player1', 'demo-player2') bypass verification for testing
+- [x] All unit tests pass (100% coverage)
 
 **Test Cases**:
 ```typescript
@@ -90,21 +93,22 @@ describe('authenticate middleware', () => {
 
 ---
 
-### L4-AUTH-002: User Profile Creation Endpoint
+### L4-AUTH-002: User Profile Creation Endpoint ✅
 
+**Status**: Completed
 **Description**: API endpoint to create user profile in Firestore after Firebase registration
 
 **User Story**: As a new user, I want my profile automatically created when I register so that my stats and data are tracked.
 
 **Acceptance Criteria**:
-- [ ] POST /api/users/profile endpoint exists
-- [ ] Requires authentication (uses auth middleware)
-- [ ] Creates document at `users/{userId}/profile` in Firestore
-- [ ] Initializes stats to zero (wins, losses, totalBattles, streaks)
-- [ ] Stores displayName, email, createdAt, lastLoginAt
-- [ ] Returns 201 on success
-- [ ] Returns 400 if profile already exists
-- [ ] All unit tests pass
+- [x] POST /api/users/profile endpoint exists
+- [x] Requires authentication (uses auth middleware)
+- [x] Creates document at `users/{userId}/profile` in Firestore
+- [x] Initializes stats to zero (wins, losses, totalBattles, streaks)
+- [x] Stores displayName, email, createdAt, lastLoginAt
+- [x] Returns 201 on success
+- [x] Returns 400 if profile already exists
+- [x] All unit tests pass
 
 **Test Cases**:
 ```typescript
@@ -150,19 +154,20 @@ describe('POST /api/users/profile', () => {
 
 ---
 
-### L4-AUTH-003: Frontend Firebase Config
+### L4-AUTH-003: Frontend Firebase Config ✅
 
+**Status**: Completed
 **Description**: Initialize Firebase SDK on frontend with environment configuration
 
 **User Story**: As a frontend developer, I want Firebase initialized correctly so that I can use authentication services.
 
 **Acceptance Criteria**:
-- [ ] Firebase app initialized with config from env vars
-- [ ] Auth instance exported for use in app
-- [ ] Emulator connection works in development mode
-- [ ] Config validates required env vars on startup
-- [ ] No errors in console on initialization
-- [ ] Integration test verifies Firebase connection
+- [x] Firebase app initialized with config from env vars
+- [x] Auth instance exported for use in app
+- [x] Emulator connection works in development mode
+- [x] Config validates required env vars on startup
+- [x] No errors in console on initialization
+- [x] Integration test verifies Firebase connection
 
 **Test Cases**:
 ```typescript
@@ -195,20 +200,21 @@ describe('Firebase Config', () => {
 
 ---
 
-### L4-AUTH-004: Auth Context Provider
+### L4-AUTH-004: Auth Context Provider ✅
 
+**Status**: Completed
 **Description**: React context provider for authentication state management
 
 **User Story**: As a frontend developer, I want centralized auth state management so that all components can access user data.
 
 **Acceptance Criteria**:
-- [ ] AuthContext created with TypeScript types
-- [ ] Provides: user, loading, signUp, signIn, signOut, getIdToken
-- [ ] Listens to onAuthStateChanged from Firebase
-- [ ] Token refreshes automatically every 50 minutes
-- [ ] User state updates on login/logout
-- [ ] Loading state managed correctly
-- [ ] All unit tests pass
+- [x] AuthContext created with TypeScript types
+- [x] Provides: user, loading, signUp, signIn, signOut, getIdToken
+- [x] Listens to onAuthStateChanged from Firebase
+- [x] Token refreshes automatically every 50 minutes
+- [x] User state updates on login/logout
+- [x] Loading state managed correctly
+- [x] All unit tests pass
 
 **Test Cases**:
 ```typescript
@@ -259,19 +265,20 @@ describe('AuthProvider', () => {
 
 ---
 
-### L4-AUTH-005: Protected Route Component
+### L4-AUTH-005: Protected Route Component ✅
 
+**Status**: Completed
 **Description**: React component wrapper to protect routes requiring authentication
 
 **User Story**: As a user, I want to be redirected to login when accessing protected pages without being signed in.
 
 **Acceptance Criteria**:
-- [ ] ProtectedRoute component created
-- [ ] Shows loading spinner while checking auth state
-- [ ] Redirects to /login if not authenticated
-- [ ] Preserves intended destination in location state
-- [ ] Renders children if authenticated
-- [ ] All unit tests pass
+- [x] ProtectedRoute component created
+- [x] Shows loading spinner while checking auth state
+- [x] Redirects to /login if not authenticated
+- [x] Preserves intended destination in location state
+- [x] Renders children if authenticated
+- [x] All unit tests pass
 
 **Test Cases**:
 ```typescript
@@ -319,21 +326,22 @@ describe('ProtectedRoute', () => {
 
 ---
 
-### L4-AUTH-006: Login Page UI
+### L4-AUTH-006: Login Page UI ✅
 
+**Status**: Completed
 **Description**: Login page with email/password form
 
 **User Story**: As a user, I want to log in with my email and password so that I can access my account.
 
 **Acceptance Criteria**:
-- [ ] Login form with email and password fields
-- [ ] "Log In" button calls signIn from auth context
-- [ ] Shows error message on invalid credentials
-- [ ] Shows loading state during login
-- [ ] Link to registration page
-- [ ] Redirects to /home on successful login
-- [ ] Form validation (email format, required fields)
-- [ ] All unit tests pass
+- [x] Login form with email and password fields
+- [x] "Log In" button calls signIn from auth context
+- [x] Shows error message on invalid credentials
+- [x] Shows loading state during login
+- [x] Link to registration page
+- [x] Redirects to /home on successful login
+- [x] Form validation (email format, required fields)
+- [x] All unit tests pass
 
 **Test Cases**:
 ```typescript
@@ -384,22 +392,23 @@ describe('LoginPage', () => {
 
 ---
 
-### L4-AUTH-007: Register Page UI
+### L4-AUTH-007: Register Page UI ✅
 
+**Status**: Completed
 **Description**: Registration page with email/password/displayName form
 
 **User Story**: As a new user, I want to create an account so that I can start playing.
 
 **Acceptance Criteria**:
-- [ ] Registration form with displayName, email, password, confirmPassword
-- [ ] "Create Account" button calls signUp from auth context
-- [ ] Password confirmation validation
-- [ ] Shows error messages for validation failures
-- [ ] Shows loading state during registration
-- [ ] Link to login page
-- [ ] Creates user profile after successful registration
-- [ ] Redirects to /home on success
-- [ ] All unit tests pass
+- [x] Registration form with displayName, email, password, confirmPassword
+- [x] "Create Account" button calls signUp from auth context
+- [x] Password confirmation validation
+- [x] Shows error messages for validation failures
+- [x] Shows loading state during registration
+- [x] Link to login page
+- [x] Creates user profile after successful registration
+- [x] Redirects to /home on success
+- [x] All unit tests pass
 
 **Test Cases**:
 ```typescript
@@ -450,19 +459,20 @@ describe('RegisterPage', () => {
 
 ---
 
-### L4-AUTH-008: E2E Auth Flow Test
+### L4-AUTH-008: E2E Auth Flow Test ✅
 
+**Status**: Completed
 **Description**: End-to-end test for complete authentication flow
 
 **User Story**: As a QA tester, I want automated E2E tests for the auth flow so that I can verify it works end-to-end.
 
 **Acceptance Criteria**:
-- [ ] Test registers new user → creates profile → redirects to home
-- [ ] Test logs out → redirects to login
-- [ ] Test logs back in → maintains session
-- [ ] Test protected route access without auth → redirects to login
-- [ ] Test token refresh during long session
-- [ ] All E2E tests pass
+- [x] Test registers new user → creates profile → redirects to home
+- [x] Test logs out → redirects to login
+- [x] Test logs back in → maintains session
+- [x] Test protected route access without auth → redirects to login
+- [x] Test token refresh during long session
+- [x] All E2E tests pass
 
 **Test Cases**:
 ```typescript
