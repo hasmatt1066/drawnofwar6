@@ -8,12 +8,19 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
+import { createBattle } from '../services/battle-api';
+import {
+  InsufficientCreaturesError,
+  ActiveBattleExistsError
+} from '../services/battle-api-errors';
 
 export function BattleLobbyPage() {
   const navigate = useNavigate();
   const [battleKey, setBattleKey] = useState('');
   const [battleName, setBattleName] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   /**
    * Quick Play - Auto-match or create battle
@@ -26,20 +33,42 @@ export function BattleLobbyPage() {
 
   /**
    * Create Battle
-   * TODO: Call POST /api/battles to create battle and get battleKey
+   * Calls API to create battle and navigates to deployment
    */
-  function handleCreateBattle() {
+  async function handleCreateBattle() {
     if (!battleName.trim()) {
-      alert('Please enter a battle name');
+      setCreateError('Please enter a battle name');
       return;
     }
 
-    const matchId = uuidv4();
-    // TODO: Call API to create battle, get battleKey and matchId
-    // For now, just navigate to deployment
-    navigate(`/deployment?matchId=${matchId}&playerId=player1`);
-    setShowCreateModal(false);
-    setBattleName('');
+    setIsCreating(true);
+    setCreateError(null);
+
+    try {
+      const result = await createBattle(battleName, true);
+
+      // Success - navigate to deployment page
+      navigate(`/deployment?matchId=${result.matchId}&playerId=${result.playerId}`);
+
+      // Clean up state
+      setShowCreateModal(false);
+      setBattleName('');
+      setIsCreating(false);
+      setCreateError(null);
+    } catch (error) {
+      setIsCreating(false);
+
+      // Handle specific error types
+      if (error instanceof InsufficientCreaturesError) {
+        setCreateError(error.message);
+      } else if (error instanceof ActiveBattleExistsError) {
+        setCreateError(error.message);
+      } else if (error instanceof Error) {
+        setCreateError(error.message);
+      } else {
+        setCreateError('Failed to create battle. Please try again.');
+      }
+    }
   }
 
   /**
@@ -119,7 +148,10 @@ export function BattleLobbyPage() {
             Host a new battle. You'll get a battle key to share with friends.
           </p>
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => {
+              setShowCreateModal(true);
+              setCreateError(null);
+            }}
             style={{
               width: '100%',
               padding: '1rem',
@@ -250,22 +282,41 @@ export function BattleLobbyPage() {
                 onChange={(e) => setBattleName(e.target.value)}
                 maxLength={50}
                 autoFocus
+                disabled={isCreating}
                 style={{
                   width: '100%',
                   padding: '0.75rem',
                   fontSize: '1rem',
                   border: '2px solid #e5e7eb',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
+                  opacity: isCreating ? 0.5 : 1
                 }}
               />
             </div>
+
+            {/* Error Message */}
+            {createError && (
+              <div style={{
+                marginBottom: '1.5rem',
+                padding: '0.75rem',
+                backgroundColor: '#fee2e2',
+                borderLeft: '4px solid #ef4444',
+                borderRadius: '4px',
+                color: '#991b1b',
+                fontSize: '0.9rem'
+              }}>
+                {createError}
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button
                 onClick={() => {
                   setShowCreateModal(false);
                   setBattleName('');
+                  setCreateError(null);
                 }}
+                disabled={isCreating}
                 style={{
                   flex: 1,
                   padding: '0.75rem',
@@ -274,13 +325,15 @@ export function BattleLobbyPage() {
                   color: '#374151',
                   border: 'none',
                   borderRadius: '8px',
-                  cursor: 'pointer'
+                  cursor: isCreating ? 'not-allowed' : 'pointer',
+                  opacity: isCreating ? 0.5 : 1
                 }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateBattle}
+                disabled={isCreating}
                 style={{
                   flex: 1,
                   padding: '0.75rem',
@@ -290,10 +343,11 @@ export function BattleLobbyPage() {
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
-                  cursor: 'pointer'
+                  cursor: isCreating ? 'not-allowed' : 'pointer',
+                  opacity: isCreating ? 0.7 : 1
                 }}
               >
-                Create
+                {isCreating ? 'Creating...' : 'Create'}
               </button>
             </div>
           </div>
