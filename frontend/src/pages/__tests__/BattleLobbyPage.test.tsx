@@ -13,7 +13,10 @@ import { BattleLobbyPage } from '../BattleLobbyPage';
 import * as battleApi from '../../services/battle-api';
 import {
   InsufficientCreaturesError,
-  ActiveBattleExistsError
+  ActiveBattleExistsError,
+  BattleNotFoundError,
+  BattleAlreadyFilledError,
+  CannotJoinOwnBattleError
 } from '../../services/battle-api-errors';
 
 // Mock react-router-dom navigate
@@ -255,6 +258,231 @@ describe('BattleLobbyPage - Create Battle Integration', () => {
       // Reopen modal - error should be cleared
       await user.click(screen.getByRole('button', { name: /create battle/i }));
       expect(screen.queryByText(/test error/i)).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Join by Key API Integration', () => {
+    it('should call joinBattleByKey API when joining with valid key', async () => {
+      const user = userEvent.setup();
+      const mockJoinBattleByKey = vi.fn().mockResolvedValue({
+        success: true,
+        battleId: 'battle-789',
+        matchId: 'match-999',
+        playerId: 'player2'
+      });
+
+      vi.spyOn(battleApi, 'joinBattleByKey').mockImplementation(mockJoinBattleByKey);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      // Type valid battle key
+      const input = screen.getByPlaceholderText('K3P9X2');
+      await user.type(input, 'ABC123');
+
+      // Click Join button
+      const joinButton = screen.getByRole('button', { name: 'Join' });
+      await user.click(joinButton);
+
+      // Verify API was called with correct key
+      expect(mockJoinBattleByKey).toHaveBeenCalledWith('ABC123');
+    });
+
+    it('should navigate to deployment page on successful join', async () => {
+      const user = userEvent.setup();
+      const mockJoinBattleByKey = vi.fn().mockResolvedValue({
+        success: true,
+        battleId: 'battle-789',
+        matchId: 'match-999',
+        playerId: 'player2'
+      });
+
+      vi.spyOn(battleApi, 'joinBattleByKey').mockImplementation(mockJoinBattleByKey);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const input = screen.getByPlaceholderText('K3P9X2');
+      await user.type(input, 'XYZ789');
+
+      const joinButton = screen.getByRole('button', { name: 'Join' });
+      await user.click(joinButton);
+
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/deployment?matchId=match-999&playerId=player2');
+      });
+    });
+
+    it('should clear battle key input on successful join', async () => {
+      const user = userEvent.setup();
+      const mockJoinBattleByKey = vi.fn().mockResolvedValue({
+        success: true,
+        battleId: 'battle-789',
+        matchId: 'match-999',
+        playerId: 'player2'
+      });
+
+      vi.spyOn(battleApi, 'joinBattleByKey').mockImplementation(mockJoinBattleByKey);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const input = screen.getByPlaceholderText('K3P9X2') as HTMLInputElement;
+      await user.type(input, 'ABC123');
+
+      const joinButton = screen.getByRole('button', { name: 'Join' });
+      await user.click(joinButton);
+
+      await waitFor(() => {
+        expect(input.value).toBe('');
+      });
+    });
+
+    it('should show loading state during join', async () => {
+      const user = userEvent.setup();
+      let resolveJoin: any;
+      const mockJoinBattleByKey = vi.fn().mockImplementation(() =>
+        new Promise((resolve) => {
+          resolveJoin = resolve;
+        })
+      );
+
+      vi.spyOn(battleApi, 'joinBattleByKey').mockImplementation(mockJoinBattleByKey);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const input = screen.getByPlaceholderText('K3P9X2');
+      await user.type(input, 'ABC123');
+
+      const joinButton = screen.getByRole('button', { name: 'Join' });
+      await user.click(joinButton);
+
+      // Should show loading state
+      expect(screen.getByText('Joining...')).toBeInTheDocument();
+
+      // Clean up
+      resolveJoin({
+        success: true,
+        battleId: 'test',
+        matchId: 'match-1',
+        playerId: 'player2'
+      });
+    });
+
+    it('should show error for battle not found', async () => {
+      const user = userEvent.setup();
+      const mockJoinBattleByKey = vi.fn().mockRejectedValue(
+        new BattleNotFoundError('Battle with key ABC123 not found')
+      );
+
+      vi.spyOn(battleApi, 'joinBattleByKey').mockImplementation(mockJoinBattleByKey);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const input = screen.getByPlaceholderText('K3P9X2');
+      await user.type(input, 'ABC123');
+
+      const joinButton = screen.getByRole('button', { name: 'Join' });
+      await user.click(joinButton);
+
+      expect(await screen.findByText(/battle.*not found/i)).toBeInTheDocument();
+    });
+
+    it('should show error for battle already filled', async () => {
+      const user = userEvent.setup();
+      const mockJoinBattleByKey = vi.fn().mockRejectedValue(
+        new BattleAlreadyFilledError('This battle has already started or is full')
+      );
+
+      vi.spyOn(battleApi, 'joinBattleByKey').mockImplementation(mockJoinBattleByKey);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const input = screen.getByPlaceholderText('K3P9X2');
+      await user.type(input, 'FULL01');
+
+      const joinButton = screen.getByRole('button', { name: 'Join' });
+      await user.click(joinButton);
+
+      expect(await screen.findByText(/already started or is full/i)).toBeInTheDocument();
+    });
+
+    it('should show error for trying to join own battle', async () => {
+      const user = userEvent.setup();
+      const mockJoinBattleByKey = vi.fn().mockRejectedValue(
+        new CannotJoinOwnBattleError('You cannot join your own battle')
+      );
+
+      vi.spyOn(battleApi, 'joinBattleByKey').mockImplementation(mockJoinBattleByKey);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const input = screen.getByPlaceholderText('K3P9X2');
+      await user.type(input, 'MINE01');
+
+      const joinButton = screen.getByRole('button', { name: 'Join' });
+      await user.click(joinButton);
+
+      expect(await screen.findByText(/cannot join your own battle/i)).toBeInTheDocument();
+    });
+
+    it('should show error for insufficient creatures', async () => {
+      const user = userEvent.setup();
+      const mockJoinBattleByKey = vi.fn().mockRejectedValue(
+        new InsufficientCreaturesError('You need at least 3 creatures to join a battle')
+      );
+
+      vi.spyOn(battleApi, 'joinBattleByKey').mockImplementation(mockJoinBattleByKey);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const input = screen.getByPlaceholderText('K3P9X2');
+      await user.type(input, 'ABC123');
+
+      const joinButton = screen.getByRole('button', { name: 'Join' });
+      await user.click(joinButton);
+
+      expect(await screen.findByText(/need at least 3 creatures/i)).toBeInTheDocument();
+    });
+
+    it('should show error for network failures', async () => {
+      const user = userEvent.setup();
+      const mockJoinBattleByKey = vi.fn().mockRejectedValue(
+        new Error('Network connection failed')
+      );
+
+      vi.spyOn(battleApi, 'joinBattleByKey').mockImplementation(mockJoinBattleByKey);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const input = screen.getByPlaceholderText('K3P9X2');
+      await user.type(input, 'ABC123');
+
+      const joinButton = screen.getByRole('button', { name: 'Join' });
+      await user.click(joinButton);
+
+      expect(await screen.findByText(/network connection failed/i)).toBeInTheDocument();
+    });
+
+    it('should keep join button disabled for invalid key lengths', async () => {
+      const user = userEvent.setup();
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const joinButton = screen.getByRole('button', { name: 'Join' });
+      const input = screen.getByPlaceholderText('K3P9X2');
+
+      // Initially disabled
+      expect(joinButton).toBeDisabled();
+
+      // Still disabled with less than 6 characters
+      await user.type(input, 'ABC');
+      expect(joinButton).toBeDisabled();
+
+      // Enabled with exactly 6 characters
+      await user.type(input, '123');
+      expect(joinButton).toBeEnabled();
+
+      // Still enabled (input maxLength prevents more than 6)
+      await user.type(input, '7');
+      expect(joinButton).toBeEnabled();
     });
   });
 });

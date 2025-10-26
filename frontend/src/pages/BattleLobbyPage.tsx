@@ -8,10 +8,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { createBattle } from '../services/battle-api';
+import { createBattle, joinBattleByKey } from '../services/battle-api';
 import {
   InsufficientCreaturesError,
-  ActiveBattleExistsError
+  ActiveBattleExistsError,
+  BattleNotFoundError,
+  BattleAlreadyFilledError,
+  CannotJoinOwnBattleError
 } from '../services/battle-api-errors';
 
 export function BattleLobbyPage() {
@@ -21,6 +24,8 @@ export function BattleLobbyPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [isJoining, setIsJoining] = useState(false);
+  const [joinError, setJoinError] = useState<string | null>(null);
 
   /**
    * Quick Play - Auto-match or create battle
@@ -73,19 +78,45 @@ export function BattleLobbyPage() {
 
   /**
    * Join by Battle Key
-   * TODO: Call POST /api/battles/:key/join
+   * Calls API to join battle and navigates to deployment
    */
-  function handleJoinByKey() {
+  async function handleJoinByKey() {
     if (!battleKey.trim() || battleKey.length !== 6) {
-      alert('Please enter a valid 6-character battle key');
+      setJoinError('Please enter a valid 6-character battle key');
       return;
     }
 
-    // TODO: Call API to join battle by key
-    // For now, generate matchId and navigate
-    const matchId = uuidv4();
-    navigate(`/deployment?matchId=${matchId}&playerId=player2`);
-    setBattleKey('');
+    setIsJoining(true);
+    setJoinError(null);
+
+    try {
+      const result = await joinBattleByKey(battleKey);
+
+      // Success - navigate to deployment page
+      navigate(`/deployment?matchId=${result.matchId}&playerId=${result.playerId}`);
+
+      // Clean up state
+      setBattleKey('');
+      setIsJoining(false);
+      setJoinError(null);
+    } catch (error) {
+      setIsJoining(false);
+
+      // Handle specific error types
+      if (error instanceof BattleNotFoundError) {
+        setJoinError(error.message);
+      } else if (error instanceof BattleAlreadyFilledError) {
+        setJoinError(error.message);
+      } else if (error instanceof CannotJoinOwnBattleError) {
+        setJoinError(error.message);
+      } else if (error instanceof InsufficientCreaturesError) {
+        setJoinError(error.message);
+      } else if (error instanceof Error) {
+        setJoinError(error.message);
+      } else {
+        setJoinError('Failed to join battle. Please try again.');
+      }
+    }
   }
 
   return (
@@ -183,13 +214,33 @@ export function BattleLobbyPage() {
           <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
             Enter a 6-character battle key to join a friend's battle.
           </p>
+
+          {/* Error Message */}
+          {joinError && (
+            <div style={{
+              marginBottom: '1rem',
+              padding: '0.75rem',
+              backgroundColor: '#fee2e2',
+              borderLeft: '4px solid #ef4444',
+              borderRadius: '4px',
+              color: '#991b1b',
+              fontSize: '0.9rem'
+            }}>
+              {joinError}
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <input
               type="text"
               placeholder="K3P9X2"
               value={battleKey}
-              onChange={(e) => setBattleKey(e.target.value.toUpperCase())}
+              onChange={(e) => {
+                setBattleKey(e.target.value.toUpperCase());
+                setJoinError(null);
+              }}
               maxLength={6}
+              disabled={isJoining}
               style={{
                 flex: 1,
                 padding: '0.75rem',
@@ -198,24 +249,26 @@ export function BattleLobbyPage() {
                 textAlign: 'center',
                 border: '2px solid #e5e7eb',
                 borderRadius: '8px',
-                textTransform: 'uppercase'
+                textTransform: 'uppercase',
+                opacity: isJoining ? 0.5 : 1
               }}
             />
             <button
               onClick={handleJoinByKey}
-              disabled={battleKey.length !== 6}
+              disabled={battleKey.length !== 6 || isJoining}
               style={{
                 padding: '0.75rem 1.5rem',
                 fontSize: '1.1rem',
                 fontWeight: 'bold',
-                backgroundColor: battleKey.length === 6 ? '#f59e0b' : '#d1d5db',
+                backgroundColor: (battleKey.length === 6 && !isJoining) ? '#f59e0b' : '#d1d5db',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
-                cursor: battleKey.length === 6 ? 'pointer' : 'not-allowed'
+                cursor: (battleKey.length === 6 && !isJoining) ? 'pointer' : 'not-allowed',
+                opacity: isJoining ? 0.7 : 1
               }}
             >
-              Join
+              {isJoining ? 'Joining...' : 'Join'}
             </button>
           </div>
         </div>
