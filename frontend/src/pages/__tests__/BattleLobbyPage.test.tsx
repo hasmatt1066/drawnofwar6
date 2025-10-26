@@ -485,4 +485,176 @@ describe('BattleLobbyPage - Create Battle Integration', () => {
       expect(joinButton).toBeEnabled();
     });
   });
+
+  describe('Quick Play API Integration', () => {
+    it('should call quickPlay API when Quick Play button clicked', async () => {
+      const user = userEvent.setup();
+      const mockQuickPlay = vi.fn().mockResolvedValue({
+        success: true,
+        action: 'joined',
+        battleId: 'battle-123',
+        battleKey: 'ABC123',
+        matchId: 'match-456',
+        playerId: 'player2'
+      });
+
+      vi.spyOn(battleApi, 'quickPlay').mockImplementation(mockQuickPlay);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const quickPlayButton = screen.getByRole('button', { name: /quick play/i });
+      await user.click(quickPlayButton);
+
+      expect(mockQuickPlay).toHaveBeenCalled();
+    });
+
+    it('should navigate to deployment when joining existing battle', async () => {
+      const user = userEvent.setup();
+      const mockQuickPlay = vi.fn().mockResolvedValue({
+        success: true,
+        action: 'joined',
+        battleId: 'battle-123',
+        matchId: 'match-456',
+        playerId: 'player2'
+      });
+
+      vi.spyOn(battleApi, 'quickPlay').mockImplementation(mockQuickPlay);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const quickPlayButton = screen.getByRole('button', { name: /quick play/i });
+      await user.click(quickPlayButton);
+
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/deployment?matchId=match-456&playerId=player2');
+      });
+    });
+
+    it('should navigate to deployment when creating new battle', async () => {
+      const user = userEvent.setup();
+      const mockQuickPlay = vi.fn().mockResolvedValue({
+        success: true,
+        action: 'created',
+        battleId: 'battle-new',
+        battleKey: 'XYZ789',
+        matchId: 'match-789',
+        playerId: 'player1'
+      });
+
+      vi.spyOn(battleApi, 'quickPlay').mockImplementation(mockQuickPlay);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const quickPlayButton = screen.getByRole('button', { name: /quick play/i });
+      await user.click(quickPlayButton);
+
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/deployment?matchId=match-789&playerId=player1');
+      });
+    });
+
+    it('should show loading state during Quick Play', async () => {
+      const user = userEvent.setup();
+      let resolveQuickPlay: any;
+      const mockQuickPlay = vi.fn().mockImplementation(() =>
+        new Promise((resolve) => {
+          resolveQuickPlay = resolve;
+        })
+      );
+
+      vi.spyOn(battleApi, 'quickPlay').mockImplementation(mockQuickPlay);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const quickPlayButton = screen.getByRole('button', { name: /quick play/i });
+      await user.click(quickPlayButton);
+
+      // Should show searching state
+      expect(screen.getByText('Searching...')).toBeInTheDocument();
+
+      // Clean up
+      resolveQuickPlay({
+        success: true,
+        action: 'joined',
+        matchId: 'match-1',
+        playerId: 'player2'
+      });
+    });
+
+    it('should disable button during Quick Play loading', async () => {
+      const user = userEvent.setup();
+      let resolveQuickPlay: any;
+      const mockQuickPlay = vi.fn().mockImplementation(() =>
+        new Promise((resolve) => {
+          resolveQuickPlay = resolve;
+        })
+      );
+
+      vi.spyOn(battleApi, 'quickPlay').mockImplementation(mockQuickPlay);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const quickPlayButton = screen.getByRole('button', { name: /quick play/i });
+      await user.click(quickPlayButton);
+
+      // Button should be disabled
+      expect(quickPlayButton).toBeDisabled();
+
+      // Clean up
+      resolveQuickPlay({
+        success: true,
+        action: 'joined',
+        matchId: 'match-1',
+        playerId: 'player2'
+      });
+    });
+
+    it('should show error for insufficient creatures', async () => {
+      const user = userEvent.setup();
+      const mockQuickPlay = vi.fn().mockRejectedValue(
+        new InsufficientCreaturesError('You need at least 3 creatures for Quick Play')
+      );
+
+      vi.spyOn(battleApi, 'quickPlay').mockImplementation(mockQuickPlay);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const quickPlayButton = screen.getByRole('button', { name: /quick play/i });
+      await user.click(quickPlayButton);
+
+      expect(await screen.findByText(/need at least 3 creatures/i)).toBeInTheDocument();
+    });
+
+    it('should show error for active battle exists', async () => {
+      const user = userEvent.setup();
+      const mockQuickPlay = vi.fn().mockRejectedValue(
+        new ActiveBattleExistsError('You already have an active battle')
+      );
+
+      vi.spyOn(battleApi, 'quickPlay').mockImplementation(mockQuickPlay);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const quickPlayButton = screen.getByRole('button', { name: /quick play/i });
+      await user.click(quickPlayButton);
+
+      expect(await screen.findByText(/already have an active battle/i)).toBeInTheDocument();
+    });
+
+    it('should show error for network failures', async () => {
+      const user = userEvent.setup();
+      const mockQuickPlay = vi.fn().mockRejectedValue(
+        new Error('Failed to connect to server')
+      );
+
+      vi.spyOn(battleApi, 'quickPlay').mockImplementation(mockQuickPlay);
+
+      renderWithRouter(<BattleLobbyPage />);
+
+      const quickPlayButton = screen.getByRole('button', { name: /quick play/i });
+      await user.click(quickPlayButton);
+
+      expect(await screen.findByText(/failed to connect to server/i)).toBeInTheDocument();
+    });
+  });
 });

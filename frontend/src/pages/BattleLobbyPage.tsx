@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { createBattle, joinBattleByKey } from '../services/battle-api';
+import { createBattle, joinBattleByKey, quickPlay } from '../services/battle-api';
 import {
   InsufficientCreaturesError,
   ActiveBattleExistsError,
@@ -26,14 +26,40 @@ export function BattleLobbyPage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
+  const [isQuickPlaying, setIsQuickPlaying] = useState(false);
+  const [quickPlayError, setQuickPlayError] = useState<string | null>(null);
 
   /**
    * Quick Play - Auto-match or create battle
-   * TODO: Implement actual matchmaking API call
+   * Calls API to find or create a battle automatically
    */
-  function handleQuickPlay() {
-    const matchId = uuidv4();
-    navigate(`/deployment?matchId=${matchId}&playerId=player1`);
+  async function handleQuickPlay() {
+    setIsQuickPlaying(true);
+    setQuickPlayError(null);
+
+    try {
+      const result = await quickPlay();
+
+      // Success - navigate to deployment page
+      navigate(`/deployment?matchId=${result.matchId}&playerId=${result.playerId}`);
+
+      // Clean up state
+      setIsQuickPlaying(false);
+      setQuickPlayError(null);
+    } catch (error) {
+      setIsQuickPlaying(false);
+
+      // Handle specific error types
+      if (error instanceof InsufficientCreaturesError) {
+        setQuickPlayError(error.message);
+      } else if (error instanceof ActiveBattleExistsError) {
+        setQuickPlayError(error.message);
+      } else if (error instanceof Error) {
+        setQuickPlayError(error.message);
+      } else {
+        setQuickPlayError('Failed to find a battle. Please try again.');
+      }
+    }
   }
 
   /**
@@ -145,8 +171,25 @@ export function BattleLobbyPage() {
           <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
             Jump into a battle immediately. We'll match you with an opponent or create a new game.
           </p>
+
+          {/* Error Message */}
+          {quickPlayError && (
+            <div style={{
+              marginBottom: '1.5rem',
+              padding: '0.75rem',
+              backgroundColor: '#fee2e2',
+              borderLeft: '4px solid #ef4444',
+              borderRadius: '4px',
+              color: '#991b1b',
+              fontSize: '0.9rem'
+            }}>
+              {quickPlayError}
+            </div>
+          )}
+
           <button
             onClick={handleQuickPlay}
+            disabled={isQuickPlaying}
             style={{
               width: '100%',
               padding: '1rem',
@@ -156,12 +199,17 @@ export function BattleLobbyPage() {
               color: 'white',
               border: 'none',
               borderRadius: '8px',
-              cursor: 'pointer'
+              cursor: isQuickPlaying ? 'not-allowed' : 'pointer',
+              opacity: isQuickPlaying ? 0.7 : 1
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#4f46e5'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#6366f1'}
+            onMouseEnter={(e) => {
+              if (!isQuickPlaying) e.currentTarget.style.backgroundColor = '#4f46e5';
+            }}
+            onMouseLeave={(e) => {
+              if (!isQuickPlaying) e.currentTarget.style.backgroundColor = '#6366f1';
+            }}
           >
-            Quick Play
+            {isQuickPlaying ? 'Searching...' : 'Quick Play'}
           </button>
         </div>
 
