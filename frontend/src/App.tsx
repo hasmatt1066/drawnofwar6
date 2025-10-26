@@ -9,6 +9,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { NavBar } from './components/NavBar';
+import { NotificationContainer } from './components/NotificationContainer';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { HomePage } from './pages/HomePage';
@@ -25,6 +26,7 @@ export const App: React.FC = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <NotificationContainer />
         <div className="app">
           <NavBar />
           <Routes>

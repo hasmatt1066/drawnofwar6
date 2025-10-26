@@ -52,14 +52,40 @@ export class PositionInterpolator {
       const previousUnit = previousUnits.get(currentUnit.unitId);
 
       if (!previousUnit) {
-        // Newly spawned unit - snap to current position
-        result.push({
-          unitId: currentUnit.unitId,
-          position: { ...currentUnit.position },
-          facingDirection: currentUnit.facingDirection,
-          isMoving: false,
-          isNewlySpawned: true
-        });
+        // Newly spawned unit
+        // Check if unit has deploymentPosition to show spawn-to-battle movement
+        if (currentUnit.deploymentPosition &&
+            (currentUnit.deploymentPosition.q !== currentUnit.position.q ||
+             currentUnit.deploymentPosition.r !== currentUnit.position.r)) {
+          // Interpolate from deployment position to combat position
+          const interpolatedPosition = this.interpolatePosition(
+            currentUnit.deploymentPosition,
+            currentUnit.position,
+            factor
+          );
+
+          const facingDirection = this.calculateFacingFromMovement(
+            currentUnit.deploymentPosition,
+            currentUnit.position
+          );
+
+          result.push({
+            unitId: currentUnit.unitId,
+            position: interpolatedPosition,
+            facingDirection,
+            isMoving: true,
+            isNewlySpawned: true
+          });
+        } else {
+          // Snap to current position (no deployment position or already at position)
+          result.push({
+            unitId: currentUnit.unitId,
+            position: { ...currentUnit.position },
+            facingDirection: currentUnit.facingDirection,
+            isMoving: false,
+            isNewlySpawned: true
+          });
+        }
       } else {
         // Existing unit - interpolate position
         const interpolatedPosition = this.interpolatePosition(

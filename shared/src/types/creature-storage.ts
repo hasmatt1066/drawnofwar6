@@ -26,12 +26,13 @@ export interface StoredCombatAttribute {
 }
 
 /**
- * Directional sprite data
+ * Stored directional sprite data (Firebase Storage URLs)
  */
-export interface DirectionalSprite {
+export interface StoredDirectionalSprite {
   sprite: string; // Firebase Storage URL (gs://) - static sprite
   walkFrames: string[]; // Array of Firebase Storage URLs for walking animation
   idleFrames: string[]; // Array of Firebase Storage URLs for idle animation
+  attackFrames: string[]; // Array of Firebase Storage URLs for attack animation
 }
 
 /**
@@ -67,9 +68,9 @@ export interface CreatureDocument {
   sprites: {
     menuSprite: string;
     directions: {
-      E: DirectionalSprite;
-      NE: DirectionalSprite;
-      SE: DirectionalSprite;
+      E: StoredDirectionalSprite;
+      NE: StoredDirectionalSprite;
+      SE: StoredDirectionalSprite;
       // W, NW, SW are mirrored in client
     };
   };
@@ -99,9 +100,9 @@ export interface CreatureDocumentInput {
   sprites: {
     menuSprite: string;
     directions: {
-      E: DirectionalSprite;
-      NE: DirectionalSprite;
-      SE: DirectionalSprite;
+      E: StoredDirectionalSprite;
+      NE: StoredDirectionalSprite;
+      SE: StoredDirectionalSprite;
     };
   };
   generationTimeMs: number;

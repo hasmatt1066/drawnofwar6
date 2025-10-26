@@ -20,6 +20,8 @@ export interface DirectionalSprite {
   walkFrames: string[];
   /** Idle animation frames (base64 array) */
   idleFrames: string[];
+  /** Attack animation frames (base64 array) */
+  attackFrames: string[];
 }
 
 /**

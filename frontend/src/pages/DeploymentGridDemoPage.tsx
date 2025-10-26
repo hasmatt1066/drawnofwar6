@@ -403,8 +403,7 @@ export const DeploymentGridDemoPage: React.FC = () => {
         console.log('[DeploymentDemo] Creating CombatVisualizationManager...');
         vizManager = new CombatVisualizationManager(
           socketAdapter as any,
-          new PIXI.Container(), // Stage container (will be added to renderer)
-          renderer as any // Grid renderer interface
+          renderer as any // Grid renderer (stage is obtained from renderer.getStage())
         );
 
         if (isCleanedUp) {
@@ -419,16 +418,57 @@ export const DeploymentGridDemoPage: React.FC = () => {
         // This allows combat to render actual creature sprites instead of placeholders
         // IMPORTANT: Include creatures from BOTH local rosters AND opponent placements
         // because opponent placements may contain creatures with sprite data we don't have locally
-        const currentPlayerPlacements = currentPlayerState.placements.map(p => p.creature);
+
+        // RACE CONDITION FIX: currentPlayerState.placements might be empty if deployment state
+        // hasn't fully synced when combat starts. Use multiple fallback sources to ensure
+        // we have creature data with battlefieldDirectionalViews.
+        let currentPlayerPlacementsCreatures: DeploymentCreature[] = [];
+
+        if (currentPlayerState.placements && currentPlayerState.placements.length > 0) {
+          // Preferred: Use synced deployment state
+          currentPlayerPlacementsCreatures = currentPlayerState.placements.map(p => p.creature);
+          console.log('[DeploymentDemo] Using current player placements from deploymentState:', currentPlayerPlacementsCreatures.length);
+        } else if (deploymentStatus) {
+          // Fallback: Use deployment status (from socket sync)
+          const placementsData =
+            currentPlayerId === 'player1'
+              ? deploymentStatus.player1.placements
+              : deploymentStatus.player2.placements;
+
+          if (placementsData && placementsData.length > 0) {
+            currentPlayerPlacementsCreatures = placementsData.map((p: any) => p.creature);
+            console.log('[DeploymentDemo] FALLBACK: Using deployment status placements:', currentPlayerPlacementsCreatures.length);
+          } else {
+            console.warn('[DeploymentDemo] WARNING: No current player placements found in either source!');
+          }
+        } else {
+          console.warn('[DeploymentDemo] WARNING: No deployment status available for fallback!');
+        }
+
         const opponentCreatures = opponentPlacements.map(p => p.creature);
-        const allCreatures = [...player1Creatures, ...player2Creatures, ...currentPlayerPlacements, ...opponentCreatures];
+        const allCreatures = [...player1Creatures, ...player2Creatures, ...currentPlayerPlacementsCreatures, ...opponentCreatures];
 
         // Deduplicate by creature ID (later entries override earlier ones)
         const creatureMap = new Map<string, DeploymentCreature>();
         allCreatures.forEach(c => creatureMap.set(c.id, c));
         const uniqueCreatures = Array.from(creatureMap.values());
 
-        console.log('[DeploymentDemo] Loading creature sprite data into visualization manager:', uniqueCreatures.length, 'unique creatures');
+        console.log('[DeploymentDemo] ===== LOADING CREATURE DATA INTO COMBAT =====');
+        console.log('[DeploymentDemo] Total unique creatures:', uniqueCreatures.length);
+        console.log('[DeploymentDemo] player1Creatures count:', player1Creatures.length);
+        console.log('[DeploymentDemo] player2Creatures count:', player2Creatures.length);
+        console.log('[DeploymentDemo] currentPlayerPlacementsCreatures count:', currentPlayerPlacementsCreatures.length);
+        console.log('[DeploymentDemo] opponentCreatures count:', opponentCreatures.length);
+
+        uniqueCreatures.forEach(creature => {
+          console.log(`[DeploymentDemo] Creature "${creature.name}" (${creature.id}):`, {
+            hasBattlefieldViews: !!creature.battlefieldDirectionalViews,
+            eAttackFrames: creature.battlefieldDirectionalViews?.E?.attackFrames?.length ?? 0,
+            neAttackFrames: creature.battlefieldDirectionalViews?.NE?.attackFrames?.length ?? 0,
+            seAttackFrames: creature.battlefieldDirectionalViews?.SE?.attackFrames?.length ?? 0
+          });
+        });
+
         vizManager.setCreatureData(uniqueCreatures);
 
         console.log('[DeploymentDemo] Starting visualization manager...');
@@ -589,7 +629,15 @@ export const DeploymentGridDemoPage: React.FC = () => {
         hex,
         creature: dragState.creature
       };
-      console.log('[DeploymentDemo] Emitting placement to server:', placement);
+      console.log('[DeploymentDemo] Emitting placement to server:', {
+        creatureName: placement.creature.name,
+        hex: placement.hex,
+        hasBattlefieldViews: !!placement.creature.battlefieldDirectionalViews,
+        viewKeys: placement.creature.battlefieldDirectionalViews ? Object.keys(placement.creature.battlefieldDirectionalViews) : [],
+        eAttackFrames: placement.creature.battlefieldDirectionalViews?.E?.attackFrames?.length ?? 0,
+        neAttackFrames: placement.creature.battlefieldDirectionalViews?.NE?.attackFrames?.length ?? 0,
+        seAttackFrames: placement.creature.battlefieldDirectionalViews?.SE?.attackFrames?.length ?? 0
+      });
       emitPlacement(placement);
     }
   }, [endDrag, dragState, emitPlacement, currentPlayerId, isConnected, cancelDrag]);

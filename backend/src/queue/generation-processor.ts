@@ -68,11 +68,11 @@ export async function processGenerationJob(job: Job<GenerationJobData>): Promise
     // Build PixelLab request from text description
     const pixelLabRequest = {
       description: textDescription || 'fantasy creature',
-      size: 64, // 64x64 required for animate-with-text
-      detail: 'medium detail',
-      shading: 'basic shading',
-      outline: 'single color black outline',
-      view: 'side', // Match animation view
+      size: 64 as const, // 64x64 required for animate-with-text
+      detail: 'medium detail' as const,
+      shading: 'basic shading' as const,
+      outline: 'single color black outline' as const,
+      view: 'side' as const, // Match animation view
       textGuidanceScale: 7.5,
       noBackground: true, // Required for animation
     };
@@ -204,11 +204,25 @@ export async function processGenerationJob(job: Job<GenerationJobData>): Promise
         totalCost += idleAnimation.costUsd;
         console.log(`[Generation Processor] ${dir.key} idle animation generated with ${idleAnimation.frames.length} frames, cost: ${idleAnimation.costUsd.toFixed(4)} USD`);
 
-        // Store sprite, walk frames, and idle frames for this direction
+        // Step 6.4: Generate attack animation for rotated sprite
+        const attackAnimation = await textAnimator.animateWithText({
+          description: textDescription || 'fantasy creature',
+          action: 'attack',
+          referenceImage: rotatedSprite.imageBase64,
+          nFrames: 4,
+          view: 'low top-down',
+          direction: dir.animateDirection
+        });
+
+        totalCost += attackAnimation.costUsd;
+        console.log(`[Generation Processor] ${dir.key} attack animation generated with ${attackAnimation.frames.length} frames, cost: ${attackAnimation.costUsd.toFixed(4)} USD`);
+
+        // Store sprite, walk frames, idle frames, and attack frames for this direction
         directionalViews[dir.key] = {
           sprite: rotatedSprite.imageBase64,
           walkFrames: walkAnimation.frames,
-          idleFrames: idleAnimation.frames
+          idleFrames: idleAnimation.frames,
+          attackFrames: attackAnimation.frames
         };
 
         progressStep += progressIncrement;
@@ -233,7 +247,14 @@ export async function processGenerationJob(job: Job<GenerationJobData>): Promise
       }
     } catch (error) {
       console.warn('[Generation Processor] Failed to generate multi-directional battlefield views, continuing without them:', error);
-      // Non-fatal: battlefield views are optional
+      // Fallback: Use original sprite and walk animation as legacy battlefield sprite
+      console.log('[Generation Processor] Using legacy battlefield sprite fallback (original sprite + walk animation)');
+      battlefieldSprite = generationResponse.imageBase64;
+      battlefieldWalkFrames = walkAnimation.frames;
+      viewAngles = {
+        menu: 'side',
+        battlefield: 'low top-down' as const  // Fallback to low top-down
+      };
     }
 
     await job.updateProgress(90);

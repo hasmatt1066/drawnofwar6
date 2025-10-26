@@ -8,7 +8,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { deploymentValidator } from '../../services/deployment-validator.js';
 import { deploymentStore } from '../../services/deployment-store.js';
-import type { PlayerDeploymentState } from '@drawn-of-war/shared/types/deployment';
+import type { PlayerDeploymentState } from '@drawn-of-war/shared';
 
 /**
  * POST /api/deployment/validate

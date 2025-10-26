@@ -128,7 +128,7 @@ export class CreatureSpriteManager {
       detail: 'medium detail',
       shading: 'basic shading',
       outline: 'single color black outline',
-      view: 'front', // Front view for deployment
+      view: 'side', // Side view (valid options: 'low top-down', 'high top-down', 'side')
       textGuidanceScale: 7.5,
       noBackground: true,
     };

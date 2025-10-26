@@ -59,7 +59,13 @@ export class HexGridRenderer {
   private hexGraphics: Map<string, PIXI.Graphics>;
   private highlightGraphics: Map<string, PIXI.Graphics>;
   private coordinateTexts: Map<string, PIXI.Text>;
-  private creatureSprites: Map<string, PIXI.Container>;
+
+  /**
+   * Creature sprite storage
+   * Protected to allow derived classes (CombatGridRenderer) to access for unified sprite lookup
+   * Maps hex hash → PIXI.Container for static sprites
+   */
+  protected creatureSprites: Map<string, PIXI.Container>;
 
   private currentHoverHex: AxialCoordinate | null = null;
   private showCoordinates: boolean = false;
@@ -537,10 +543,10 @@ export class HexGridRenderer {
     const offsetY = (this.config.canvasHeight - bounds.height) / 2 - bounds.minY + verticalBias;
     const pixel = this.hexGrid.toPixel(hex);
 
-    console.log(`[DeploymentGridRenderer] renderCreature called for ${creatureName}`);
-    console.log(`[DeploymentGridRenderer] spriteData type:`, typeof spriteData);
-    console.log(`[DeploymentGridRenderer] spriteData:`, spriteData);
-    console.log(`[DeploymentGridRenderer] direction:`, direction);
+    console.log(`[${this.constructor.name}] renderCreature called for ${creatureName}`);
+    console.log(`[${this.constructor.name}] spriteData type:`, typeof spriteData);
+    console.log(`[${this.constructor.name}] spriteData:`, spriteData);
+    console.log(`[${this.constructor.name}] direction:`, direction);
 
     // Extract sprite URL and animation frames with directional support
     let spriteUrl: string | undefined;
@@ -551,15 +557,15 @@ export class HexGridRenderer {
     if (typeof spriteData === 'string') {
       // Legacy: direct base64 string
       spriteUrl = spriteData;
-      console.log(`[DeploymentGridRenderer] Legacy mode - direct sprite URL`);
+      console.log(`[${this.constructor.name}] Legacy mode - direct sprite URL`);
     } else if (spriteData && typeof spriteData === 'object') {
       // NEW: Multi-directional support
-      console.log(`[DeploymentGridRenderer] Object mode - checking for battlefieldDirectionalViews`);
-      console.log(`[DeploymentGridRenderer] Has battlefieldDirectionalViews:`, !!spriteData.battlefieldDirectionalViews);
+      console.log(`[${this.constructor.name}] Object mode - checking for battlefieldDirectionalViews`);
+      console.log(`[${this.constructor.name}] Has battlefieldDirectionalViews:`, !!spriteData.battlefieldDirectionalViews);
 
       if (spriteData.battlefieldDirectionalViews) {
         const dirViews = spriteData.battlefieldDirectionalViews;
-        console.log(`[DeploymentGridRenderer] Directional views:`, dirViews);
+        console.log(`[${this.constructor.name}] Directional views:`, dirViews);
 
         // Map direction to sprite and animation frames (with mirroring for W, NW, SW)
         switch (direction) {
@@ -568,8 +574,8 @@ export class HexGridRenderer {
             idleFrames = dirViews.E.idleFrames;
             walkFrames = dirViews.E.walkFrames;
             shouldMirror = false;
-            console.log(`[DeploymentGridRenderer] Direction E - idleFrames:`, idleFrames);
-            console.log(`[DeploymentGridRenderer] Direction E - idleFrames length:`, idleFrames?.length);
+            console.log(`[${this.constructor.name}] Direction E - idleFrames:`, idleFrames);
+            console.log(`[${this.constructor.name}] Direction E - idleFrames length:`, idleFrames?.length);
             break;
           case 0: // NE (Northeast)
             spriteUrl = dirViews.NE.sprite;
@@ -609,14 +615,14 @@ export class HexGridRenderer {
             shouldMirror = false;
         }
       } else {
-        // Fallback to legacy battlefield sprite or menu sprite
-        spriteUrl = spriteData.battlefieldSprite || spriteData.spriteImageBase64;
+        // Fallback to legacy battlefield sprite, menu sprite, or basic sprite field
+        spriteUrl = (spriteData as any).battlefieldSprite || (spriteData as any).spriteImageBase64 || spriteData.sprite;
       }
     }
 
-    console.log(`[DeploymentGridRenderer] After extraction - idleFrames:`, idleFrames);
-    console.log(`[DeploymentGridRenderer] After extraction - walkFrames:`, walkFrames);
-    console.log(`[DeploymentGridRenderer] After extraction - spriteUrl:`, spriteUrl);
+    console.log(`[${this.constructor.name}] After extraction - idleFrames:`, idleFrames);
+    console.log(`[${this.constructor.name}] After extraction - walkFrames:`, walkFrames);
+    console.log(`[${this.constructor.name}] After extraction - spriteUrl:`, spriteUrl);
 
     // Create sprite container
     const spriteContainer = new PIXI.Container();
@@ -624,7 +630,7 @@ export class HexGridRenderer {
 
     if (spriteUrl || idleFrames || walkFrames) {
       // Load and render actual sprite image or animation
-      console.log(`[DeploymentGridRenderer] Calling loadAndRenderSprite with idleFrames:`, idleFrames?.length ?? 0);
+      console.log(`[${this.constructor.name}] Calling loadAndRenderSprite with idleFrames:`, idleFrames?.length ?? 0);
       this.loadAndRenderSprite(spriteContainer, spriteUrl, playerId, creatureName, shouldMirror, idleFrames, walkFrames);
     } else {
       // Fallback: Create circular background with text
@@ -675,7 +681,7 @@ export class HexGridRenderer {
     try {
       // PRIORITY 1: Use idle animation frames if available
       if (idleFrames && idleFrames.length > 0) {
-        console.log(`[DeploymentGridRenderer] Loading idle animation with ${idleFrames.length} frames for ${creatureName}`);
+        console.log(`[${this.constructor.name}] Loading idle animation with ${idleFrames.length} frames for ${creatureName}`);
 
         // Load all frame textures in parallel
         const textures = await Promise.all(
@@ -717,7 +723,7 @@ export class HexGridRenderer {
         // Add animated sprite
         container.addChild(animatedSprite);
 
-        console.log(`[DeploymentGridRenderer] Idle animation loaded and playing for ${creatureName}`);
+        console.log(`[${this.constructor.name}] Idle animation loaded and playing for ${creatureName}`);
         return;
       }
 
@@ -731,7 +737,7 @@ export class HexGridRenderer {
 
         if (!isValidImageUrl) {
           // Not a valid image URL, use fallback rendering
-          console.warn(`[DeploymentGridRenderer] Invalid sprite URL format for ${creatureName}, using fallback: ${spriteUrl}`);
+          console.warn(`[${this.constructor.name}] Invalid sprite URL format for ${creatureName}, using fallback: ${spriteUrl}`);
           throw new Error(`Invalid sprite URL format: ${spriteUrl}`);
         }
 
@@ -783,7 +789,7 @@ export class HexGridRenderer {
       // PRIORITY 3: No sprite data available
       throw new Error('No sprite data available (neither idleFrames nor spriteUrl)');
     } catch (error) {
-      console.error('[DeploymentGridRenderer] Failed to load sprite:', error);
+      console.error('[${this.constructor.name}] Failed to load sprite:', error);
 
       // Fallback to placeholder on error
       const bg = new PIXI.Graphics();
@@ -898,8 +904,8 @@ export class HexGridRenderer {
             shouldMirror = false;
         }
       } else {
-        // Fallback to legacy battlefield sprite or menu sprite
-        spriteUrl = spriteData.battlefieldSprite || spriteData.spriteImageBase64;
+        // Fallback to legacy battlefield sprite, menu sprite, or basic sprite field
+        spriteUrl = (spriteData as any).battlefieldSprite || (spriteData as any).spriteImageBase64 || spriteData.sprite;
       }
     }
 
@@ -982,6 +988,14 @@ export class HexGridRenderer {
    */
   getHexGrid(): HexGrid {
     return this.hexGrid;
+  }
+
+  /**
+   * Get the PixiJS stage container
+   * Used by effect renderers (CombatVisualizationManager) to add visual effect layers
+   */
+  getStage(): PIXI.Container {
+    return this.app.stage;
   }
 
   /**

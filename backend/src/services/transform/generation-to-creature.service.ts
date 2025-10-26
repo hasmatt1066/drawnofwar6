@@ -6,7 +6,7 @@
  */
 
 import type { GenerationResult } from '../../types/generation.js';
-import type { CreatureDocumentInput, StoredCombatAttribute, OwnerId } from '@drawn-of-war/shared/types/creature-storage.js';
+import type { CreatureDocumentInput, StoredCombatAttribute, OwnerId } from '@drawn-of-war/shared';
 
 export class GenerationToCreatureTransformer {
   /**
@@ -51,9 +51,9 @@ export class GenerationToCreatureTransformer {
       sprites: {
         menuSprite: '', // Will be filled with Firebase Storage URLs by save service
         directions: {
-          E: { sprite: '', walkFrames: [] },
-          NE: { sprite: '', walkFrames: [] },
-          SE: { sprite: '', walkFrames: [] }
+          E: { sprite: '', walkFrames: [], idleFrames: [], attackFrames: [] },
+          NE: { sprite: '', walkFrames: [], idleFrames: [], attackFrames: [] },
+          SE: { sprite: '', walkFrames: [], idleFrames: [], attackFrames: [] }
         }
       },
       generationTimeMs: generationResult.processingTimeMs,

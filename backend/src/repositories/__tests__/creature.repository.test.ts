@@ -4,7 +4,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CreatureRepository } from '../creature.repository.js';
-import type { CreatureDocumentInput } from '@drawn-of-war/shared/types/creature-storage.js';
+import type { CreatureDocumentInput } from '@drawn-of-war/shared';
 
 // Mock Firestore
 const mockDoc = {

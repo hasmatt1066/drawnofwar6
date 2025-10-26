@@ -1,57 +1,449 @@
 
-> drawn-of-war@0.1.0 firebase:emulators /mnt/c/Users/mhast/Desktop/drawnofwar6
-> firebase emulators:start
+> @drawn-of-war/backend@0.1.0 dev /mnt/c/Users/mhast/Desktop/drawnofwar6/backend
+> LD_LIBRARY_PATH=../node_modules/.pnpm/@img+sharp-libvips-linux-x64@1.2.3/node_modules/@img/sharp-libvips-linux-x64/lib:$LD_LIBRARY_PATH node node_modules/tsx/dist/cli.mjs watch --clear-screen=false src/index.ts
 
-[33m[1m⚠  emulators:[22m[39m You are not currently authenticated so some features may not work correctly. Please run [1mfirebase login[22m to authenticate the CLI.
-[36m[1mi  emulators:[22m[39m Starting emulators: auth, firestore, storage
-[36m[1mi  emulators:[22m[39m Detected demo project ID "demo-no-project", emulated services will use a demo configuration and attempts to access non-emulated services for this project will fail.
-[33m[1m⚠  ui:[22m[39m Port 4000 is not open on 127.0.0.1, could not start Emulator UI.
-[33m[1m⚠  ui:[22m[39m To select a different host/port, specify that host/port in a firebase.json config file:
-      {
-        // ...
-        "emulators": {
-          "ui": {
-            "host": "[33mHOST[39m",
-            "port": "[33mPORT[39m"
-          }
-        }
-      }
-[33m[1m⚠  auth:[22m[39m Port 9099 is not open on 127.0.0.1, could not start Authentication Emulator.
-[33m[1m⚠  auth:[22m[39m To select a different host/port, specify that host/port in a firebase.json config file:
-      {
-        // ...
-        "emulators": {
-          "auth": {
-            "host": "[33mHOST[39m",
-            "port": "[33mPORT[39m"
-          }
-        }
-      }
-[33m[1m⚠  firestore:[22m[39m Port 8080 is not open on 127.0.0.1, could not start Firestore Emulator.
-[33m[1m⚠  firestore:[22m[39m To select a different host/port, specify that host/port in a firebase.json config file:
-      {
-        // ...
-        "emulators": {
-          "firestore": {
-            "host": "[33mHOST[39m",
-            "port": "[33mPORT[39m"
-          }
-        }
-      }
-[33m[1m⚠  storage:[22m[39m Port 9199 is not open on 127.0.0.1, could not start Storage Emulator.
-[33m[1m⚠  storage:[22m[39m To select a different host/port, specify that host/port in a firebase.json config file:
-      {
-        // ...
-        "emulators": {
-          "storage": {
-            "host": "[33mHOST[39m",
-            "port": "[33mPORT[39m"
-          }
-        }
-      }
-[33m[1m⚠  hub:[22m[39m emulator hub unable to start on port 4400, starting on 4401 instead.
-[33m[1m⚠  logging:[22m[39m Logging Emulator unable to start on port 4500, starting on 4501 instead.
-[36m[1mi  emulators:[22m[39m Shutting down emulators.
-
-[1m[31mError:[39m[22m Could not start Emulator UI, port taken.
- ELIFECYCLE  Command failed with exit code 1.
+[Claude Vision] Service initialized
+[Claude Vision] Model: claude-3-5-sonnet-20241022
+[Animation Library] Loaded 55 animations
+[Animation Library] Categories: { idle: 5, locomotion: 12, combat: 15, abilities: 15, reactions: 8 }
+[Animation Mapper] Service initialized
+[Attribute Extractor] Service initialized
+[Style Validator] Service initialized
+[Style Validator] Pass threshold: 60%
+[Startup] Validating Claude API configuration...
+[Claude Config] Configuration loaded successfully
+[Claude Config] Model: claude-3-5-sonnet-20241022
+[Claude Config] API URL: https://api.anthropic.com/v1
+[Claude Config] Max Tokens: 1024
+[Claude Config] Timeout: 30000ms
+[Startup] Initializing Firebase Admin SDK...
+{"timestamp":"2025-10-21T03:52:42.626Z","level":"info","type":"queue_manager_initialized","queueName":"generation-queue","redisHost":"localhost","redisPort":6379,"redisDb":0}
+{"timestamp":"2025-10-21T03:52:42.628Z","level":"info","type":"worker_started","queueName":"generation-queue","concurrency":5,"redisHost":"localhost","redisPort":6379}
+[Queue Service] Initialized successfully
+[Firebase] Initializing with emulator configuration
+[Firebase] Using Firestore emulator at localhost:8080
+[Firebase] Using Storage emulator at localhost:9199
+[Firebase] Initialized successfully
+[Startup] Firebase connection check failed or timed out - creature library features may not work
+[Startup] Make sure Firebase emulator is running if USE_FIREBASE_EMULATOR=true
+[Startup] Initializing creature sprite manager...
+[CreatureSpriteManager] Loaded 0 cached sprites
+[Startup] Creature sprite manager initialized
+[Startup] Initializing Socket.IO server...
+[Socket.IO] Initialized with namespaces: /combat, /deployment
+[Startup] Initializing combat socket handler...
+[Startup] Initializing deployment socket handler...
+[Deployment Socket] Initialized
+[Server] Drawn of War backend running
+[Server] URL: http://localhost:3001
+[Server] WebSocket: ws://localhost:3001
+[Server] Environment: development
+[Server] Health check: http://localhost:3001/health
+[Firebase] Connection check passed
+[Generate Enhanced] Received text request
+[Generate Enhanced] Text description: fierce fire warrior with flaming sword...
+[Generate Enhanced] Submitting job to queue (text)
+[Generate Enhanced] Job 31 submitted in 3ms
+{"timestamp":"2025-10-21T03:55:28.733Z","level":"info","type":"queue_state_change","jobId":"31","fromState":"waiting","toState":"active","metadata":{"jobName":"generation","userId":"anonymous"}}
+[Generation Processor] Processing job 31 (text)
+[Generation Processor] Text-only path (PixelLab → Claude Vision)
+[Generation Processor] Step 1: Generating sprite from text description...
+[Generation Processor] PixelLab request: {
+  description: 'fierce fire warrior with flaming sword',
+  size: 64,
+  detail: 'medium detail',
+  shading: 'basic shading',
+  outline: 'single color black outline',
+  view: 'side',
+  textGuidanceScale: 7.5,
+  noBackground: true
+}
+[Generation Processor] PixelLab sprite generated, cost: 0 USD
+[Generation Processor] Step 2: Analyzing generated sprite with Claude Vision...
+[Claude Vision] Starting creature analysis...
+[Claude Vision] Text context: "fierce fire warrior with flaming sword"
+The model 'claude-3-5-sonnet-20241022' is deprecated and will reach end-of-life on October 22, 2025
+Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resources/model-deprecations for more information.
+[Claude Vision] Received response from API
+[Claude Vision] Cost: $0.009468
+[Claude Vision] Analysis complete
+[Claude Vision] Concept: "flaming sword warrior"
+[Claude Vision] Race: elemental, Class: warrior
+[Claude Vision] Animations: 20
+[Claude Vision] Tokens used: 1924
+[Claude Vision] Duration: 4132ms
+[Generation Processor] Step 3: Mapping animations from Claude analysis...
+[Animation Mapper] Mapping animations...
+[Animation Mapper] Claude suggested: 20 animations
+[Animation Mapper] Mapped 10 from Claude suggestions
+[Animation Mapper] Added 6 filler animations
+[Animation Mapper] Total animations: 20
+[Generation Processor] Step 4: Extracting combat attributes...
+[Attribute Extractor] Extracting combat attributes...
+[Attribute Extractor] Input abilities: 4
+[Attribute Extractor] Found 4 unique attributes
+[Attribute Extractor] 4 attributes have valid sprite animations
+[Attribute Extractor] Selected 3 primary attributes:
+  - Fire Spell (spell, priority: 8, animation: cast_fire_spell)
+  - Charge (melee, priority: 7, animation: charge_attack)
+  - Dash (ability, priority: 4, animation: dash_default)
+[Attribute Extractor] Loading effect animation frames...
+[Attribute Extractor] Loaded 4 frames for Fire Spell
+[Attribute Extractor] Loaded 4 frames for Charge
+[Attribute Extractor] Loaded 4 frames for Dash
+[Generation Processor] Step 5: Generating walk animation frames...
+[Generation Processor] Walk animation generated with 4 frames, cost: 0 USD
+[Generation Processor] Step 6: Generating multi-directional battlefield views (rotation-based)...
+[Generation Processor] Generating E direction using rotation API...
+[Generation Processor] E sprite rotated, cost: 0.0000 USD
+[Generation Processor] E walk animation generated with 4 frames, cost: 0.0000 USD
+[Generation Processor] E idle animation generated with 4 frames, cost: 0.0000 USD
+[Generation Processor] E attack animation generated with 4 frames, cost: 0.0000 USD
+[Generation Processor] Generating NE direction using rotation API...
+[Generation Processor] NE sprite rotated, cost: 0.0000 USD
+[Generation Processor] NE walk animation generated with 4 frames, cost: 0.0000 USD
+[Generation Processor] NE idle animation generated with 4 frames, cost: 0.0000 USD
+[Generation Processor] NE attack animation generated with 4 frames, cost: 0.0000 USD
+[Generation Processor] Generating SE direction using rotation API...
+[Generation Processor] SE sprite rotated, cost: 0.0000 USD
+[Generation Processor] SE walk animation generated with 4 frames, cost: 0.0000 USD
+[Generation Processor] SE idle animation generated with 4 frames, cost: 0.0000 USD
+[Generation Processor] SE attack animation generated with 4 frames, cost: 0.0000 USD
+[Generation Processor] Multi-directional battlefield views generation complete (rotation-based)
+[Generation Processor] Total API cost: 0.0000 USD
+[Generation Processor] Job 31 completed in 195879ms
+{"timestamp":"2025-10-21T03:58:44.619Z","level":"info","type":"queue_state_change","jobId":"31","fromState":"active","toState":"completed","metadata":{"jobName":"generation...[truncated]","result":"[Object truncated]"}}
+[Creatures API] Saving creature from job 31 for owner demo-player1
+[CreatureSaveService] Starting save for job 31, owner demo-player1
+[CreatureSaveService] Retrieved generation result for job 31
+[CreatureSaveService] Transformed to creature: Flaming Sword Warrior
+[CreatureSaveService] Created Firestore document with ID: uLHDfH2ziCElLKRyD5Jn
+[CreatureSaveService] Uploading sprites for creature uLHDfH2ziCElLKRyD5Jn...
+[CreatureSaveService] Using multi-directional battlefield views
+[CreatureSaveService] Successfully uploaded all sprites for creature uLHDfH2ziCElLKRyD5Jn
+[CreatureSaveService] Successfully saved creature uLHDfH2ziCElLKRyD5Jn
+[URL Converter] Converting creature URLs
+[URL Converter] E idleFrames count: 4
+[URL Converter] E attackFrames count: 4
+[URL Converter] NE idleFrames count: 4
+[URL Converter] NE attackFrames count: 4
+[URL Converter] SE idleFrames count: 4
+[URL Converter] SE attackFrames count: 4
+[URL Converter] Conversion complete
+[URL Converter] Result E idleFrames count: 4
+[URL Converter] Result E attackFrames count: 4
+[URL Converter] Sample E idle frame URL: http://localhost:9199/v0/b/drawn-of-war.appspot.com/o/creatures%2FuLHDfH2ziCElLKRyD5Jn%2Fdirections%2FE-idle-0.png?alt=media
+[URL Converter] Sample E attack frame URL: http://localhost:9199/v0/b/drawn-of-war.appspot.com/o/creatures%2FuLHDfH2ziCElLKRyD5Jn%2Fdirections%2FE-attack-0.png?alt=media
+[CreatureSpriteManager] Generating sprite for p1-warrior (Warrior)
+[CreatureSpriteManager] Generating sprite for p1-archer (Archer)
+[CreatureSpriteManager] Generating sprite for p1-mage (Mage)
+[CreatureSpriteManager] Generating sprite for p1-tank (Tank)
+[CreatureSpriteManager] Generating sprite for p1-rogue (Rogue)
+[CreatureSpriteManager] Generating sprite for p1-cleric (Cleric)
+[CreatureSpriteManager] Generating sprite for p1-paladin (Paladin)
+[CreatureSpriteManager] Generating sprite for p1-ranger (Ranger)
+[CreatureSpriteManager] Generating sprite for p2-warrior (Warrior)
+[CreatureSpriteManager] Generating sprite for p2-archer (Archer)
+[CreatureSpriteManager] Generating sprite for p2-mage (Mage)
+[CreatureSpriteManager] Generating sprite for p2-tank (Tank)
+[CreatureSpriteManager] Generating sprite for p2-rogue (Rogue)
+[CreatureSpriteManager] Generating sprite for p2-cleric (Cleric)
+[CreatureSpriteManager] Generating sprite for p2-paladin (Paladin)
+[CreatureSpriteManager] Generating sprite for p2-ranger (Ranger)
+[CreatureSpriteManager] Failed to generate sprite for p1-warrior: PixelLabError: View must be one of: low top-down, high top-down, side
+    at Function.validateView (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:232:13)
+    at Function.validateGenerationRequest (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:134:12)
+    at SpriteGenerator.submitGeneration (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/sprite-generator.ts:53:22)
+    at CreatureSpriteManager.generateSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:136:44)
+    at CreatureSpriteManager.getSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:94:35)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:98:21)
+    at Array.map (<anonymous>)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:97:38)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  type: 'invalid_request',
+  statusCode: undefined,
+  retryable: false,
+  originalError: undefined,
+  fieldErrors: undefined
+}
+[CreatureSpriteManager] Using placeholder for p1-warrior
+[CreatureSpriteManager] Failed to generate sprite for p1-archer: PixelLabError: View must be one of: low top-down, high top-down, side
+    at Function.validateView (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:232:13)
+    at Function.validateGenerationRequest (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:134:12)
+    at SpriteGenerator.submitGeneration (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/sprite-generator.ts:53:22)
+    at CreatureSpriteManager.generateSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:136:44)
+    at CreatureSpriteManager.getSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:94:35)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:98:21)
+    at Array.map (<anonymous>)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:97:38)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  type: 'invalid_request',
+  statusCode: undefined,
+  retryable: false,
+  originalError: undefined,
+  fieldErrors: undefined
+}
+[CreatureSpriteManager] Using placeholder for p1-archer
+[CreatureSpriteManager] Failed to generate sprite for p1-mage: PixelLabError: View must be one of: low top-down, high top-down, side
+    at Function.validateView (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:232:13)
+    at Function.validateGenerationRequest (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:134:12)
+    at SpriteGenerator.submitGeneration (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/sprite-generator.ts:53:22)
+    at CreatureSpriteManager.generateSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:136:44)
+    at CreatureSpriteManager.getSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:94:35)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:98:21)
+    at Array.map (<anonymous>)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:97:38)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  type: 'invalid_request',
+  statusCode: undefined,
+  retryable: false,
+  originalError: undefined,
+  fieldErrors: undefined
+}
+[CreatureSpriteManager] Using placeholder for p1-mage
+[CreatureSpriteManager] Failed to generate sprite for p1-tank: PixelLabError: View must be one of: low top-down, high top-down, side
+    at Function.validateView (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:232:13)
+    at Function.validateGenerationRequest (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:134:12)
+    at SpriteGenerator.submitGeneration (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/sprite-generator.ts:53:22)
+    at CreatureSpriteManager.generateSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:136:44)
+    at CreatureSpriteManager.getSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:94:35)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:98:21)
+    at Array.map (<anonymous>)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:97:38)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  type: 'invalid_request',
+  statusCode: undefined,
+  retryable: false,
+  originalError: undefined,
+  fieldErrors: undefined
+}
+[CreatureSpriteManager] Using placeholder for p1-tank
+[CreatureSpriteManager] Failed to generate sprite for p1-rogue: PixelLabError: View must be one of: low top-down, high top-down, side
+    at Function.validateView (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:232:13)
+    at Function.validateGenerationRequest (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:134:12)
+    at SpriteGenerator.submitGeneration (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/sprite-generator.ts:53:22)
+    at CreatureSpriteManager.generateSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:136:44)
+    at CreatureSpriteManager.getSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:94:35)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:98:21)
+    at Array.map (<anonymous>)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:97:38)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  type: 'invalid_request',
+  statusCode: undefined,
+  retryable: false,
+  originalError: undefined,
+  fieldErrors: undefined
+}
+[CreatureSpriteManager] Using placeholder for p1-rogue
+[CreatureSpriteManager] Failed to generate sprite for p1-cleric: PixelLabError: View must be one of: low top-down, high top-down, side
+    at Function.validateView (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:232:13)
+    at Function.validateGenerationRequest (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:134:12)
+    at SpriteGenerator.submitGeneration (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/sprite-generator.ts:53:22)
+    at CreatureSpriteManager.generateSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:136:44)
+    at CreatureSpriteManager.getSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:94:35)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:98:21)
+    at Array.map (<anonymous>)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:97:38)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  type: 'invalid_request',
+  statusCode: undefined,
+  retryable: false,
+  originalError: undefined,
+  fieldErrors: undefined
+}
+[CreatureSpriteManager] Using placeholder for p1-cleric
+[CreatureSpriteManager] Failed to generate sprite for p1-paladin: PixelLabError: View must be one of: low top-down, high top-down, side
+    at Function.validateView (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:232:13)
+    at Function.validateGenerationRequest (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:134:12)
+    at SpriteGenerator.submitGeneration (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/sprite-generator.ts:53:22)
+    at CreatureSpriteManager.generateSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:136:44)
+    at CreatureSpriteManager.getSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:94:35)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:98:21)
+    at Array.map (<anonymous>)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:97:38)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  type: 'invalid_request',
+  statusCode: undefined,
+  retryable: false,
+  originalError: undefined,
+  fieldErrors: undefined
+}
+[CreatureSpriteManager] Using placeholder for p1-paladin
+[CreatureSpriteManager] Failed to generate sprite for p1-ranger: PixelLabError: View must be one of: low top-down, high top-down, side
+    at Function.validateView (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:232:13)
+    at Function.validateGenerationRequest (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:134:12)
+    at SpriteGenerator.submitGeneration (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/sprite-generator.ts:53:22)
+    at CreatureSpriteManager.generateSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:136:44)
+    at CreatureSpriteManager.getSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:94:35)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:98:21)
+    at Array.map (<anonymous>)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:97:38)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  type: 'invalid_request',
+  statusCode: undefined,
+  retryable: false,
+  originalError: undefined,
+  fieldErrors: undefined
+}
+[CreatureSpriteManager] Using placeholder for p1-ranger
+[CreatureSpriteManager] Failed to generate sprite for p2-warrior: PixelLabError: View must be one of: low top-down, high top-down, side
+    at Function.validateView (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:232:13)
+    at Function.validateGenerationRequest (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:134:12)
+    at SpriteGenerator.submitGeneration (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/sprite-generator.ts:53:22)
+    at CreatureSpriteManager.generateSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:136:44)
+    at CreatureSpriteManager.getSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:94:35)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:98:21)
+    at Array.map (<anonymous>)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:97:38)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  type: 'invalid_request',
+  statusCode: undefined,
+  retryable: false,
+  originalError: undefined,
+  fieldErrors: undefined
+}
+[CreatureSpriteManager] Using placeholder for p2-warrior
+[CreatureSpriteManager] Failed to generate sprite for p2-archer: PixelLabError: View must be one of: low top-down, high top-down, side
+    at Function.validateView (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:232:13)
+    at Function.validateGenerationRequest (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:134:12)
+    at SpriteGenerator.submitGeneration (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/sprite-generator.ts:53:22)
+    at CreatureSpriteManager.generateSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:136:44)
+    at CreatureSpriteManager.getSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:94:35)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:98:21)
+    at Array.map (<anonymous>)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:97:38)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  type: 'invalid_request',
+  statusCode: undefined,
+  retryable: false,
+  originalError: undefined,
+  fieldErrors: undefined
+}
+[CreatureSpriteManager] Using placeholder for p2-archer
+[CreatureSpriteManager] Failed to generate sprite for p2-mage: PixelLabError: View must be one of: low top-down, high top-down, side
+    at Function.validateView (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:232:13)
+    at Function.validateGenerationRequest (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:134:12)
+    at SpriteGenerator.submitGeneration (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/sprite-generator.ts:53:22)
+    at CreatureSpriteManager.generateSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:136:44)
+    at CreatureSpriteManager.getSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:94:35)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:98:21)
+    at Array.map (<anonymous>)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:97:38)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  type: 'invalid_request',
+  statusCode: undefined,
+  retryable: false,
+  originalError: undefined,
+  fieldErrors: undefined
+}
+[CreatureSpriteManager] Using placeholder for p2-mage
+[CreatureSpriteManager] Failed to generate sprite for p2-tank: PixelLabError: View must be one of: low top-down, high top-down, side
+    at Function.validateView (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:232:13)
+    at Function.validateGenerationRequest (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:134:12)
+    at SpriteGenerator.submitGeneration (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/sprite-generator.ts:53:22)
+    at CreatureSpriteManager.generateSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:136:44)
+    at CreatureSpriteManager.getSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:94:35)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:98:21)
+    at Array.map (<anonymous>)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:97:38)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  type: 'invalid_request',
+  statusCode: undefined,
+  retryable: false,
+  originalError: undefined,
+  fieldErrors: undefined
+}
+[CreatureSpriteManager] Using placeholder for p2-tank
+[CreatureSpriteManager] Failed to generate sprite for p2-rogue: PixelLabError: View must be one of: low top-down, high top-down, side
+    at Function.validateView (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:232:13)
+    at Function.validateGenerationRequest (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:134:12)
+    at SpriteGenerator.submitGeneration (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/sprite-generator.ts:53:22)
+    at CreatureSpriteManager.generateSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:136:44)
+    at CreatureSpriteManager.getSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:94:35)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:98:21)
+    at Array.map (<anonymous>)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:97:38)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  type: 'invalid_request',
+  statusCode: undefined,
+  retryable: false,
+  originalError: undefined,
+  fieldErrors: undefined
+}
+[CreatureSpriteManager] Using placeholder for p2-rogue
+[CreatureSpriteManager] Failed to generate sprite for p2-cleric: PixelLabError: View must be one of: low top-down, high top-down, side
+    at Function.validateView (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:232:13)
+    at Function.validateGenerationRequest (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:134:12)
+    at SpriteGenerator.submitGeneration (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/sprite-generator.ts:53:22)
+    at CreatureSpriteManager.generateSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:136:44)
+    at CreatureSpriteManager.getSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:94:35)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:98:21)
+    at Array.map (<anonymous>)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:97:38)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  type: 'invalid_request',
+  statusCode: undefined,
+  retryable: false,
+  originalError: undefined,
+  fieldErrors: undefined
+}
+[CreatureSpriteManager] Using placeholder for p2-cleric
+[CreatureSpriteManager] Failed to generate sprite for p2-paladin: PixelLabError: View must be one of: low top-down, high top-down, side
+    at Function.validateView (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:232:13)
+    at Function.validateGenerationRequest (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:134:12)
+    at SpriteGenerator.submitGeneration (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/sprite-generator.ts:53:22)
+    at CreatureSpriteManager.generateSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:136:44)
+    at CreatureSpriteManager.getSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:94:35)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:98:21)
+    at Array.map (<anonymous>)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:97:38)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  type: 'invalid_request',
+  statusCode: undefined,
+  retryable: false,
+  originalError: undefined,
+  fieldErrors: undefined
+}
+[CreatureSpriteManager] Using placeholder for p2-paladin
+[CreatureSpriteManager] Failed to generate sprite for p2-ranger: PixelLabError: View must be one of: low top-down, high top-down, side
+    at Function.validateView (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:232:13)
+    at Function.validateGenerationRequest (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/request-validator.ts:134:12)
+    at SpriteGenerator.submitGeneration (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/pixellab/sprite-generator.ts:53:22)
+    at CreatureSpriteManager.generateSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:136:44)
+    at CreatureSpriteManager.getSprite (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/services/creature-sprite-manager.ts:94:35)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:98:21)
+    at Array.map (<anonymous>)
+    at <anonymous> (/mnt/c/Users/mhast/Desktop/drawnofwar6/backend/src/api/routes/creature-sprites.routes.ts:97:38)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  type: 'invalid_request',
+  statusCode: undefined,
+  retryable: false,
+  originalError: undefined,
+  fieldErrors: undefined
+}
+[CreatureSpriteManager] Using placeholder for p2-ranger
+[Deployment Socket] Client connected: seHpYM0hWOTELBaFAAAB
+[Deployment Socket] player1 joining match 872931e2-da25-4dde-b203-8bf255cf071d
+[Deployment Socket] Match 872931e2-da25-4dde-b203-8bf255cf071d not found, creating new match...
+[Deployment Socket] Match 872931e2-da25-4dde-b203-8bf255cf071d created successfully
+[Deployment Socket] player1 joined match 872931e2-da25-4dde-b203-8bf255cf071d
+[Deployment Socket] player1 disconnected from match 872931e2-da25-4dde-b203-8bf255cf071d
+[Deployment Socket] Client disconnected: seHpYM0hWOTELBaFAAAB
+[Creatures API] Batch fetching 1 creatures for owner demo-player1
+[Deployment Socket] Client connected: 1Zmmq9wdeseQ1bW0AAAD
+[Deployment Socket] player1 joining match 203dc34e-6364-4bff-9951-7572827c1d55
+[Deployment Socket] Match 203dc34e-6364-4bff-9951-7572827c1d55 not found, creating new match...
+[Deployment Socket] Match 203dc34e-6364-4bff-9951-7572827c1d55 created successfully
+[Deployment Socket] player1 joined match 203dc34e-6364-4bff-9951-7572827c1d55
+[URL Converter] Converting creature URLs
+[URL Converter] E idleFrames count: 4
+[URL Converter] E attackFrames count: 4
+[URL Converter] NE idleFrames count: 4
+[URL Converter] NE attackFrames count: 4
+[URL Converter] SE idleFrames count: 4
+[URL Converter] SE attackFrames count: 4
+[URL Converter] Conversion complete
+[URL Converter] Result E idleFrames count: 4
+[URL Converter] Result E attackFrames count: 4
+[URL Converter] Sample E idle frame URL: http://localhost:9199/v0/b/drawn-of-war.appspot.com/o/creatures%2FuLHDfH2ziCElLKRyD5Jn%2Fdirections%2FE-idle-0.png?alt=media
+[URL Converter] Sample E attack frame URL: http://localhost:9199/v0/b/drawn-of-war.appspot.com/o/creatures%2FuLHDfH2ziCElLKRyD5Jn%2Fdirections%2FE-attack-0.png?alt=media

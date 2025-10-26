@@ -141,6 +141,7 @@ export class AStarPathfinder {
     const config = {
       width: gridWidth,
       height: gridHeight,
+      hexSize: 50,  // Default hex size
       orientation: 'flat-top' as const
     };
 

@@ -1,0 +1,126 @@
+/**
+ * Notification Container Styles
+ *
+ * TASK-SJRG-5: Toast notification styling with animations
+ */
+
+.notification-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 400px;
+  pointer-events: none;
+}
+
+.notification {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  pointer-events: auto;
+  animation: slideIn 0.3s ease-out;
+  min-width: 300px;
+}
+
+.notification-success {
+  border-left: 4px solid #22c55e;
+}
+
+.notification-error {
+  border-left: 4px solid #ef4444;
+}
+
+.notification-info {
+  border-left: 4px solid #3b82f6;
+}
+
+.notification-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.notification-icon {
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.notification-success .notification-icon {
+  color: #22c55e;
+}
+
+.notification-error .notification-icon {
+  color: #ef4444;
+}
+
+.notification-info .notification-icon {
+  color: #3b82f6;
+}
+
+.notification-message {
+  color: #1f2937;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.notification-close:hover {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+.notification-close:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .notification-container {
+    left: 20px;
+    right: 20px;
+    max-width: none;
+  }
+
+  .notification {
+    min-width: 0;
+  }
+}

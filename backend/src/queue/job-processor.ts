@@ -18,7 +18,7 @@
  */
 
 import type { Job } from 'bullmq';
-import { SpriteGenerator, JobSubmissionResponse } from '../pixellab/sprite-generator.js';
+import { SpriteGenerator } from '../pixellab/sprite-generator.js';
 import { StatusPoller } from '../pixellab/status-poller.js';
 import { ResultBuilder } from '../pixellab/result-builder.js';
 import { ImageDecoder } from '../pixellab/image-decoder.js';
@@ -142,7 +142,7 @@ export class JobProcessor {
       const generationRequest = this.mapPromptToRequest(structuredPrompt);
 
       // Step 3: Submit to PixelLab
-      let submission: JobSubmissionResponse;
+      let submission: any;
       try {
         submission = await this.spriteGenerator.submitGeneration(generationRequest);
 

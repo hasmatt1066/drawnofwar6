@@ -131,6 +131,46 @@
   background-clip: text;
 }
 
+.headerButtons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.saveButton {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.saveButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+}
+
+.saveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.savedButton {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  border: 1px solid #22c55e;
+}
+
+.savedButton:hover {
+  transform: none;
+  box-shadow: none;
+}
+
 .newCreatureButton {
   padding: 0.75rem 1.5rem;
   background: rgba(255, 255, 255, 0.1);

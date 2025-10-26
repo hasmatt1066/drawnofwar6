@@ -78,16 +78,19 @@ export async function convertCreatureUrls<T extends {
   sprites: {
     menuSprite: string;
     directions: {
-      E: { sprite: string; walkFrames: string[]; idleFrames?: string[] };
-      NE: { sprite: string; walkFrames: string[]; idleFrames?: string[] };
-      SE: { sprite: string; walkFrames: string[]; idleFrames?: string[] };
+      E: { sprite: string; walkFrames: string[]; idleFrames?: string[]; attackFrames?: string[] };
+      NE: { sprite: string; walkFrames: string[]; idleFrames?: string[]; attackFrames?: string[] };
+      SE: { sprite: string; walkFrames: string[]; idleFrames?: string[]; attackFrames?: string[] };
     };
   };
 }>(creature: T): Promise<T> {
   console.log('[URL Converter] Converting creature URLs');
   console.log('[URL Converter] E idleFrames count:', creature.sprites.directions.E.idleFrames?.length ?? 0);
+  console.log('[URL Converter] E attackFrames count:', creature.sprites.directions.E.attackFrames?.length ?? 0);
   console.log('[URL Converter] NE idleFrames count:', creature.sprites.directions.NE.idleFrames?.length ?? 0);
+  console.log('[URL Converter] NE attackFrames count:', creature.sprites.directions.NE.attackFrames?.length ?? 0);
   console.log('[URL Converter] SE idleFrames count:', creature.sprites.directions.SE.idleFrames?.length ?? 0);
+  console.log('[URL Converter] SE attackFrames count:', creature.sprites.directions.SE.attackFrames?.length ?? 0);
 
   try {
     // Convert all URLs in parallel for performance
@@ -101,7 +104,10 @@ export async function convertCreatureUrls<T extends {
       seWalkFrames,
       eIdleFrames,
       neIdleFrames,
-      seIdleFrames
+      seIdleFrames,
+      eAttackFrames,
+      neAttackFrames,
+      seAttackFrames
     ] = await Promise.all([
       convertGsUrlToHttp(creature.sprites.menuSprite),
       convertGsUrlToHttp(creature.sprites.directions.E.sprite),
@@ -119,6 +125,16 @@ export async function convertCreatureUrls<T extends {
         : Promise.resolve(undefined),
       creature.sprites.directions.SE.idleFrames
         ? Promise.all(creature.sprites.directions.SE.idleFrames.map(convertGsUrlToHttp))
+        : Promise.resolve(undefined),
+      // Convert attack frames (optional, may not exist on older creatures)
+      creature.sprites.directions.E.attackFrames
+        ? Promise.all(creature.sprites.directions.E.attackFrames.map(convertGsUrlToHttp))
+        : Promise.resolve(undefined),
+      creature.sprites.directions.NE.attackFrames
+        ? Promise.all(creature.sprites.directions.NE.attackFrames.map(convertGsUrlToHttp))
+        : Promise.resolve(undefined),
+      creature.sprites.directions.SE.attackFrames
+        ? Promise.all(creature.sprites.directions.SE.attackFrames.map(convertGsUrlToHttp))
         : Promise.resolve(undefined)
     ]);
 
@@ -130,17 +146,20 @@ export async function convertCreatureUrls<T extends {
           E: {
             sprite: eSprite,
             walkFrames: eWalkFrames,
-            ...(eIdleFrames && { idleFrames: eIdleFrames })
+            ...(eIdleFrames && { idleFrames: eIdleFrames }),
+            ...(eAttackFrames && { attackFrames: eAttackFrames })
           },
           NE: {
             sprite: neSprite,
             walkFrames: neWalkFrames,
-            ...(neIdleFrames && { idleFrames: neIdleFrames })
+            ...(neIdleFrames && { idleFrames: neIdleFrames }),
+            ...(neAttackFrames && { attackFrames: neAttackFrames })
           },
           SE: {
             sprite: seSprite,
             walkFrames: seWalkFrames,
-            ...(seIdleFrames && { idleFrames: seIdleFrames })
+            ...(seIdleFrames && { idleFrames: seIdleFrames }),
+            ...(seAttackFrames && { attackFrames: seAttackFrames })
           }
         }
       }
@@ -148,7 +167,9 @@ export async function convertCreatureUrls<T extends {
 
     console.log('[URL Converter] Conversion complete');
     console.log('[URL Converter] Result E idleFrames count:', result.sprites.directions.E.idleFrames?.length ?? 0);
+    console.log('[URL Converter] Result E attackFrames count:', result.sprites.directions.E.attackFrames?.length ?? 0);
     console.log('[URL Converter] Sample E idle frame URL:', result.sprites.directions.E.idleFrames?.[0]);
+    console.log('[URL Converter] Sample E attack frame URL:', result.sprites.directions.E.attackFrames?.[0]);
 
     return result;
   } catch (error) {
@@ -167,9 +188,9 @@ export async function convertManyCreatureUrls<T extends {
   sprites: {
     menuSprite: string;
     directions: {
-      E: { sprite: string; walkFrames: string[]; idleFrames?: string[] };
-      NE: { sprite: string; walkFrames: string[]; idleFrames?: string[] };
-      SE: { sprite: string; walkFrames: string[]; idleFrames?: string[] };
+      E: { sprite: string; walkFrames: string[]; idleFrames?: string[]; attackFrames?: string[] };
+      NE: { sprite: string; walkFrames: string[]; idleFrames?: string[]; attackFrames?: string[] };
+      SE: { sprite: string; walkFrames: string[]; idleFrames?: string[]; attackFrames?: string[] };
     };
   };
 }>(creatures: T[]): Promise<T[]> {

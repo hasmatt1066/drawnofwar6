@@ -10,5 +10,11 @@ export * from './utils/hex-math/index.js';
 // Export deployment types
 export * from './types/deployment.js';
 
+// Export combat types
+export * from './types/combat.js';
+
+// Export creature storage types
+export * from './types/creature-storage.js';
+
 // Export socket event types
 export * from './types/socket-events.js';

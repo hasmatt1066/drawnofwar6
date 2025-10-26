@@ -13,7 +13,7 @@
 
 import type { Queue } from 'bullmq';
 import type { GenerationResult } from '../types/generation.js';
-import type { CreatureDocument, OwnerId } from '@drawn-of-war/shared/types/creature-storage.js';
+import type { CreatureDocument, OwnerId } from '@drawn-of-war/shared';
 import { getGenerationToCreatureTransformer } from './transform/generation-to-creature.service.js';
 import { getCreatureStorageService } from './storage/creature-storage.service.js';
 import { getCreatureRepository } from '../repositories/creature.repository.js';
@@ -99,17 +99,20 @@ export class CreatureSaveService {
           E: {
             sprite: generationResult.battlefieldDirectionalViews.E.sprite,
             walkFrames: generationResult.battlefieldDirectionalViews.E.walkFrames,
-            idleFrames: generationResult.battlefieldDirectionalViews.E.idleFrames
+            idleFrames: generationResult.battlefieldDirectionalViews.E.idleFrames,
+            attackFrames: generationResult.battlefieldDirectionalViews.E.attackFrames
           },
           NE: {
             sprite: generationResult.battlefieldDirectionalViews.NE.sprite,
             walkFrames: generationResult.battlefieldDirectionalViews.NE.walkFrames,
-            idleFrames: generationResult.battlefieldDirectionalViews.NE.idleFrames
+            idleFrames: generationResult.battlefieldDirectionalViews.NE.idleFrames,
+            attackFrames: generationResult.battlefieldDirectionalViews.NE.attackFrames
           },
           SE: {
             sprite: generationResult.battlefieldDirectionalViews.SE.sprite,
             walkFrames: generationResult.battlefieldDirectionalViews.SE.walkFrames,
-            idleFrames: generationResult.battlefieldDirectionalViews.SE.idleFrames
+            idleFrames: generationResult.battlefieldDirectionalViews.SE.idleFrames,
+            attackFrames: generationResult.battlefieldDirectionalViews.SE.attackFrames
           }
         };
       } else if (generationResult.battlefieldSprite) {
@@ -117,21 +120,34 @@ export class CreatureSaveService {
         // Use the same sprite for all 3 directions (renderer will mirror as needed)
         console.warn(`[CreatureSaveService] No multi-directional views, using legacy battlefield sprite for all directions`);
         const walkFrames = generationResult.battlefieldWalkFrames || [generationResult.battlefieldSprite];
+        // Use static sprite for idle/attack animations as fallback (prevents empty texture arrays)
+        const idleFrames = [generationResult.battlefieldSprite];
+        const attackFrames = [generationResult.battlefieldSprite];
         directionalSprites = {
-          E: { sprite: generationResult.battlefieldSprite, walkFrames },
-          NE: { sprite: generationResult.battlefieldSprite, walkFrames },
-          SE: { sprite: generationResult.battlefieldSprite, walkFrames }
+          E: { sprite: generationResult.battlefieldSprite, walkFrames, idleFrames, attackFrames },
+          NE: { sprite: generationResult.battlefieldSprite, walkFrames, idleFrames, attackFrames },
+          SE: { sprite: generationResult.battlefieldSprite, walkFrames, idleFrames, attackFrames }
         };
       } else {
         // No battlefield sprites at all - use menu sprite as fallback
         console.warn(`[CreatureSaveService] No battlefield sprites, using menu sprite as fallback`);
         const walkFrames = generationResult.animationFrames || [generationResult.spriteImageBase64];
+        // Use static sprite for idle/attack animations as fallback (prevents empty texture arrays)
+        const idleFrames = [generationResult.spriteImageBase64];
+        const attackFrames = [generationResult.spriteImageBase64];
         directionalSprites = {
-          E: { sprite: generationResult.spriteImageBase64, walkFrames },
-          NE: { sprite: generationResult.spriteImageBase64, walkFrames },
-          SE: { sprite: generationResult.spriteImageBase64, walkFrames }
+          E: { sprite: generationResult.spriteImageBase64, walkFrames, idleFrames, attackFrames },
+          NE: { sprite: generationResult.spriteImageBase64, walkFrames, idleFrames, attackFrames },
+          SE: { sprite: generationResult.spriteImageBase64, walkFrames, idleFrames, attackFrames }
         };
       }
+
+      // DIAGNOSTIC: Log what we're about to upload
+      console.log(`[CreatureSaveService] About to upload sprites for creature ${creatureId}:`);
+      console.log(`  E sprite: ${directionalSprites.E.sprite ? 'present' : 'MISSING'}`);
+      console.log(`  E walkFrames count: ${directionalSprites.E.walkFrames.length}`);
+      console.log(`  E idleFrames count: ${directionalSprites.E.idleFrames?.length ?? 0}`);
+      console.log(`  E attackFrames count: ${directionalSprites.E.attackFrames?.length ?? 0}`);
 
       const spriteUrls = await this.storageService.uploadAllCreatureSprites(creatureId, {
         menuSprite: generationResult.spriteImageBase64,
@@ -140,6 +156,8 @@ export class CreatureSaveService {
 
       uploadedSprites = true;
       console.log(`[CreatureSaveService] Successfully uploaded all sprites for creature ${creatureId}`);
+      console.log(`  Returned E idleFrames count: ${spriteUrls.directions.E.idleFrames.length}`);
+      console.log(`  Returned E attackFrames count: ${spriteUrls.directions.E.attackFrames.length}`);
 
       // Step 5: Update Firestore document with storage URLs
       await this.repository.update(creatureId, {

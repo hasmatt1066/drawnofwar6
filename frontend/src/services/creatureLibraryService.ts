@@ -15,10 +15,10 @@ import type {
   CreatureListResponse,
   BatchCreaturesResponse,
   OwnerId
-} from '@drawn-of-war/shared/types/creature-storage';
+} from '@shared/types/creature-storage';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-const LIBRARY_API = `${API_BASE}/api/creature-library`;
+// Use relative URL - Vite dev server will proxy to backend
+const LIBRARY_API = '/api/creature-library';
 
 /**
  * Save creature request
@@ -50,6 +50,24 @@ export interface ListCreaturesRequest {
  * Creature Library Service
  */
 export class CreatureLibraryService {
+  /**
+   * Check if a generation job has already been saved to the gallery
+   */
+  async checkJobSaved(jobId: string): Promise<{ saved: boolean; creatureId?: string }> {
+    try {
+      const response = await fetch(`${LIBRARY_API}/check-saved/${jobId}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('[CreatureLibrary] Error checking job save status:', error);
+      throw error;
+    }
+  }
+
   /**
    * Save a creature from a completed generation job
    */

@@ -16,8 +16,21 @@ import { AnimationAssetMapper } from './animation-asset-mapper';
 
 /**
  * Minimal renderer interface for combat visualization
+ * Note: This uses unitId-based rendering for proper sprite lifecycle management
  */
 export interface CombatRenderer {
+  // New combat-specific method with unitId for proper sprite lifecycle
+  renderCreatureWithId?(
+    unitId: string,
+    hex: AxialCoordinate,
+    creatureName: string,
+    playerId: 'player1' | 'player2',
+    spriteData?: any,
+    opacity?: number,
+    direction?: number
+  ): void;
+
+  // Keep legacy method for backward compatibility
   renderCreature(
     hex: AxialCoordinate,
     creatureName: string,
@@ -26,7 +39,9 @@ export interface CombatRenderer {
     opacity?: number,
     direction?: number
   ): void;
-  removeCreature(hex: AxialCoordinate): void;
+
+  removeCreatureById?(unitId: string): void;  // Unit ID-based removal
+  removeCreature(hex: AxialCoordinate): void;  // Position-based removal (legacy)
   clearAllCreatures(): void;
 }
 
@@ -108,7 +123,11 @@ export class CombatRendererIntegration {
       this.animationStateMachine.unregisterUnit(event.unitId);
 
       // Remove from renderer
-      if (this.renderer.removeCreature) {
+      if (this.renderer.removeCreatureById) {
+        // Use unitId-based removal if available
+        this.renderer.removeCreatureById(event.unitId);
+      } else if (this.renderer.removeCreature) {
+        // Fall back to position-based removal
         const position = this.activeUnitPositions.get(event.unitId);
         if (position) {
           this.renderer.removeCreature(position);
@@ -254,8 +273,13 @@ export class CombatRendererIntegration {
     const isMoving = interpolated?.isMoving || false;
 
     // Update animation state
+    // Extract attacking state from currentTarget (if unit has a target, it's attacking)
+    const isAttacking = unit.currentTarget !== undefined && unit.currentTarget !== null;
+
     this.animationStateMachine.updateState(unit.unitId, {
       isMoving,
+      isAttacking,
+      isCasting: false, // TODO: Add ability casting detection when implemented
       health: unit.health
     });
 
@@ -270,16 +294,31 @@ export class CombatRendererIntegration {
     );
 
     // Render creature with animation frames
-    this.renderer.renderCreature(
-      position,
-      unit.creatureId,
-      unit.ownerId as 'player1' | 'player2',
-      {
-        battlefieldDirectionalViews: this.createDirectionalViews(unit, animState)
-      },
-      1.0, // Full opacity
-      facingDirection
-    );
+    // Use new unitId-based method if available, otherwise fall back to position-based
+    if (this.renderer.renderCreatureWithId) {
+      this.renderer.renderCreatureWithId(
+        unit.unitId,
+        position,
+        unit.creatureId,
+        unit.ownerId as 'player1' | 'player2',
+        {
+          battlefieldDirectionalViews: this.createDirectionalViews(unit, animState)
+        },
+        1.0, // Full opacity
+        facingDirection
+      );
+    } else {
+      this.renderer.renderCreature(
+        position,
+        unit.creatureId,
+        unit.ownerId as 'player1' | 'player2',
+        {
+          battlefieldDirectionalViews: this.createDirectionalViews(unit, animState)
+        },
+        1.0, // Full opacity
+        facingDirection
+      );
+    }
 
     // Update tracked position
     this.activeUnitPositions.set(unit.unitId, position);

@@ -25,6 +25,20 @@ export interface CombatCreature {
   ownerId: PlayerId;
   /** Current position on battlefield */
   position: AxialCoordinate;
+  /** Original deployment position (where unit was placed before combat) */
+  deploymentPosition?: AxialCoordinate;
+  /**
+   * Final battle position (destination after spawn movement completes).
+   * Used for multi-tick spawn movement: creatures gradually move from off-screen
+   * spawn positions to their battle positions over 300-500ms (18-30 ticks at 60 tps).
+   */
+  battlePosition?: AxialCoordinate;
+  /**
+   * Countdown for spawn movement phase (ticks remaining until spawn complete).
+   * When > 0, creature is in spawn animation phase moving toward battlePosition.
+   * When 0 or undefined, creature has completed spawn and is in normal combat.
+   */
+  spawnTicksRemaining?: number;
   /** Current health points */
   health: number;
   /** Maximum health points */

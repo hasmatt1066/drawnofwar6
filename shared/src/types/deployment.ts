@@ -16,6 +16,8 @@ export interface DirectionalSprite {
   walkFrames: string[];
   /** Idle animation frames (base64 array) - optional for backward compatibility */
   idleFrames?: string[];
+  /** Attack animation frames (base64 array) - optional, falls back to idle if not present */
+  attackFrames?: string[];
 }
 
 /**

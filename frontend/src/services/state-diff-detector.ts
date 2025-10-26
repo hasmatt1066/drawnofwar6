@@ -98,13 +98,17 @@ export class StateDiffDetector {
    * Detect changes between previous and new state
    */
   public detectChanges(newState: CombatState): DetectedEvents {
-    // First state - no changes to detect
+    // Process events from state.events array (server-authoritative events)
+    const serverEvents = this.processServerEvents(newState);
+
+    // First state - only use server events
     if (!this.previousState) {
       this.previousState = newState;
-      return this.createEmptyEvents();
+      return serverEvents;
     }
 
-    const events: DetectedEvents = {
+    // Merge server events with state-diff detected events
+    const stateDiffEvents: DetectedEvents = {
       damages: this.detectDamage(this.previousState, newState),
       heals: this.detectHealing(this.previousState, newState),
       projectiles: this.detectNewProjectiles(this.previousState, newState),
@@ -115,7 +119,108 @@ export class StateDiffDetector {
       deaths: this.detectDeaths(this.previousState, newState)
     };
 
+    // Merge events (server events take priority)
+    const merged: DetectedEvents = {
+      damages: [...serverEvents.damages, ...stateDiffEvents.damages],
+      heals: [...serverEvents.heals, ...stateDiffEvents.heals],
+      projectiles: [...serverEvents.projectiles, ...stateDiffEvents.projectiles],
+      buffsApplied: [...serverEvents.buffsApplied, ...stateDiffEvents.buffsApplied],
+      buffsRemoved: [...serverEvents.buffsRemoved, ...stateDiffEvents.buffsRemoved],
+      debuffsApplied: [...serverEvents.debuffsApplied, ...stateDiffEvents.debuffsApplied],
+      debuffsRemoved: [...serverEvents.debuffsRemoved, ...stateDiffEvents.debuffsRemoved],
+      deaths: [...serverEvents.deaths, ...stateDiffEvents.deaths]
+    };
+
     this.previousState = newState;
+    return merged;
+  }
+
+  /**
+   * Process server-sent events from state.events array
+   */
+  private processServerEvents(state: CombatState): DetectedEvents {
+    const events: DetectedEvents = this.createEmptyEvents();
+
+    if (!state.events || state.events.length === 0) {
+      return events;
+    }
+
+    for (const event of state.events) {
+      switch (event.eventType) {
+        case 'damage_dealt':
+          if (event.data.targetUnitId && event.data.damage) {
+            events.damages.push({
+              unitId: event.data.targetUnitId,
+              oldHealth: (event.data.oldHealth !== undefined) ? event.data.oldHealth : 0,
+              newHealth: (event.data.newHealth !== undefined) ? event.data.newHealth : 0,
+              damageAmount: event.data.damage,
+              tick: event.tick
+            });
+          }
+          break;
+
+        case 'healing_done':
+          if (event.data.targetUnitId && event.data.healing) {
+            events.heals.push({
+              unitId: event.data.targetUnitId,
+              oldHealth: (event.data.oldHealth !== undefined) ? event.data.oldHealth : 0,
+              newHealth: (event.data.newHealth !== undefined) ? event.data.newHealth : 0,
+              healAmount: event.data.healing,
+              tick: event.tick
+            });
+          }
+          break;
+
+        case 'projectile_spawned':
+          if (event.data.projectileId && event.data.sourceUnitId && event.data.targetUnitId) {
+            events.projectiles.push({
+              projectileId: event.data.projectileId,
+              sourceUnitId: event.data.sourceUnitId,
+              targetUnitId: event.data.targetUnitId,
+              sourcePosition: event.data.sourcePosition || { q: 0, r: 0 },
+              targetPosition: event.data.targetPosition || { q: 0, r: 0 },
+              tick: event.tick
+            });
+          }
+          break;
+
+        case 'unit_died':
+          if (event.data.unitId) {
+            events.deaths.push({
+              unitId: event.data.unitId,
+              tick: event.tick
+            });
+          }
+          break;
+
+        case 'buff_applied':
+          if (event.data.unitId && event.data.buffId) {
+            events.buffsApplied.push({
+              unitId: event.data.unitId,
+              buffId: event.data.buffId,
+              buffName: event.data.buffName || 'Unknown Buff',
+              duration: event.data.duration || 0,
+              stacks: event.data.stacks,
+              tick: event.tick
+            });
+          }
+          break;
+
+        case 'debuff_applied':
+          if (event.data.unitId && event.data.debuffId) {
+            events.debuffsApplied.push({
+              unitId: event.data.unitId,
+              buffId: event.data.debuffId,
+              buffName: event.data.debuffName || 'Unknown Debuff',
+              duration: event.data.duration || 0,
+              stacks: event.data.stacks,
+              tick: event.tick
+            });
+          }
+          break;
+      }
+    }
+
     return events;
   }
 

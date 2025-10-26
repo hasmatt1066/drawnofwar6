@@ -6,7 +6,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Queue, Job } from 'bullmq';
 import { CreatureSaveService } from '../creature-save.service.js';
 import type { GenerationResult } from '../../types/generation.js';
-import type { CreatureDocument } from '@drawn-of-war/shared/types/creature-storage.js';
+import type { CreatureDocument } from '@drawn-of-war/shared';
 
 // Mock dependencies
 vi.mock('../transform/generation-to-creature.service.js', () => ({

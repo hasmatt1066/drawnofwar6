@@ -24,7 +24,8 @@ const mockStage = {
 
 const mockGridRenderer = {
   getSpriteAt: vi.fn(),
-  getActiveSprites: vi.fn(() => new Map())
+  getActiveSprites: vi.fn(() => new Map()),
+  getStage: vi.fn(() => mockStage)
 };
 
 // Helper to create unit
@@ -108,7 +109,6 @@ describe('Buff Icon Integration', () => {
 
     manager = new CombatVisualizationManager(
       mockSocketClient as any,
-      mockStage as any,
       mockGridRenderer as any
     );
 

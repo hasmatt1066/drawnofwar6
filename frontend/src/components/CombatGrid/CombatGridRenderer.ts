@@ -34,6 +34,11 @@ interface AnimatedSpriteData {
   x: number;
   y: number;
   onComplete?: () => void;
+
+  // Cached data for animation state changes
+  battlefieldViews?: any;      // BattlefieldDirectionalViews from creature data
+  playerId?: 'player1' | 'player2';
+  direction?: number;
 }
 
 /**
@@ -52,6 +57,106 @@ export class CombatGridRenderer extends HexGridRenderer {
    */
   public supportsAnimations(): boolean {
     return true;
+  }
+
+  /**
+   * Change animation state for an existing sprite
+   * This swaps the texture array to show different animation frames
+   */
+  public async changeAnimationState(unitId: string, newState: AnimationState): Promise<void> {
+    const spriteData = this.animatedSprites.get(unitId);
+
+    if (!spriteData) {
+      console.warn('[CombatGridRenderer] Cannot change animation state - sprite not found:', unitId);
+      return;
+    }
+
+    // Skip if already in this state
+    if (spriteData.animationState === newState) {
+      return;
+    }
+
+    console.log('[CombatGridRenderer] Changing animation state:', {
+      unitId,
+      from: spriteData.animationState,
+      to: newState
+    });
+
+    // Check if we have cached battlefield views
+    if (!spriteData.battlefieldViews) {
+      console.warn('[CombatGridRenderer] Cannot change animation - no cached battlefield views:', unitId);
+      spriteData.animationState = newState; // Update state flag anyway
+      return;
+    }
+
+    try {
+      // Get new animation data for the requested state
+      const animationData = this.selectDirectionalAnimation(
+        spriteData.battlefieldViews,
+        spriteData.direction || 1,
+        newState
+      );
+
+      // Load new textures (try cache first)
+      const textures: PIXI.Texture[] = [];
+
+      for (const frame of animationData.frames) {
+        try {
+          // Try synchronous cache retrieval
+          const cached = PIXI.Assets.get(frame) as PIXI.Texture;
+          if (cached) {
+            textures.push(cached);
+          } else {
+            // Load if not cached
+            const loaded = await PIXI.Assets.load(frame);
+            textures.push(loaded);
+          }
+        } catch (error) {
+          console.error('[CombatGridRenderer] Failed to load texture:', frame, error);
+          // Continue with other frames
+        }
+      }
+
+      if (textures.length === 0) {
+        console.error('[CombatGridRenderer] No textures loaded for animation state:', newState);
+        return;
+      }
+
+      // Update sprite state
+      spriteData.animationState = newState;
+      spriteData.loop = animationData.loop;
+      spriteData.textures = textures;
+
+      // Swap AnimatedSprite textures
+      spriteData.sprite.textures = textures;
+      spriteData.sprite.loop = animationData.loop;
+
+      // Setup completion handler for one-shot animations
+      if (!animationData.loop) {
+        spriteData.sprite.onComplete = () => {
+          console.log('[CombatGridRenderer] Animation completed:', unitId, newState);
+          this.triggerAnimationComplete({
+            unitId,
+            animationState: newState
+          });
+        };
+      } else {
+        // Clear completion handler for looping animations
+        spriteData.sprite.onComplete = null;
+      }
+
+      // Restart playback from frame 0
+      spriteData.sprite.gotoAndPlay(0);
+
+      console.log('[CombatGridRenderer] Successfully changed animation state:', {
+        unitId,
+        newState,
+        frameCount: textures.length,
+        loop: animationData.loop
+      });
+    } catch (error) {
+      console.error('[CombatGridRenderer] Error changing animation state:', error);
+    }
   }
 
   /**
@@ -86,7 +191,9 @@ export class CombatGridRenderer extends HexGridRenderer {
       // Try synchronous texture retrieval from cache
       const textures: (PIXI.Texture | null)[] = animationData.frames.map(frame => {
         try {
-          return PIXI.Assets.get(frame) as PIXI.Texture;
+          const texture = PIXI.Assets.get(frame);
+          // Assets.get() returns undefined if not in cache, not an error
+          return texture !== undefined ? texture as PIXI.Texture : null;
         } catch {
           return null;
         }
@@ -98,6 +205,11 @@ export class CombatGridRenderer extends HexGridRenderer {
       if (allCached) {
         // CACHE HIT - Create sprite synchronously
         console.log('[CombatGridRenderer] Cache HIT - creating sprite synchronously:', unitId);
+
+        // Cache battlefield views for createSpriteSync to access
+        (this as any).lastBattlefieldViews = battlefieldViews;
+        (this as any).lastDirection = direction;
+
         this.createSpriteSync(
           unitId,
           hex,
@@ -106,6 +218,10 @@ export class CombatGridRenderer extends HexGridRenderer {
           animationData,
           textures as PIXI.Texture[]
         );
+
+        // Clear cache
+        delete (this as any).lastBattlefieldViews;
+        delete (this as any).lastDirection;
       } else {
         // CACHE MISS - Fall back to async with pending tracker
         console.log('[CombatGridRenderer] Cache MISS - falling back to async load:', unitId);
@@ -184,9 +300,10 @@ export class CombatGridRenderer extends HexGridRenderer {
 
     // Scale sprite to fit hex
     const targetSize = this.getHexGrid().hexSize * 1.2;
+    const firstTexture = textures[0];
     const baseScale = Math.min(
-      targetSize / textures[0].width,
-      targetSize / textures[0].height
+      targetSize / (firstTexture?.width || 100),
+      targetSize / (firstTexture?.height || 100)
     );
 
     // Apply mirroring if needed
@@ -230,6 +347,11 @@ export class CombatGridRenderer extends HexGridRenderer {
     // Start playing
     animatedSprite.play();
 
+    // Get battlefield views from renderCreatureWithId context
+    // This will be passed from the calling method
+    const battlefieldViews = (this as any).lastBattlefieldViews;
+    const cachedDirection = (this as any).lastDirection;
+
     // Store sprite data (key by unitId)
     const spriteData: AnimatedSpriteData = {
       container,
@@ -241,7 +363,10 @@ export class CombatGridRenderer extends HexGridRenderer {
       textures,
       scale: { x: animatedSprite.scale.x, y: animatedSprite.scale.y },
       x: container.x,
-      y: container.y
+      y: container.y,
+      battlefieldViews,
+      playerId,
+      direction: cachedDirection
     };
 
     // Only add onComplete if defined
@@ -724,17 +849,43 @@ export class CombatGridRenderer extends HexGridRenderer {
   }
 
   /**
-   * Select animation for direction
+   * Select animation for direction and state
    */
-  private selectDirectionalAnimation(views: any, direction: number): AnimationData {
+  private selectDirectionalAnimation(
+    views: any,
+    direction: number,
+    animationState: AnimationState = AnimationState.IDLE
+  ): AnimationData {
     // Map direction to view key
     const dirKey = direction === 0 ? 'NE' : direction === 1 ? 'E' : 'SE';
     const view = views[dirKey] || views['E']; // Fallback to E
 
+    // Select frames based on animation state
+    let frames: string[];
+    let loop: boolean;
+
+    switch (animationState) {
+      case AnimationState.ATTACK:
+        frames = view.attackFrames || view.attack || [view.sprite];
+        loop = false; // Attack is one-shot
+        break;
+
+      case AnimationState.WALK:
+        frames = view.walkFrames || view.walk || [view.sprite];
+        loop = true;
+        break;
+
+      case AnimationState.IDLE:
+      default:
+        frames = view.idleFrames || view.idle || [view.sprite];
+        loop = true;
+        break;
+    }
+
     return {
-      frames: view.idle || [view.sprite],
+      frames,
       frameDuration: 100,
-      loop: true,
+      loop,
       shouldMirror: false
     };
   }

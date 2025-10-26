@@ -93,7 +93,7 @@ export async function pollJobStatus(
   } = {}
 ): Promise<JobStatus> {
   const pollInterval = options.pollInterval || 2000; // 2 seconds
-  const maxAttempts = options.maxAttempts || 150; // 5 minutes max
+  const maxAttempts = options.maxAttempts || 450; // 15 minutes max (multi-directional generation with attack frames takes 6-7 mins)
   let attempts = 0;
 
   while (attempts < maxAttempts) {

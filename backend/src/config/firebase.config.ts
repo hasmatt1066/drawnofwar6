@@ -104,7 +104,7 @@ export function getStorage(): admin.storage.Storage {
 }
 
 // Get Storage bucket
-export function getStorageBucket(): admin.storage.Bucket {
+export function getStorageBucket() {
   return getStorage().bucket();
 }
 

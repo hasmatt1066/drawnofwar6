@@ -224,8 +224,19 @@ export class CombatEngine {
 
     // Update all alive units
     const aliveUnits = this.state.units.filter(u => u.status === 'alive');
+
+    // FIRST: Update spawn movement for units still spawning
     for (const unit of aliveUnits) {
-      this.updateUnit(unit);
+      if (unit.spawnTicksRemaining && unit.spawnTicksRemaining > 0) {
+        this.updateSpawnMovement(unit);
+      }
+    }
+
+    // THEN: Update combat AI for units that have finished spawning
+    for (const unit of aliveUnits) {
+      if (!unit.spawnTicksRemaining || unit.spawnTicksRemaining === 0) {
+        this.updateUnit(unit);
+      }
     }
 
     // Update all projectiles
@@ -294,9 +305,51 @@ export class CombatEngine {
   }
 
   /**
+   * Update spawn movement for a unit
+   * Handles the spawn-to-battle animation phase
+   */
+  private updateSpawnMovement(unit: CombatCreature): void {
+    if (!unit.spawnTicksRemaining || unit.spawnTicksRemaining <= 0 || !unit.battlePosition) {
+      return;
+    }
+
+    // Decrement remaining ticks
+    unit.spawnTicksRemaining--;
+
+    // Calculate total spawn duration (assumes initial value was set correctly)
+    const totalSpawnTicks = 90; // ~1.5 seconds at 60 TPS
+    const ticksElapsed = totalSpawnTicks - unit.spawnTicksRemaining;
+    const progress = ticksElapsed / totalSpawnTicks; // 0.0 to 1.0
+
+    // Interpolate position from deploymentPosition to battlePosition
+    if (unit.deploymentPosition && unit.battlePosition) {
+      const start = unit.deploymentPosition;
+      const end = unit.battlePosition;
+
+      // Linear interpolation
+      unit.position = {
+        q: start.q + (end.q - start.q) * progress,
+        r: start.r + (end.r - start.r) * progress
+      };
+
+      // Update facing direction toward battle position
+      unit.facingDirection = calculateFacingDirection(unit.position, end);
+    }
+
+    // When complete, snap to exact battle position
+    if (unit.spawnTicksRemaining === 0 && unit.battlePosition) {
+      unit.position = { ...unit.battlePosition };
+    }
+  }
+
+  /**
    * Update a single unit's AI and actions
    */
   private updateUnit(unit: CombatCreature): void {
+    // Skip units still spawning
+    if (unit.spawnTicksRemaining && unit.spawnTicksRemaining > 0) {
+      return;
+    }
     // Select target if needed
     if (!unit.currentTarget || this.isTargetDead(unit.currentTarget)) {
       const target = findClosestEnemy(unit, this.state.units);
@@ -772,6 +825,28 @@ export class CombatEngine {
   }
 
   /**
+   * Calculate spawn position for a unit
+   * Returns off-screen position 4 hexes behind deployment zone
+   */
+  private calculateSpawnPosition(deploymentHex: AxialCoordinate, ownerId: PlayerId): AxialCoordinate {
+    const spawnDistance = 4; // hexes behind deployment zone
+
+    if (ownerId === 'player1') {
+      // Player 1 spawns 4 hexes to the left (negative q direction)
+      return {
+        q: deploymentHex.q - spawnDistance,
+        r: deploymentHex.r
+      };
+    } else {
+      // Player 2 spawns 4 hexes to the right (positive q direction)
+      return {
+        q: deploymentHex.q + spawnDistance,
+        r: deploymentHex.r
+      };
+    }
+  }
+
+  /**
    * Create a combat creature from deployment data
    */
   private createCombatCreature(
@@ -783,15 +858,24 @@ export class CombatEngine {
     // In production, these would come from creature database
     const stats = this.getDefaultStats();
 
+    // Calculate spawn position (off-screen behind deployment zone)
+    const spawnPosition = this.calculateSpawnPosition(position, ownerId);
+
+    // Calculate initial facing direction toward battle position
+    const initialFacing = calculateFacingDirection(spawnPosition, position);
+
     return {
       unitId: `${ownerId}_${creatureId}_${Date.now()}`,
       creatureId,
       ownerId,
-      position,
+      position: spawnPosition, // Start at spawn position (off-screen)
+      deploymentPosition: spawnPosition, // Store spawn position
+      battlePosition: position, // Store final battle position (deployment hex)
+      spawnTicksRemaining: 90, // ~1.5 seconds at 60 TPS
       health: stats.maxHealth,
       maxHealth: stats.maxHealth,
       status: 'alive',
-      facingDirection: 0,
+      facingDirection: initialFacing,
       attackCooldownRemaining: 0,
       stats: {
         movementSpeed: stats.movementSpeed,

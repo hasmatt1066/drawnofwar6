@@ -225,15 +225,16 @@ export class AnimationAssetMapper {
 
   /**
    * Get attack animation frames
+   * Falls back to idle frames if attack frames don't exist
    */
   private getAttackFrames(creatureId: string, direction: string): string[] {
+    // TODO: Once attack frames are available via API, use them
+    // For now, fall back to idle frames with different timing (configured in getTimingConfig)
     const basePath = `/api/creatures/${creatureId}/animations/attack/${direction}`;
-    return [
-      `${basePath}/frame-0.png`,
-      `${basePath}/frame-1.png`,
-      `${basePath}/frame-2.png`,
-      `${basePath}/frame-3.png`
-    ];
+
+    // Check if attack frames exist - for now, always fall back to idle
+    // This will be updated when backend serves attack animations
+    return this.getIdleFrames(creatureId, direction);
   }
 
   /**

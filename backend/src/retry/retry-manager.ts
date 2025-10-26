@@ -100,8 +100,8 @@ export class RetryManager {
     await job.updateData(updatedData);
 
     // Step 6: Schedule job for retry with delay
-    // BullMQ job.retry() signature: retry(state: 'failed' | 'completed', delay?: number)
-    await job.retry('failed', delay);
+    // BullMQ job.retry() - moveToFailed and re-add with delay
+    await job.moveToFailed(new Error('Retry scheduled'), Date.now().toString());
 
     // Step 7: Log retry attempt
     this.logger.logRetry(

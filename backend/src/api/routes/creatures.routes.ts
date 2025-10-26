@@ -13,7 +13,7 @@ import { createCreatureSaveService } from '../../services/creature-save.service.
 import { getCreatureRepository } from '../../repositories/creature.repository.js';
 import { queueService } from '../../queue/index.js';
 import { convertCreatureUrls, convertManyCreatureUrls } from '../../services/storage/firebase-url-converter.js';
-import type { OwnerId, SerializedCreatureDocument } from '@drawn-of-war/shared/types/creature-storage.js';
+import type { OwnerId, SerializedCreatureDocument } from '@drawn-of-war/shared';
 
 const router = Router();
 
@@ -69,6 +69,22 @@ router.post('/save', [
 
       console.log(`[Creatures API] Saving creature from job ${jobId} for owner ${ownerId}`);
 
+      // Check if job already saved (duplicate prevention)
+      const repository = getCreatureRepository();
+      const existingCreature = await repository.findByJobId(jobId);
+
+      if (existingCreature) {
+        console.log(`[Creatures API] Job ${jobId} already saved as creature ${existingCreature.id}`);
+        res.status(200).json({
+          success: true,
+          creatureId: existingCreature.id,
+          creature: await serializeCreature(existingCreature),
+          alreadyExists: true
+        });
+        return;
+      }
+
+      // Proceed with new save
       const queue = queueService.getQueue();
       const saveService = createCreatureSaveService(queue);
       const result = await saveService.saveCreature({ jobId, ownerId });
@@ -227,6 +243,61 @@ router.get('/batch', [
       });
     } catch (error) {
       console.error('[Creatures API] Error batch fetching creatures:', error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+]);
+
+/**
+ * GET /api/creatures/check-saved/:jobId
+ *
+ * Check if a generation job has already been saved to the gallery.
+ *
+ * IMPORTANT: Must be defined BEFORE /:id route to avoid "check-saved" being treated as an ID.
+ *
+ * Response:
+ *   200 OK
+ *   { saved: true, creatureId: string } (if saved)
+ *   { saved: false } (if not saved)
+ */
+router.get('/check-saved/:jobId', [
+  // Validation middleware
+  param('jobId')
+    .isString()
+    .notEmpty()
+    .withMessage('jobId is required'),
+
+  // Handler
+  async (req: Request, res: Response) => {
+    // Check validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    try {
+      const jobId = req.params['jobId'];
+
+      console.log(`[Creatures API] Checking if job ${jobId} is saved`);
+
+      const repository = getCreatureRepository();
+      const creature = await repository.findByJobId(jobId);
+
+      if (creature) {
+        res.status(200).json({
+          saved: true,
+          creatureId: creature.id
+        });
+      } else {
+        res.status(200).json({
+          saved: false
+        });
+      }
+    } catch (error) {
+      console.error('[Creatures API] Error checking if job is saved:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Unknown error'
       });

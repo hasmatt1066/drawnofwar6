@@ -37,22 +37,26 @@ function transformDirectionalViews(
     E: {
       sprite: convertStorageUrl(storageViews.E.sprite),
       walkFrames: storageViews.E.walkFrames.map(convertStorageUrl),
-      idleFrames: storageViews.E.idleFrames?.map(convertStorageUrl)
+      idleFrames: storageViews.E.idleFrames?.map(convertStorageUrl),
+      attackFrames: storageViews.E.attackFrames?.map(convertStorageUrl)
     },
     NE: {
       sprite: convertStorageUrl(storageViews.NE.sprite),
       walkFrames: storageViews.NE.walkFrames.map(convertStorageUrl),
-      idleFrames: storageViews.NE.idleFrames?.map(convertStorageUrl)
+      idleFrames: storageViews.NE.idleFrames?.map(convertStorageUrl),
+      attackFrames: storageViews.NE.attackFrames?.map(convertStorageUrl)
     },
     SE: {
       sprite: convertStorageUrl(storageViews.SE.sprite),
       walkFrames: storageViews.SE.walkFrames.map(convertStorageUrl),
-      idleFrames: storageViews.SE.idleFrames?.map(convertStorageUrl)
+      idleFrames: storageViews.SE.idleFrames?.map(convertStorageUrl),
+      attackFrames: storageViews.SE.attackFrames?.map(convertStorageUrl)
     }
   };
 
   console.log('[CreatureTransform] Transformed directional views:', result);
   console.log('[CreatureTransform] E idleFrames count:', result.E.idleFrames?.length ?? 0);
+  console.log('[CreatureTransform] E attackFrames count:', result.E.attackFrames?.length ?? 0);
 
   return result;
 }

@@ -11,7 +11,7 @@ import type {
   CreatureDocument,
   CreatureDocumentInput,
   OwnerId
-} from '@drawn-of-war/shared/types/creature-storage.js';
+} from '@drawn-of-war/shared';
 
 const COLLECTION_NAME = 'creatures';
 const CURRENT_SCHEMA_VERSION = '1.0.0';
@@ -60,10 +60,33 @@ export class CreatureRepository {
         return null;
       }
 
-      return this.snapshotToDocument(snapshot);
+      return this.snapshotToDocument(snapshot as any);
     } catch (error) {
       console.error(`[CreatureRepository] Error finding creature ${id}:`, error);
       throw new Error(`Failed to find creature: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Find creature by generation job ID
+   */
+  async findByJobId(jobId: string): Promise<CreatureDocument | null> {
+    try {
+      const query = this.firestore
+        .collection(COLLECTION_NAME)
+        .where('generationJobId', '==', jobId)
+        .limit(1);
+
+      const snapshot = await query.get();
+
+      if (snapshot.empty) {
+        return null;
+      }
+
+      return this.snapshotToDocument(snapshot.docs[0]);
+    } catch (error) {
+      console.error(`[CreatureRepository] Error finding creature by job ${jobId}:`, error);
+      throw new Error(`Failed to query creature by job ID: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

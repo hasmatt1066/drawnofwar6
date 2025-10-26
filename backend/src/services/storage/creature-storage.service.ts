@@ -170,6 +170,37 @@ export class CreatureStorageService {
   }
 
   /**
+   * Upload attack animation frame
+   */
+  async uploadAttackFrame(
+    creatureId: string,
+    direction: 'E' | 'NE' | 'SE',
+    frameIndex: number,
+    base64Data: string
+  ): Promise<string> {
+    this.validateBase64(base64Data);
+
+    const fileName = `creatures/${creatureId}/directions/${direction}-attack-${frameIndex}.png`;
+    const file = this.bucket.file(fileName);
+
+    const buffer = this.extractBuffer(base64Data);
+
+    await file.save(buffer, {
+      metadata: {
+        contentType: 'image/png',
+        metadata: {
+          creatureId,
+          spriteType: 'attack-frame',
+          direction,
+          frameIndex: frameIndex.toString()
+        }
+      }
+    });
+
+    return `gs://${this.bucket.name}/${fileName}`;
+  }
+
+  /**
    * Delete all assets for a creature (cleanup utility)
    */
   async deleteCreatureAssets(creatureId: string): Promise<void> {
@@ -199,18 +230,23 @@ export class CreatureStorageService {
   async uploadAllCreatureSprites(creatureId: string, sprites: {
     menuSprite: string;
     directions: {
-      E: { sprite: string; walkFrames: string[]; idleFrames?: string[] };
-      NE: { sprite: string; walkFrames: string[]; idleFrames?: string[] };
-      SE: { sprite: string; walkFrames: string[]; idleFrames?: string[] };
+      E: { sprite: string; walkFrames: string[]; idleFrames?: string[]; attackFrames?: string[] };
+      NE: { sprite: string; walkFrames: string[]; idleFrames?: string[]; attackFrames?: string[] };
+      SE: { sprite: string; walkFrames: string[]; idleFrames?: string[]; attackFrames?: string[] };
     };
   }): Promise<{
     menuSprite: string;
     directions: {
-      E: { sprite: string; walkFrames: string[]; idleFrames: string[] };
-      NE: { sprite: string; walkFrames: string[]; idleFrames: string[] };
-      SE: { sprite: string; walkFrames: string[]; idleFrames: string[] };
+      E: { sprite: string; walkFrames: string[]; idleFrames: string[]; attackFrames: string[] };
+      NE: { sprite: string; walkFrames: string[]; idleFrames: string[]; attackFrames: string[] };
+      SE: { sprite: string; walkFrames: string[]; idleFrames: string[]; attackFrames: string[] };
     };
   }> {
+    // DIAGNOSTIC: Log what we received
+    console.log(`[CreatureStorageService] uploadAllCreatureSprites received:`);
+    console.log(`  E idleFrames count: ${sprites.directions.E.idleFrames?.length ?? 0}`);
+    console.log(`  E attackFrames count: ${sprites.directions.E.attackFrames?.length ?? 0}`);
+
     try {
       // Upload all sprites in parallel for maximum performance
       const [
@@ -223,7 +259,10 @@ export class CreatureStorageService {
         seWalkFrameUrls,
         eIdleFrameUrls,
         neIdleFrameUrls,
-        seIdleFrameUrls
+        seIdleFrameUrls,
+        eAttackFrameUrls,
+        neAttackFrameUrls,
+        seAttackFrameUrls
       ] = await Promise.all([
         this.uploadMenuSprite(creatureId, sprites.menuSprite),
         this.uploadDirectionalSprite(creatureId, 'E', sprites.directions.E.sprite),
@@ -253,8 +292,29 @@ export class CreatureStorageService {
           ? Promise.all(sprites.directions.SE.idleFrames.map((frame, i) =>
               this.uploadIdleFrame(creatureId, 'SE', i, frame)
             ))
+          : Promise.resolve([]),
+        // Upload attack frames if available
+        sprites.directions.E.attackFrames && sprites.directions.E.attackFrames.length > 0
+          ? Promise.all(sprites.directions.E.attackFrames.map((frame, i) =>
+              this.uploadAttackFrame(creatureId, 'E', i, frame)
+            ))
+          : Promise.resolve([]),
+        sprites.directions.NE.attackFrames && sprites.directions.NE.attackFrames.length > 0
+          ? Promise.all(sprites.directions.NE.attackFrames.map((frame, i) =>
+              this.uploadAttackFrame(creatureId, 'NE', i, frame)
+            ))
+          : Promise.resolve([]),
+        sprites.directions.SE.attackFrames && sprites.directions.SE.attackFrames.length > 0
+          ? Promise.all(sprites.directions.SE.attackFrames.map((frame, i) =>
+              this.uploadAttackFrame(creatureId, 'SE', i, frame)
+            ))
           : Promise.resolve([])
       ]);
+
+      // DIAGNOSTIC: Log what we're returning
+      console.log(`[CreatureStorageService] uploadAllCreatureSprites returning:`);
+      console.log(`  E idleFrames count: ${eIdleFrameUrls.length}`);
+      console.log(`  E attackFrames count: ${eAttackFrameUrls.length}`);
 
       return {
         menuSprite: menuSpriteUrl,
@@ -262,17 +322,20 @@ export class CreatureStorageService {
           E: {
             sprite: eSpriteUrl,
             walkFrames: eWalkFrameUrls,
-            idleFrames: eIdleFrameUrls
+            idleFrames: eIdleFrameUrls,
+            attackFrames: eAttackFrameUrls
           },
           NE: {
             sprite: neSpriteUrl,
             walkFrames: neWalkFrameUrls,
-            idleFrames: neIdleFrameUrls
+            idleFrames: neIdleFrameUrls,
+            attackFrames: neAttackFrameUrls
           },
           SE: {
             sprite: seSpriteUrl,
             walkFrames: seWalkFrameUrls,
-            idleFrames: seIdleFrameUrls
+            idleFrames: seIdleFrameUrls,
+            attackFrames: seAttackFrameUrls
           }
         }
       };

@@ -6,8 +6,8 @@
  */
 
 import type { Namespace, Socket } from 'socket.io';
-import type { CombatState, CombatResult, CombatEvent } from '../../../../shared/src/types/combat.js';
-import type { DeploymentState } from '../../../../shared/src/types/deployment.js';
+import type { CombatState, CombatResult, CombatEvent } from '@drawn-of-war/shared';
+import type { DeploymentState } from '@drawn-of-war/shared';
 import { combatStateManager } from '../services/combat/combat-state-manager.js';
 
 /**

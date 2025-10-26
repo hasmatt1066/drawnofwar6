@@ -1,0 +1,52 @@
+
+> @drawn-of-war/backend@0.1.0 dev /mnt/c/Users/mhast/Desktop/drawnofwar6/backend
+> LD_LIBRARY_PATH=../node_modules/.pnpm/@img+sharp-libvips-linux-x64@1.2.3/node_modules/@img/sharp-libvips-linux-x64/lib:$LD_LIBRARY_PATH node node_modules/tsx/dist/cli.mjs watch --clear-screen=false src/index.ts
+
+[Claude Vision] Service initialized
+[Claude Vision] Model: claude-3-5-sonnet-20241022
+[Animation Library] Loaded 55 animations
+[Animation Library] Categories: { idle: 5, locomotion: 12, combat: 15, abilities: 15, reactions: 8 }
+[Animation Mapper] Service initialized
+[Attribute Extractor] Service initialized
+[Style Validator] Service initialized
+[Style Validator] Pass threshold: 60%
+[Startup] Validating Claude API configuration...
+[Claude Config] Configuration loaded successfully
+[Claude Config] Model: claude-3-5-sonnet-20241022
+[Claude Config] API URL: https://api.anthropic.com/v1
+[Claude Config] Max Tokens: 1024
+[Claude Config] Timeout: 30000ms
+[Startup] Initializing Firebase Admin SDK...
+{"timestamp":"2025-10-23T13:49:03.946Z","level":"info","type":"queue_manager_initialized","queueName":"generation-queue","redisHost":"localhost","redisPort":6379,"redisDb":0}
+{"timestamp":"2025-10-23T13:49:03.950Z","level":"info","type":"worker_started","queueName":"generation-queue","concurrency":5,"redisHost":"localhost","redisPort":6379}
+[Queue Service] Initialized successfully
+[Firebase] Initializing with emulator configuration
+[Firebase] Using Firestore emulator at localhost:8080
+[Firebase] Using Storage emulator at localhost:9199
+[Firebase] Initialized successfully
+[Startup] Firebase connection check failed or timed out - creature library features may not work
+[Startup] Make sure Firebase emulator is running if USE_FIREBASE_EMULATOR=true
+[Startup] Initializing creature sprite manager...
+[CreatureSpriteManager] Loaded cached sprite: p1-archer
+[CreatureSpriteManager] Loaded cached sprite: p1-cleric
+[CreatureSpriteManager] Loaded cached sprite: p1-mage
+[CreatureSpriteManager] Loaded cached sprite: p1-paladin
+[CreatureSpriteManager] Loaded cached sprite: p1-ranger
+[CreatureSpriteManager] Loaded cached sprite: p1-rogue
+[CreatureSpriteManager] Loaded cached sprite: p1-tank
+[CreatureSpriteManager] Loaded cached sprite: p1-warrior
+[Firebase] Connection check passed
+[CreatureSpriteManager] Loaded cached sprite: p2-tank
+[CreatureSpriteManager] Loaded cached sprite: p2-warrior
+[CreatureSpriteManager] Loaded 10 cached sprites
+[Startup] Creature sprite manager initialized
+[Startup] Initializing Socket.IO server...
+[Socket.IO] Initialized with namespaces: /combat, /deployment
+[Startup] Initializing combat socket handler...
+[Startup] Initializing deployment socket handler...
+[Deployment Socket] Initialized
+[Server] Drawn of War backend running
+[Server] URL: http://localhost:3001
+[Server] WebSocket: ws://localhost:3001
+[Server] Environment: development
+[Server] Health check: http://localhost:3001/health

@@ -8,7 +8,7 @@
  * replaced with Redis or database persistence.
  */
 
-import type { PlayerDeploymentState } from '@drawn-of-war/shared/types/deployment';
+import type { PlayerDeploymentState } from '@drawn-of-war/shared';
 
 /**
  * Stored deployment entry

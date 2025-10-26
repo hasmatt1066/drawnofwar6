@@ -8,6 +8,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './CreatureAnimationStudio.module.css';
 import { DirectionalAnimationStudio } from '../components/DirectionalAnimationStudio';
+import { getCreatureLibraryService } from '../services/creatureLibraryService';
+import { showNotification } from '../utils/notifications';
 
 interface CombatAttribute {
   attributeId: string;
@@ -65,8 +67,11 @@ export default function CreatureAnimationStudio() {
   const [jobId, setJobId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [saveStatus, setSaveStatus] = useState<'unsaved' | 'saving' | 'saved'>('unsaved');
+  const [savedCreatureId, setSavedCreatureId] = useState<string | null>(null);
 
   const intervalRef = useRef<NodeJS.Timeout>();
+  const libraryService = getCreatureLibraryService();
 
   // Load creature from completed generation job
   const loadCreature = async () => {
@@ -99,6 +104,51 @@ export default function CreatureAnimationStudio() {
       setError(err.message || 'Failed to load creature');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Check if job is already saved when creature loads
+  useEffect(() => {
+    if (jobId && creatureData) {
+      libraryService.checkJobSaved(jobId)
+        .then(result => {
+          if (result.saved) {
+            setSaveStatus('saved');
+            setSavedCreatureId(result.creatureId || null);
+          } else {
+            setSaveStatus('unsaved');
+            setSavedCreatureId(null);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to check save status:', err);
+          // Default to unsaved on error
+          setSaveStatus('unsaved');
+        });
+    }
+  }, [jobId, creatureData, libraryService]);
+
+  // Save creature to gallery
+  const handleSaveToGallery = async () => {
+    if (!jobId) {
+      showNotification('error', 'No job ID available');
+      return;
+    }
+
+    setSaveStatus('saving');
+    try {
+      const result = await libraryService.saveCreature({
+        jobId,
+        ownerId: 'demo-player1'
+      });
+
+      setSaveStatus('saved');
+      setSavedCreatureId(result.creatureId);
+      showNotification('success', `Creature saved to gallery! ID: ${result.creatureId}`);
+    } catch (error) {
+      setSaveStatus('unsaved');
+      showNotification('error', 'Failed to save creature to gallery');
+      console.error('Save error:', error);
     }
   };
 
@@ -232,12 +282,23 @@ export default function CreatureAnimationStudio() {
     <div className={styles.container}>
       <header className={styles.header}>
         <h1>Creature Animation Studio</h1>
-        <button
-          onClick={() => setCreatureData(null)}
-          className={styles.newCreatureButton}
-        >
-          Load Different Creature
-        </button>
+        <div className={styles.headerButtons}>
+          <button
+            onClick={handleSaveToGallery}
+            disabled={saveStatus !== 'unsaved'}
+            className={`${styles.saveButton} ${saveStatus === 'saved' ? styles.savedButton : ''}`}
+          >
+            {saveStatus === 'unsaved' && 'Add to Gallery'}
+            {saveStatus === 'saving' && 'Saving...'}
+            {saveStatus === 'saved' && 'Saved ✓'}
+          </button>
+          <button
+            onClick={() => setCreatureData(null)}
+            className={styles.newCreatureButton}
+          >
+            Load Different Creature
+          </button>
+        </div>
       </header>
 
       <div className={styles.content}>
